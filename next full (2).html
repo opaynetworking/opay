@@ -1,0 +1,891 @@
+<!DOCTYPE html>  
+<html lang="en">  
+<head>  
+<meta charset="UTF-8">  
+<meta name="viewport" content="width=device-width, initial-scale=1.0">  
+<title>Transfer to Bank</title>  
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">  
+<style>    /* CSS Variables for Light and Dark Mode */
+    :root {
+    --bg-color: #f8f8fb;
+    --text-color: #212121;
+    --card-bg: #ffffff;
+    --header-bg: #ffffff;
+    --input-bg: #EFEFF5;
+    --divider-color: #E0E0E0;
+    --placeholder-color: #9E9E9E;
+    --secondary-text: #616161;
+    --tab-inactive: #424242;
+    --contact-bg: #E8F5E9;
+    --event-bg: linear-gradient(to bottom right, #00B876, #008A5E);
+    --recipient-bg: #FFFFFF;
+    --shadow-color: rgba(255, 255, 255, 0.6);
+    --amount-color: #000000;
+    --currency-color: #000000;
+    --section-title-color: #000000;
+    --balance-bg: #F8F8FB;
+    --toast-bg: #323232;
+    --toast-color: #ffffff;
+    --pin-bg: #F8F8FB;
+    --pin-input-bg: #F8F8FB;
+    --keypad-bg: #F8F8FB;
+    --key-bg: #ffffff;
+    --key-color: #000000;
+    --active-remark-bg: #00B876;
+    --active-remark-color: white;
+    --amount-box-bg: #f0f0f0;
+    --scale-badge-bg: #6b7280; /* grey-500 */
+    --scale-badge-text: white;
+    }
+    
+    @media (prefers-color-scheme: dark) {
+    :root {
+    --bg-color: #121212;
+    --text-color: #e0e0e0;
+    --card-bg: #1e1e1e;
+    --header-bg: #1e1e1e;
+    --input-bg: #2d2d2d;
+    --divider-color: #424242;
+    --placeholder-color: #9E9E9E;
+    --secondary-text: #b0b0b0;
+    --tab-inactive: #b0b0b0;
+    --contact-bg: #2d3a2e;
+    --event-bg: linear-gradient(to bottom right, #008A5E, #006A48);
+    --recipient-bg: #2d2d2d;
+    --shadow-color: rgba(0, 0, 0, 0.3);
+    --amount-color: #e0e0e0;
+    --currency-color: #e0e0e0;
+    --section-title-color: #e0e0e0;
+    --balance-bg: #2d2d2d;
+    --toast-bg: #424242;
+    --toast-color: #e0e0e0;
+    --pin-bg: #2d2d2d;
+    --pin-input-bg: #2d2d2d;
+    --keypad-bg: #2d2d2d;
+    --key-bg: #424242;
+    --key-color: #e0e0e0;
+    --active-remark-bg: #00B876;
+    --active-remark-color: white;
+    --amount-box-bg: #333;
+    --scale-badge-bg: #4b5563;
+    --scale-badge-text: #f9fafb;
+    }
+    }
+    
+    *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Roboto,Arial,sans-serif;-webkit-tap-highlight-color:transparent}
+    html,body{width:100%;height:100%;overflow-x:hidden}
+    body{background:var(--bg-color);color:var(--text-color);line-height:1.5;position:relative}
+    
+    .container{
+        max-width:600px;
+        width:100%;
+        margin:0 auto;
+        background:var(--card-bg);
+        height:100vh;
+        display:flex;
+        flex-direction:column;
+        position:relative;
+    }
+    .header{display:flex;align-items:center;padding:8px;background:var(--header-bg);width:100%;flex-shrink:0;}
+    .header-text{
+        flex:1;
+        padding:8px 0;
+        font-size:14px;
+        color:var(--text-color);
+        text-align:left;
+        margin-left:4px;
+    }
+    .records-btn{padding:8px;font-size:14px;color:#00B876;white-space:nowrap}
+    
+    .scroll-container{
+        flex:1;
+        overflow-y:auto;
+        background:var(--bg-color);
+        padding:10px;
+    }
+    
+    /* Footer confirm button - no border, no background, just floating */
+    .footer-confirm {
+        padding: 25px 30px;
+        flex-shrink: 0;
+        background:var(--bg-color);
+    }
+    .confirm-btn{
+        background:#00B876;
+        border-radius:50px;
+        text-align:center;
+        opacity:.5;
+        cursor:not-allowed;
+        width:100%;
+        border: none;
+        outline: none;
+    }
+    .confirm-text{
+        color:#fff;
+        font-weight:bold;
+        font-size:16px;
+        padding:12px;
+    }
+    .confirm-btn.enabled {
+        opacity:1;
+        cursor:pointer;
+    }
+    
+    .recipient-card{display:flex;align-items:center;margin-bottom:5px}
+    .circle-image{width:40px;height:45px;border-radius:50%;overflow:hidden;display:flex;justify-content:center;align-items:center;margin-left:10px;margin-right:5px;flex-shrink:0}
+    .circle-image img{width:100%;height:100%;object-fit:cover}
+    .recipient-info{flex:1;min-width:0}
+    .recipient-name{font-size:14px;font-weight:500;color:var(--text-color);padding:8px 8px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .recipient-details{font-size:13px;color:#757575;padding:0 8px 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    
+    .amount-card,.remark-card{background:var(--card-bg);border-radius:12px;padding:15px;margin-bottom:15px}
+    .section-title{font-size:14px;font-weight:bold;color:var(--section-title-color);padding:8px}
+    
+    /* Scale indicator as badge (no comment icon) */
+    .scale-badge {
+        position: absolute;
+        top: -10px;
+        left: 40px;
+        background: #9E9E9E;
+        color: var(--scale-badge-text);
+        font-size: 12px;
+        font-weight: 400;
+        padding: 0px 5px;
+        border-radius: 3px; 
+        box-shadow: 0 2px 2px;
+    /* triangle dimension */
+  --b: 0.5em; /* base */
+  --h: 0.3em; /* height */
+
+  --p: 15%; /* triangle position (0%:left 100%:right) */
+  --r: 0.2em; /* the radius */
+  --c: #9E9E9E;
+  border-radius: var(--r) var(--r) min(var(--r),100% - var(--p) - var(--b)/2) min(var(--r),var(--p) - var(--b)/2)/var(--r);
+  clip-path: polygon(0 100%,0 0,100% 0,100% 100%,
+    min(100%,var(--p) + var(--b)/2) 100%,
+    var(--p) calc(100% + var(--h)),
+    max(0%  ,var(--p) - var(--b)/2) 100%);
+  /*background: var(--c);*/
+  border-image: conic-gradient(var(--c) 0 0) fill 0/
+    var(--r) calc(100% - var(--p) - var(--b)/2) 0 calc(var(--p) - var(--b)/2)/
+    0 0 var(--h) 0;
+        z-index: 5;
+    }
+    
+    .amount-input-wrapper {
+        position: relative;
+        margin-top: 10px;
+        margin-bottom: 8px;
+    }
+    .amount-input-container{display:flex;align-items:center;padding:8px 8px 8px 8px; border-bottom: 1px solid var(--divider-color);}
+    .currency-symbol{font-size:25px;color:var(--currency-color);padding-left:8px;flex-shrink:0}
+    .amount-input{flex:1;padding:0 8px;font-size:25px;color:var(--amount-color);border:none;outline:none;background:transparent;min-width:0}
+    .amount-input::placeholder{color:var(--placeholder-color)}
+    .clear-btn{width:20px;height:20px;margin-right:10px;display:none;flex-shrink:0;cursor:pointer}
+    
+    .amount-note{font-size:14px;color:#D81B60;padding:8px;margin-left:5px;display:none}
+    
+    .amount-options{display:flex;justify-content:space-between;padding:3px 8px}
+    .amount-box{
+        width:95px;
+        padding:5px 8px;
+        border-radius:8px;
+        text-align:center;
+        margin:0 7px;
+        background:var(--amount-box-bg);
+        cursor:pointer;
+        flex-shrink:0;
+    }
+    .amount-option{font-size:12px;color:#757575;padding:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .active-box{background:#E8F5E9 !important}
+    .active-option{color:#00B876 !important}
+    
+    /* Remark input with underline */
+    .remark-input-wrapper {
+        margin-bottom: 15px;
+    }
+    .remark-input {
+        width: 100%;
+        padding: 8px 0;
+        font-size: 16px;
+        color: var(--text-color);
+        border: none;
+        border-bottom: 1px solid var(--divider-color);
+        outline: none;
+        background: transparent;
+    }
+    .remark-input:focus {
+        border-bottom-color: #00B876;
+    }
+    
+    /* Remark buttons styled like amount boxes */
+    .remark-buttons {
+        display: flex;
+        gap: 10px;
+        margin-top: 5px;
+        padding: 0;
+    }
+    .remark-btn {
+        flex: 1;
+        padding: 10px;
+        border-radius: 8px;
+        background: var(--amount-box-bg);
+        color: #757575;
+        font-size: 14px;
+        cursor: pointer;
+        text-align: center;
+        transition: all 0.2s;
+    }
+    .remark-btn.active {
+        background: #E8F5E9;
+        color: #00B876;
+    }
+    
+    .hidden-edit{display:none}
+    .hidden-section{display:none}
+    
+    /* Fullscreen loader */
+    .loader{
+        display:none;position:fixed;top:0;left:0;width:100%;height:100%;
+        z-index:9999;justify-content:center;align-items:center;
+        background:rgba(0,0,0,0.5);
+    }
+    .loader-gif{width:60px;height:60px;object-fit:contain}
+    
+    /* Bottom Sheet */
+    .bottom-sheet-container{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.5);display:none;justify-content:center;align-items:flex-end;z-index:1000}
+    .bottom-sheet{width:100%;max-width:500px;background:var(--card-bg);border-radius:20px 20px 0 0;padding-bottom:1px;animation:slideUp .4s ease-out;max-height:85vh;overflow-y:auto;margin:0 auto;box-shadow:0 -4px 20px rgba(0,0,0,.15)}
+    @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+    
+    .loading-circle{margin:12px auto;width:48px;height:48px;border:4px solid #eee;border-top:4px solid #00B876;border-radius:50%;animation:spin .9s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    
+    .close-icon{width:24px;height:24px;margin-left:10px;margin-top:5px;margin-bottom:15px;cursor:pointer}
+    
+    .amount-section{display:flex;justify-content:center;align-items:center;margin-bottom:20px}
+    .bs-currency-symbol{font-size:20px;font-weight:bold;color:var(--currency-color);margin-top:3px;margin-right:5px}
+    .bs-amount{font-size:30px;color:var(--amount-color);font-weight:500}
+    
+    .detail-row{display:flex;align-items:center;margin:8px 5px;padding:0 8px}
+    .detail-label{flex:1;font-size:14px;color:var(--placeholder-color)}
+    .bank-logo{width:25px;height:25px;border-radius:50%;border:3px solid var(--card-bg);margin-right:8px}
+    .detail-value{font-size:12px;color:var(--text-color);padding:0 8px}
+    
+    .fee-detail{display:flex;align-items:center;margin:8px 5px;padding:0 8px}
+    .fee-label{flex:1;font-size:14px;color:var(--placeholder-color)}
+    .fee-amount{font-size:12px;color:#757575;padding:0 8px}
+    .fee-amount-free{font-size:12px;color:var(--text-color);padding:0 8px}
+    
+    .payment-method{display:flex;align-items:center;margin:15px 5px 0 5px;padding:0 8px}
+    .method-label{flex:1;font-size:14px;color:var(--text-color)}
+    .method-value{font-size:14px;color:var(--placeholder-color);padding:0 5px}
+    .chevron-icon{width:16px;height:16px;margin-right:10px}
+    
+    .balance-section{background:var(--balance-bg);border-radius:15px;padding:15px;margin:15px}
+    .balance-header{display:flex;align-items:center;padding:8px 8px 8px 0}
+    .balance-title{font-size:14px;color:var(--text-color)}
+    .balance-icon{width:20px;height:20px;margin-left:8px;cursor:pointer}
+    .check-icon{width:20px;height:20px;margin-right:5px}
+    .dotted-line{color:var(--placeholder-color);font-size:12px;margin:0;text-align:center;letter-spacing:-1px}
+    .wallet-balance,.owealth-balance{display:flex;align-items:center;padding:8px 8px 8px 0}
+    .wallet-label{font-size:12px;color:var(--secondary-text)}
+    .wallet-amount{flex:1;font-size:12px;color:var(--placeholder-color);padding-left:8px}
+    .wallet-deduction{font-size:12px;color:var(--secondary-text);padding-right:8px}
+    .pay-button{background:#00B876;border-radius:50px;height:50px;display:flex;justify-content:center;align-items:center;margin:20px 25px 15px;cursor:pointer;transition:background-color .2s}
+    .pay-button:hover{background:#009e63}
+    .pay-text{color:#fff;font-size:15px;font-weight:500}
+    
+    /* Toast */
+    .toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:var(--toast-bg);color:var(--toast-color);padding:12px 24px;border-radius:4px;z-index:10000;opacity:0;transition:opacity .3s;font-size:14px;box-shadow:0 4px 10px rgba(0,0,0,.2)}
+    .toast.show{opacity:1}
+    
+    /* PIN Bottom Sheet */
+    .pin-bottom-sheet{width:100%;max-width:500px;background:var(--card-bg);border-radius:20px 20px 0 0;padding-bottom:1px;animation:slideUp .4s ease-out;max-height:85vh;overflow-y:auto;margin:0 auto;box-shadow:0 -4px 20px rgba(0,0,0,.15)}
+    .pin-header{display:flex;align-items:center;padding:16px}
+    .pin-caption{flex:1;text-align:center;font-size:16px;font-weight:bold;color:var(--text-color)}
+    .pin-close-icon{width:24px;height:24px;cursor:pointer}
+    .pin-container{display:flex;justify-content:center;padding:5px 16px;gap:10px}
+    .pin-box{width:50px;height:50px;background:var(--pin-input-bg);border-radius:12px;display:flex;justify-content:center;align-items:center;position:relative;border:1px solid transparent}
+    .pin-input{width:100%;height:100%;border:none;background:transparent;text-align:center;font-size:16px;color:var(--text-color);outline:none;border-radius:12px;pointer-events:none}
+    .pin-input::placeholder{color:#607D8B}
+    .pin-box.active{border-color:#00B876}
+    .forgot-pin{text-align:center;padding:8px;font-size:12px;color:var(--placeholder-color);margin-bottom:8px;cursor:pointer}
+    .keypad-container{background:var(--keypad-bg);padding:16px}
+    .secure-indicator{display:flex;align-items:center;justify-content:center;margin-bottom:9px}
+    .secure-icon{width:20px;height:20px;margin-right:3px}
+    .secure-text{font-size:12px;color:var(--secondary-text)}
+    .keypad-row{display:flex;justify-content:space-between;margin-bottom:5px;gap:6px}
+    .key{flex:1;min-width:0;height:50px;background:var(--key-bg);border-radius:5px;display:flex;justify-content:center;align-items:center;cursor:pointer;user-select:none}
+    .key-text{font-size:25px;color:var(--key-color)}
+    .zero-key{flex:2}
+    .clear-key{flex:1}
+    .clear-icon{width:24px;height:24px}
+    </style>
+</head>  
+<body>  
+<div class="container" id="mainContainer">  
+    <div class="header">  
+        <div class="image-view" id="backButton">  
+            <img src="https://cdn3.iconfinder.com/data/icons/feather-5/24/chevron-left-512.png" alt="Back" width="24" height="24">  
+        </div>  
+        <div class="header-text">Transfer to Bank Account</div>  
+        <div class="records-btn">Records</div>  
+    </div>  
+
+    <div class="scroll-container">  
+        <div class="content">  
+            <div class="recipient-card">  
+                <div class="circle-image">  
+                    <div class="loading-circle" id="bankLogoLoader" style="display:none;"></div>  
+                    <img id="banklogo" src="https://logo.clearbit.com/ubagroup.com" alt="UBA Bank">  
+                </div>  
+                <div class="recipient-info">  
+                    <div id="accountname" class="recipient-name">Web Tech</div>  
+                    <div id="an_bn" class="recipient-details">9123458653 OPay</div>  
+                </div>  
+            </div>  
+
+            <div class="amount-card">  
+                <div class="section-title">Amount</div>  
+                <div class="amount-input-wrapper">
+                    <div class="scale-badge" id="scaleBadge"></div>
+                    <div class="amount-input-container">  
+                        <div class="currency-symbol">₦</div>  
+                        <input type="text" id="edittext2" class="amount-input" placeholder="100.00 - 5,000,000.00" inputmode="decimal">  
+                        <div id="clear" class="clear-btn">  
+                            <img src="https://cdn3.iconfinder.com/data/icons/feather-5/24/x-512.png" alt="Clear" width="20" height="20">  
+                        </div>  
+                    </div>  
+                </div>
+                <div class="divider"></div>  
+                <div id="textview15" class="amount-note">Amount must be between ₦100.00 and ₦5,000,000.00</div>  
+
+                <div class="amount-options">  
+                    <div id="box1" class="amount-box"><div class="amount-option">₦500</div></div>  
+                    <div id="box2" class="amount-box"><div class="amount-option">₦1,000</div></div>  
+                    <div id="box3" class="amount-box"><div class="amount-option">₦2,000</div></div>  
+                </div>  
+                <div class="amount-options">  
+                    <div id="box4" class="amount-box"><div class="amount-option">₦5,000</div></div>  
+                    <div id="box5" class="amount-box"><div class="amount-option">₦9,999</div></div>  
+                    <div id="box6" class="amount-box"><div class="amount-option">₦10,000</div></div>  
+                </div>  
+            </div>  
+
+            <div class="remark-card">  
+                <div class="section-title">Remark</div>  
+                <div class="remark-input-wrapper">
+                    <input type="text" id="edittext1" class="remark-input" placeholder="What's this for? (Optional)">
+                </div>
+                <div class="remark-buttons">
+                    <div class="remark-btn" id="remarkPurchase">Purchase</div>
+                    <div class="remark-btn" id="remarkPersonal">Personal</div>
+                </div>
+            </div>  
+
+            <input type="text" id="edittext3" class="hidden-edit" placeholder="Edit Text">  
+            <div id="linear112" class="hidden-section">  
+                <div id="linear111" class="hidden-content">  
+                    <div id="linear13" class="loading-container"></div>  
+             </div>  
+           </div>
+        </div> 
+    </div>  
+
+    <!-- Footer with confirm button - no border, no background -->
+    <div class="footer-confirm">
+        <div id="linear_confirm" class="confirm-btn">  
+            <div class="confirm-text">Confirm</div>  
+        </div>  
+    </div>
+</div>  
+
+<!-- Fullscreen loader (GIF) -->  
+<div id="loadingPopup" class="loader">  
+    <img src="images/toban/loading.gif" alt="Loading..." class="loader-gif">  
+</div>  
+
+<!-- Toast -->  
+<div id="toast" class="toast"></div>  
+
+<!-- Bottom Sheet (Review) -->  
+<div class="bottom-sheet-container" id="bottomSheet">  
+    <div class="bottom-sheet">  
+        <img class="close-icon" id="closeBottomSheet" src="https://cdn3.iconfinder.com/data/icons/feather-5/24/x-512.png" alt="Close">  
+
+        <div class="amount-section">  
+            <div class="bs-currency-symbol">₦</div>  
+            <div class="bs-amount" id="bs-amount">100.00</div>  
+        </div>  
+
+        <div class="detail-row">  
+            <div class="detail-label">Bank</div>  
+            <img class="bank-logo" id="bs-bank-logo" src="https://logo.clearbit.com/opayweb.com" alt="Bank Logo">  
+            <div class="detail-value" id="bs-bank-name">Opay</div>  
+        </div>  
+
+        <div class="detail-row">  
+            <div class="detail-label">Account Number</div>  
+            <div class="detail-value" id="bs-account-number">9165938152</div>  
+        </div>  
+
+        <div class="detail-row">  
+            <div class="detail-label">Name</div>  
+            <div class="detail-value" id="bs-account-name">Yusuf Surajo</div>  
+        </div>  
+
+        <div class="detail-row">  
+            <div class="detail-label">Amount</div>  
+            <div class="detail-value" id="bs-amount-detail">₦100.00</div>  
+        </div>  
+
+        <div class="fee-detail">  
+            <div class="fee-label">Transaction Fee</div>  
+            <div class="fee-amount">₦10.00</div>  
+            <div class="fee-amount-free">₦0.00</div>  
+        </div>  
+
+        <div class="payment-method">  
+            <div class="method-label">Payment method</div>  
+            <div class="method-value">All</div>  
+            <img class="chevron-icon" src="https://cdn3.iconfinder.com/data/icons/feather-5/24/chevron-right-512.png" alt="More">  
+        </div>  
+
+        <div class="balance-section">  
+            <div class="balance-header">  
+                <div class="balance-title">Available Balance (<span id="bs-available-balance">5,000.00</span>)</div>  
+                <img class="balance-icon" src="https://cdn3.iconfinder.com/data/icons/feather-5/24/info-512.png" alt="Info">  
+                <div style="flex:1;"></div>  
+                <img class="check-icon" src="https://cdn3.iconfinder.com/data/icons/feather-5/24/check-512.png" alt="Selected">  
+            </div>  
+            <div class="dotted-line">- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -</div>  
+            <div class="wallet-balance">  
+                <div class="wallet-label">Wallet Balance</div>  
+                <div class="wallet-amount">(5,000.00)</div>  
+                <div class="wallet-deduction" id="bs-deduction">-₦0.00</div>  
+            </div>  
+            <div class="owealth-balance">  
+                <div class="wallet-label">Owealth Balance</div>  
+                <div class="wallet-amount">(₦0.00)</div>  
+            </div>  
+        </div>  
+
+        <div class="pay-button" id="payButton">  
+            <div class="pay-text">Pay</div>  
+        </div>  
+    </div>  
+</div>  
+
+<!-- PIN Bottom Sheet -->  
+<div class="bottom-sheet-container" id="pinBottomSheet">  
+    <div class="pin-bottom-sheet">  
+        <div class="pin-header">  
+            <div class="pin-caption" id="pinSheetTitle">Enter Payment PIN</div>  
+            <img class="pin-close-icon" src="https://cdn3.iconfinder.com/data/icons/feather-5/24/x-512.png" alt="Close" id="closePinBottomSheet">  
+        </div>  
+
+        <div class="pin-container">  
+            <div class="pin-box"><input type="password" class="pin-input" id="pin1" maxlength="1" inputmode="none" readonly></div>  
+            <div class="pin-box"><input type="password" class="pin-input" id="pin2" maxlength="1" inputmode="none" readonly></div>  
+            <div class="pin-box"><input type="password" class="pin-input" id="pin3" maxlength="1" inputmode="none" readonly></div>  
+            <div class="pin-box"><input type="password" class="pin-input" id="pin4" maxlength="1" inputmode="none" readonly></div>  
+        </div>  
+
+        <div class="forgot-pin">Forgot Payment PIN</div>  
+
+        <div class="keypad-container">  
+            <div class="secure-indicator">  
+                <img class="secure-icon" src="images/toban/badge.png" alt="Secure">  
+                <div class="secure-text">OPay Secure Numeric Keypad</div>  
+            </div>  
+
+            <div class="keypad-row">  
+                <div class="key" data-value="1"><div class="key-text">1</div></div>  
+                <div class="key" data-value="2"><div class="key-text">2</div></div>  
+                <div class="key" data-value="3"><div class="key-text">3</div></div>  
+            </div>  
+            <div class="keypad-row">  
+                <div class="key" data-value="4"><div class="key-text">4</div></div>  
+                <div class="key" data-value="5"><div class="key-text">5</div></div>  
+                <div class="key" data-value="6"><div class="key-text">6</div></div>  
+            </div>  
+            <div class="keypad-row">  
+                <div class="key" data-value="7"><div class="key-text">7</div></div>  
+                <div class="key" data-value="8"><div class="key-text">8</div></div>  
+                <div class="key" data-value="9"><div class="key-text">9</div></div>  
+            </div>  
+            <div class="keypad-row">  
+                <div class="key zero-key" data-value="0"><div class="key-text">0</div></div>  
+                <div class="key clear-key" id="clearPinKey">  
+                    <img class="clear-icon" src="https://cdn3.iconfinder.com/data/icons/feather-5/24/delete-512.png" alt="Clear">  
+                </div>  
+            </div>  
+        </div>  
+    </div>  
+</div>  
+
+<script>  
+/* ===== Boot data from PHP ===== */  
+const userBalance = 5000;  
+let pinSet        = 1; // 0 or 1  
+const formattedBalance = "5,000.00";  
+
+/* ===== PIN stage defaults ===== */  
+let pinStage = pinSet ? "enter" : "set";  
+
+/* ===== Helpers ===== */  
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3000);}  
+
+function formatAmount(v, addDecimals = false){  
+    v = v.replace(/[^0-9.]/g,'');  
+    const parts = v.split('.');  
+    if (parts.length>2){ v = parts[0]+'.'+parts[1]; }  
+    if (parts[1]){ parts[1]=parts[1].substring(0,2); v = parts[0]+'.'+parts[1]; }  
+    let [i,d]=v.split('.');  
+    i = (i||'').replace(/\B(?=(\d{3})+(?!\d))/g,',');  
+    if (addDecimals) {  
+        d = (d || '00').padEnd(2,'0');  
+        return i+'.'+d;  
+    }  
+    return d!==undefined ? i+'.'+d : i;  
+}  
+
+function parseAmount(v){return parseFloat((v||'').replace(/,/g,''));}  
+
+function updateScale(amountNum) {  
+    const scaleEl = document.getElementById('scaleBadge');  
+    if (isNaN(amountNum) || amountNum === 0) {  
+        scaleEl.textContent = '';  
+        return;  
+    }  
+    if (amountNum < 100) scaleEl.textContent = '';  
+    else if (amountNum < 1000) scaleEl.textContent = 'Hundred';  
+    else if (amountNum < 10000) scaleEl.textContent = 'Thousands';  
+    else if (amountNum < 100000) scaleEl.textContent = 'Tens of Thousands';  
+    else if (amountNum < 1000000) scaleEl.textContent = 'Hundreds of Thousands';  
+    else if (amountNum <= 5000000) scaleEl.textContent = 'Millions';  
+    else scaleEl.textContent = '';  
+}  
+
+function validateAmount(v){  
+    const a=parseAmount(v);  
+    const note = document.getElementById("textview15");  
+    const confirmBtn = document.getElementById('linear_confirm');  
+    if (isNaN(a) || a<100 || a>5000000){  
+        note.style.display="block";  
+        confirmBtn.classList.remove('enabled');  
+        return false;  
+    }else{  
+        note.style.display="none";  
+        confirmBtn.classList.add('enabled');  
+        return true;  
+    }  
+}  
+
+function showLoader(show){  
+    const loader = document.getElementById('loadingPopup');  
+    const gif    = loader.querySelector("img");  
+    if (show) {  
+        _setLoading(gif);  
+        loader.style.display = 'flex';  
+    } else {  
+        loader.style.display = 'none';  
+    }  
+}  
+
+/* ===== UI Init ===== */  
+const amountInput = document.getElementById('edittext2');  
+const confirmBtn  = document.getElementById('linear_confirm');  
+
+function _UI(){  
+    const selected = localStorage.getItem("transfer.selected");  
+    let payload=null; if(selected){ try{payload=JSON.parse(selected);}catch(e){} }  
+    const accountName   = payload?.accountname   || 'Web Tech';  
+    const accountNumber = payload?.accountnumber || '9123458653';  
+    const bankName      = payload?.bankname      || 'OPay';  
+    const bankLogoUrl   = payload?.url           || 'https://logo.clearbit.com/ubagroup.com';  
+
+    const bankLogo = document.getElementById('banklogo');  
+    const bankLogoLoader = document.getElementById('bankLogoLoader');  
+    bankLogoLoader.style.display='block';  
+    bankLogo.style.opacity='0';  
+    bankLogo.onload = ()=>{ bankLogoLoader.style.display='none'; bankLogo.style.opacity='1'; };  
+    bankLogo.onerror= ()=>{ bankLogoLoader.style.display='none'; bankLogo.style.opacity='1'; };  
+    bankLogo.src = bankLogoUrl;  
+
+    document.getElementById('accountname').textContent = accountName;  
+    document.getElementById('an_bn').textContent = `${accountNumber} ${bankName}`;  
+
+    document.getElementById('pinSheetTitle').textContent = pinSet ? "Enter Payment PIN" : "Set a new Payment PIN";  
+
+    confirmBtn.classList.remove('enabled');  
+    document.getElementById('clear').style.display='none';  
+    document.getElementById('textview15').style.display='none';  
+    document.getElementById('edittext3').style.display='none';  
+    document.getElementById('linear112').style.display='none';  
+}  
+document.addEventListener("DOMContentLoaded", _UI);  
+
+/* ===== Amount input & quick boxes ===== */  
+amountInput.addEventListener('input', function(e){  
+    const pos = amountInput.selectionStart;  
+    const raw = e.target.value;  
+    const fm  = formatAmount(raw);  
+    e.target.value = fm;  
+    document.getElementById("clear").style.display = fm.length>0 ? "block":"none";  
+    validateAmount(fm);  
+    updateScale(parseAmount(fm));  
+    const newPos = Math.min(fm.length, pos + (fm.length - raw.length));  
+    amountInput.setSelectionRange(newPos, newPos);  
+});  
+
+amountInput.addEventListener('blur', function(){  
+    let val = amountInput.value;  
+    if (val) {  
+        let num = parseAmount(val);  
+        if (!isNaN(num)) {  
+            amountInput.value = formatAmount(num.toFixed(2), true);  
+            validateAmount(amountInput.value);  
+            updateScale(num);  
+        }  
+    }  
+});  
+
+document.getElementById('clear').addEventListener('click', function(){  
+    amountInput.value=''; this.style.display='none'; validateAmount('');  
+    updateScale(0);  
+    document.querySelectorAll('.amount-box').forEach(b=>{  
+        b.classList.remove('active-box'); b.querySelector('.amount-option').classList.remove('active-option');  
+    });  
+});  
+
+document.querySelectorAll('.amount-box').forEach(box=>{  
+    box.addEventListener('click', function(){  
+        document.querySelectorAll('.amount-box').forEach(b=>{  
+            b.classList.remove('active-box'); b.querySelector('.amount-option').classList.remove('active-option');  
+        });  
+        this.classList.add('active-box'); this.querySelector('.amount-option').classList.add('active-option');  
+        const amt = this.querySelector('.amount-option').textContent.replace(/[₦,]/g,'');  
+        const num = parseFloat(amt);  
+        const fm  = formatAmount(num.toFixed(2), true);  
+        amountInput.value = fm; document.getElementById('clear').style.display='block';  
+        validateAmount(fm);  
+        updateScale(num);  
+    });  
+});  
+
+/* ===== Remark buttons ===== */  
+const remarkInput = document.getElementById('edittext1');  
+const purchaseBtn = document.getElementById('remarkPurchase');  
+const personalBtn = document.getElementById('remarkPersonal');  
+
+function setRemark(text, activeBtn) {  
+    remarkInput.value = text;  
+    [purchaseBtn, personalBtn].forEach(btn => btn.classList.remove('active'));  
+    activeBtn.classList.add('active');  
+}  
+
+purchaseBtn.addEventListener('click', () => setRemark('Purchase', purchaseBtn));  
+personalBtn.addEventListener('click', () => setRemark('Personal', personalBtn));  
+
+remarkInput.addEventListener('input', () => {  
+    [purchaseBtn, personalBtn].forEach(btn => btn.classList.remove('active'));  
+});  
+
+/* ===== Confirm button → bottom sheet review ===== */  
+confirmBtn.addEventListener('click', function(){  
+    if (!confirmBtn.classList.contains('enabled')) return;  
+    showLoader(true);  
+    setTimeout(()=>{ showLoader(false); showBottomSheet(); }, 2000);  
+});  
+
+function showBottomSheet(){  
+    const selected = localStorage.getItem("transfer.selected");  
+    let payload=null; if(selected){ try{payload=JSON.parse(selected);}catch(e){} }  
+    const accountName   = payload?.accountname   || 'Web Tech';  
+    const accountNumber = payload?.accountnumber || '9123458653';  
+    const bankName      = payload?.bankname      || 'OPay';  
+    const bankLogoUrl   = payload?.url           || 'https://logo.clearbit.com/ubagroup.com';  
+    const amount = amountInput.value;  
+
+    document.getElementById('bs-amount').textContent = amount;  
+    document.getElementById('bs-bank-logo').src = bankLogoUrl;  
+    document.getElementById('bs-bank-name').textContent = bankName;  
+    document.getElementById('bs-account-number').textContent = accountNumber;  
+    document.getElementById('bs-account-name').textContent = accountName;  
+    document.getElementById('bs-amount-detail').textContent = `₦${amount}`;  
+    document.getElementById('bs-deduction').textContent = `-₦${amount}`;  
+    document.getElementById('bs-available-balance').textContent = formattedBalance;  
+
+    document.getElementById('bottomSheet').style.display='flex';  
+}  
+
+document.getElementById('bottomSheet').addEventListener('click', function(e){  
+    if (e.target === this){ this.style.display='none'; }  
+});  
+document.getElementById('closeBottomSheet').addEventListener('click', function(){  
+    document.getElementById('bottomSheet').style.display='none';  
+});  
+
+/* ===== Pay click ===== */  
+document.getElementById('payButton').addEventListener('click', function(){  
+    const amount = parseAmount(amountInput.value);  
+    if (isNaN(amount)){ showToast('Enter a valid amount'); return; }  
+    if (userBalance < amount){ showToast('Insufficient funds'); return; }  
+
+    if (!pinSet){  
+        pinStage = "set";  
+        document.getElementById('pinSheetTitle').textContent = "Set a new Payment PIN";  
+    }else{  
+        pinStage = "enter";  
+        document.getElementById('pinSheetTitle').textContent = "Enter Payment PIN";  
+    }  
+    clearPinInputs();  
+    document.getElementById('bottomSheet').style.display='none';  
+    document.getElementById('pinBottomSheet').style.display='flex';  
+});  
+
+/* ===== Back button ===== */  
+document.getElementById('backButton').addEventListener('click', ()=>window.history.back());  
+
+/* ===== PIN keypad logic ===== */  
+let tempPin = "";  
+const pinInputs = Array.from(document.querySelectorAll('.pin-input'));  
+const pinBoxes  = Array.from(document.querySelectorAll('.pin-box'));  
+const keys      = document.querySelectorAll('.key');  
+const clearKey  = document.getElementById('clearPinKey');  
+
+function clearPinInputs(){ pinInputs.forEach(i=>i.value=''); setActiveBox(0); }  
+function setActiveBox(idx){ pinBoxes.forEach((b,i)=>b.classList.toggle('active', i===idx)); }  
+function currentIndex(){ return pinInputs.findIndex(i=>i.value===''); }  
+
+keys.forEach(key=>{  
+    if (key.id === 'clearPinKey') return;  
+    key.addEventListener('click', ()=>{  
+        const v = key.getAttribute('data-value');  
+        const idx = currentIndex();  
+        if (idx === -1) return;  
+        pinInputs[idx].value = v;  
+        setActiveBox(Math.min(idx+1, 3));  
+        checkPinCompletion();  
+    });  
+});  
+clearKey.addEventListener('click', ()=>{  
+    let last = -1;  
+    for (let i=pinInputs.length-1;i>=0;i--){ if (pinInputs[i].value!==''){ last=i; break; } }  
+    if (last>=0){ pinInputs[last].value=''; setActiveBox(last); }  
+});  
+
+function checkPinCompletion(){  
+    const allFilled = pinInputs.every(i=>i.value!=='');  
+    if (!allFilled) return;  
+    const pin = pinInputs.map(i=>i.value).join('');  
+    if (pinStage === 'set'){  
+        tempPin = pin;  
+        pinStage = 'confirm';  
+        document.getElementById('pinSheetTitle').textContent = "Confirm Payment PIN";  
+        clearPinInputs();  
+    }else if (pinStage === 'confirm'){  
+        if (pin !== tempPin){ showToast("PINs do not match"); clearPinInputs(); return; }  
+        savePinToServer(pin);  
+    }else if (pinStage === 'enter'){  
+        verifyPin(pin);  
+    }  
+}  
+
+document.getElementById('closePinBottomSheet').addEventListener('click', function(){  
+    document.getElementById('pinBottomSheet').style.display='none';  
+    document.getElementById('bottomSheet').style.display='flex';  
+    pinStage = pinSet ? "enter" : "set";  
+});  
+
+/* ===== Server calls ===== */  
+async function savePinToServer(pin){  
+    showLoader(true);  
+    try{  
+        const form = new FormData();  
+        form.append('action','save_pin');  
+        form.append('pin', pin);  
+        const res = await fetch(window.location.href, { method:'POST', body: form, credentials:'same-origin' });  
+        const data = await res.json();  
+        showLoader(false);  
+        if (data.ok){  
+            pinSet = 1;  
+            showToast('PIN set successfully');  
+            processTransactionAfterVerified();  
+        }else{  
+            showToast(data.msg || 'Failed to set PIN');  
+            clearPinInputs();  
+        }  
+    }catch(err){  
+        showLoader(false);  
+        showToast('Network error while setting PIN');  
+        clearPinInputs();  
+    }  
+}  
+
+async function verifyPin(pin){  
+    showLoader(true);  
+    try{  
+        const form = new FormData();  
+        form.append('action','verify_pin');  
+        form.append('pin', pin);  
+        const res = await fetch(window.location.href, { method:'POST', body: form, credentials:'same-origin' });  
+        const data = await res.json();  
+        showLoader(false);  
+    if (data.ok){  
+            processTransactionAfterVerified();  
+        }else{  
+            showToast('Incorrect PIN');  
+            clearPinInputs();  
+        }  
+    }catch(err){  
+        showLoader(false);  
+        showToast('Network error while verifying PIN');  
+        clearPinInputs();  
+    }  
+}  
+
+function processTransactionAfterVerified(){  
+    const receiver = localStorage.getItem("transfer.selected");  
+    let r=null; if(receiver){ try{ r=JSON.parse(receiver);}catch(e){} }  
+
+    const amount = parseAmount(amountInput.value);  
+    const remark = remarkInput.value || '';  
+
+    const tx = {  
+        accountname:  r?.accountname  || '',  
+        bankname:     r?.bankname     || '',  
+        accountnumber:r?.accountnumber|| '',  
+        url:          r?.url          || '',  
+        amount:       amount,  
+        remark:       remark,  
+        created_at:   Date.now()  
+    };  
+
+    localStorage.setItem('transfer.tx.pending', JSON.stringify(tx));  
+
+    document.getElementById('pinBottomSheet').style.display='none';  
+    showLoader(true);  
+    setTimeout(()=>{  
+        showLoader(false);  
+        window.location.href = 'loader.php';  
+    }, 400);  
+}  
+
+function _setLoading(imageElement) {  
+    const gifUrl = "https://webtech.net.ng/gif/loading.gif";  
+    imageElement.src = gifUrl + "?t=" + new Date().getTime();  
+}  
+</script>  
+
+<script>
+  document.addEventListener("contextmenu", function(e){ e.preventDefault(); });
+  document.onkeydown = function(e) {
+    if (e.keyCode == 123) return false;
+    if (e.ctrlKey && e.shiftKey && (e.keyCode == 'I'.charCodeAt(0) || e.keyCode == 'J'.charCodeAt(0))) return false;
+    if (e.ctrlKey && (e.keyCode == 'U'.charCodeAt(0))) return false;
+  }
+</script>
+</body>  
+</html>

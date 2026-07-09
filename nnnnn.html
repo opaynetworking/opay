@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Transfer to Bank Account</title>
+    <!-- Font Awesome (optional) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* ===== original styles from second file ===== */
+        :root {
+            --bg-color: #F8F8FB;
+            --text-color: #000000;
+            --card-bg: #FFFFFF;
+            --header-bg: #FFFFFF;
+            --border-color: #eeeeee;
+            --secondary-text: #bdbdbd;
+            --accent-color: #00b876;
+            --free-transfer-bg: #F6EDFF;
+            --free-transfer-text: #4527a0;
+            --free-count-color: #673ab7;
+            --placeholder-color: #e0e0e0;
+            --event-bg: #FFFFFF;
+            --event-border: #f5f5f5;
+            --empty-state-color: #9e9e9e;
+            --tab-inactive: #000000;
+            --network-monitor-bg: #FFFFFF;
+            --error-bg: #fee2e2;
+            --error-color: #dc2626;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-color: #121212;
+                --text-color: #e0e0e0;
+                --card-bg: #1e1e1e;
+                --header-bg: #1e1e1e;
+                --border-color: #333333;
+                --secondary-text: #757575;
+                --accent-color: #00c585;
+                --free-transfer-bg: #2d2d2d;
+                --free-transfer-text: #d0b8ff;
+                --free-count-color: #a98ae6;
+                --placeholder-color: #666666;
+                --event-bg: #1e1e1e;
+                --event-border: #333333;
+                --empty-state-color: #757575;
+                --tab-inactive: #b0b0b0;
+                --network-monitor-bg: #2d2d2d;
+                --error-bg: #451f1f;
+                --error-color: #f87171;
+            }
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.5;
+        }
+        .container {
+            max-width: 500px;
+            margin: 0 auto;
+            background: var(--bg-color);
+            min-height: 100vh;
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            padding: 10px 20px 5px;
+            background: var(--header-bg);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        .header-text {
+            flex: 1;
+            font-size: 16px;
+            font-weight: 400;
+        }
+        .back-btn, .history-btn {
+            font-size: 25px;
+            color: var(--text-color);
+            width: 25px;
+            cursor: pointer;
+        }
+        .history-btn {
+            font-size: 14px;
+            color: var(--accent-color);
+            font-weight: 600;
+            margin-right: 15px;
+        }
+        .slider-container {
+            margin: 5px 15px 15px 15px;
+            border-radius: 15px;
+            overflow: hidden;
+            position: relative;
+            height: 100px;
+        }
+        .slider {
+            display: flex;
+            transition: transform 0.5s ease;
+            height: 100%;
+        }
+        .slide {
+            min-width: 100%;
+            height: 100%;
+        }
+        .slide img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .card {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 10px;
+            margin: 15px;
+        }
+        .free-transfers {
+            background: var(--free-transfer-bg);
+            border-radius: 12px;
+            padding: 10px;
+            display: flex;
+            align-items: center;
+            margin: 15px;
+            color: var(--free-transfer-text);
+        }
+        .free-transfers img {
+            margin-right: 10px;
+            width: 20px;
+            height: 20px;
+        }
+        .free-count {
+            font-weight: bold;
+            font-size: 18px;
+            color: var(--free-count-color);
+            margin-left: 5px;
+        }
+        .section-title {
+            font-size: 15px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+        .input-group {
+            margin: 15px 0;
+        }
+        .input-field {
+            width: 100%;
+            border: none;
+            border-bottom: 1px solid var(--border-color);
+            padding: 12px 8px;
+            font-size: 16px;
+            outline: none;
+            background: var(--card-bg);
+            color: var(--text-color);
+        }
+        .input-field::placeholder {
+            color: var(--secondary-text);
+        }
+        .bank-selector {
+            display: flex;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+        }
+        .bank-logo {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            overflow: hidden;
+            background: var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .bank-logo.hidden {
+            display: none;
+        }
+        .bank-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .bank-name {
+            flex: 1;
+            padding: 0 12px;
+            color: var(--secondary-text);
+            font-size: 16px;
+        }
+        .bank-name.selected {
+            color: var(--text-color);
+        }
+        .chevron {
+            font-size: 24px;
+            color: var(--secondary-text);
+        }
+        .detection-bar {
+            border-radius: 10px;
+            padding: 8px 15px;
+            margin: 20px 0;
+            display: none;
+            align-items: center;
+            gap: 10px;
+        }
+        .detection-bar.success {
+            background: #E0F7EE;
+            display: flex;
+        }
+        .check-circle {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background-color: var(--accent-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .check-circle svg {
+            width: 16px;
+            height: 16px;
+            fill: white;
+        }
+        .detection-bar .check-icon {
+            display: none;
+        }
+        .detection-bar.success .check-icon {
+            display: block;
+        }
+        .detection-bar.loading {
+            background: #E0F7EE;
+            display: flex;
+        }
+        .detection-bar .spinner-icon {
+            width: 24px;
+            height: 24px;
+            display: none;
+            animation: roll 2s linear infinite;
+        }
+        .detection-bar.loading .spinner-icon {
+            display: block;
+        }
+        .detection-bar.loading .check-icon,
+        .detection-bar.loading .error-icon {
+            display: none;
+        }
+        .detection-bar.error {
+            background: var(--error-bg);
+            display: flex;
+        }
+        .error-circle {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background-color: var(--error-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .error-circle svg {
+            width: 16px;
+            height: 16px;
+            fill: white;
+        }
+        .detection-bar .error-icon {
+            display: none;
+        }
+        .detection-bar.error .error-icon {
+            display: block;
+        }
+        .detection-bar.error .check-icon,
+        .detection-bar.error .spinner-icon {
+            display: none;
+        }
+        .accountname {
+            color: var(--accent-color);
+            font-weight: 600;
+            font-size: 16px;
+        }
+        .detection-bar.error .accountname {
+            color: var(--error-color);
+        }
+        .next-btn {
+            background: var(--accent-color);
+            border-radius: 25px;
+            padding: 12px;
+            text-align: center;
+            margin: 20px 0 20px 0;
+            opacity: 0.5;
+            pointer-events: none;
+            cursor: not-allowed;
+            transition: opacity 0.2s, margin 0.2s;
+            border: none;
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+            width: 100%;
+        }
+        .next-btn.enabled {
+            opacity: 1;
+            pointer-events: auto;
+            cursor: pointer;
+        }
+        .next-btn.with-detection {
+            margin-top: 4px;
+        }
+        .network-monitor {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            background: var(--network-monitor-bg);
+            border-radius: 12px;
+            margin: 15px;
+            cursor: pointer;
+        }
+        .network-monitor img {
+            width: 35px;
+            height: 35px;
+        }
+        .network-text {
+            flex: 1;
+            padding: 0 10px;
+            font-size: 14px;
+        }
+        .tabs {
+            display: flex;
+            padding: 0;
+            background: var(--card-bg);
+            border-radius: 15px 15px 0 0;
+            margin: 0;
+            align-items: center;
+        }
+        .tab {
+            padding: 0 16px;
+            font-weight: bold;
+            display: grid;
+            place-items: center;
+            height: 44px;
+            cursor: pointer;
+            color: var(--tab-inactive);
+        }
+        .tab.active {
+            color: var(--accent-color);
+        }
+        .indicator {
+            height: 3px;
+            background: var(--accent-color);
+            width: 37px;
+            margin: 0 28px;
+        }
+        .b-list {
+            padding: 10px;
+        }
+        .b-item {
+            display: flex;
+            width: 100%;
+            background: var(--card-bg);
+            align-items: center;
+            padding: 10px 8px;
+            border-bottom: 1px solid var(--event-border);
+            cursor: pointer;
+        }
+        .b-left {
+            flex: 1;
+            display: flex;
+            flex-direction: row;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .b-name {
+            font-size: 14px;
+            color: var(--text-color);
+            font-weight: 500;
+            white-space: nowrap;
+        }
+        .b-sub {
+            font-size: 14px;
+            color: var(--secondary-text);
+            white-space: nowrap;
+        }
+        .b-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: var(--card-bg);
+            border: 3px solid transparent;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-shrink: 0;
+            margin-left: auto;
+        }
+        .b-avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .view-all {
+            text-align: center;
+            padding: 3px;
+            color: var(--text-color);
+            font-weight: 400;
+            font-size: 11px;
+            width: 65px;
+            background-color: var(--border-color);
+            border-radius: 20px;
+            display: grid;
+            place-items: center;
+            margin: 10px auto 0;
+        }
+        .events {
+            background: var(--event-bg);
+            border-radius: 15px;
+            margin: 15px;
+            padding: 15px;
+        }
+        .events .section-title {
+            font-weight: 500;
+        }
+        .event-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--event-border);
+        }
+        .event-item:last-child {
+            border-bottom: none;
+        }
+        .event-icon {
+            width: 40px;
+            height: 40px;
+            background: var(--border-color);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+        }
+        .event-icon img {
+            width: 30px;
+            height: 30px;
+            object-fit: contain;
+        }
+        .event-content {
+            flex: 1;
+        }
+        .event-title {
+            font-weight: 450;
+            margin-bottom: 4px;
+        }
+        .event-desc {
+            color: var(--secondary-text);
+            font-size: 14px;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px 0;
+        }
+        .empty-state img {
+            width: 50px;
+            height: 50px;
+            opacity: .5;
+        }
+        .empty-state p {
+            color: var(--empty-state-color);
+            margin-top: 15px;
+        }
+        .rolling-image {
+            animation: roll 2s linear infinite;
+        }
+        @keyframes roll {
+            from { transform: rotate(0); }
+            to { transform: rotate(360deg); }
+        }
+        @media (prefers-color-scheme: dark) {
+            .detection-bar.success,
+            .detection-bar.loading {
+                background: #1c3b2f;
+            }
+        }
+
+        /* ===== GREEN CIRCLE LOADER (from first file) ===== */
+        .loader{
+            display:none;position:fixed;top:0;left:0;width:100%;height:100%;
+            z-index:9999;justify-content:center;align-items:center;
+            background:rgba(0,0,0,0.5);
+        }
+        .loader-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .green-ring {
+            position: relative;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 10px solid #00B876;
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 2px 0px rgba(255, 255, 255, 0.85),
+                        0 0 20px 2px rgba(255, 255, 255, 0.4);
+        }
+        .logo-wrapper {
+            width: 43px;
+            height: 43px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 50%;
+            background: white;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            animation: pulse-zoom 1s ease-in-out infinite;
+            z-index: 2;
+        }
+        .logo-image {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 50%;
+        }
+        .orbit {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            animation: rotate-dot 1s linear infinite;
+            transform-origin: center center;
+            z-index: 3;
+        }
+        .dot {
+            position: absolute;
+            top: -2px;
+            left: 50%;
+            transform: translateX(-800%);
+            width: 1px;
+            height: 2px;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 0 9px 6px rgba(255, 255, 255, 0.5);
+        }
+        @keyframes pulse-zoom {
+            0% { transform: scale(0.85); opacity: 0.8; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); }
+            50% { transform: scale(1.05); opacity: 1; box-shadow: 0 10px 20px rgba(5, 150, 105, 0.15); }
+            100% { transform: scale(0.85); opacity: 0.8; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); }
+        }
+        @keyframes rotate-dot {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="back-btn" id="backBtn">‹</div>
+            <div class="header-text">Transfer to Bank Account</div>
+            <div class="history-btn">History</div>
+        </div>
+
+        <div class="slider-container">
+            <div class="slider" id="slider">
+                <div class="slide"><img src="https://iili.io/qzCN8oF.jpg" alt="Promo 1"></div>
+                <div class="slide"><img src="https://iili.io/qzCN4cv.jpg" alt="Promo 2"></div>
+                <div class="slide"><img src="https://iili.io/qzCNkt1.jpg" alt="Promo 3"></div>
+            </div>
+        </div>
+
+        <div class="free-transfers">
+            <img src="images/toban/naira.png" alt="Gift icon">
+            <span>Free transfers for the day:</span>
+            <span class="free-count">3</span>
+        </div>
+
+        <div class="card">
+            <div class="section-title">Recipient Account</div>
+
+            <div class="input-group">
+                <input id="accountNumber" type="tel" inputmode="numeric" pattern="\d*" maxlength="10"
+                       class="input-field" placeholder="Enter 10 digits Account Number" autocomplete="off">
+            </div>
+
+            <div class="bank-selector" id="bankSelector">
+                <div class="bank-logo hidden" id="bankLogoContainer">
+                    <img id="bankLogo" src="" alt="Bank logo">
+                </div>
+                <div class="bank-name" id="bankName">Select Bank</div>
+                <div class="chevron">›</div>
+            </div>
+
+            <div class="detection-bar" id="detectBar">
+                <span class="check-icon">
+                    <span class="check-circle">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+                        </svg>
+                    </span>
+                </span>
+                <img class="spinner-icon rolling-image" src="images/toban/rolling.png" alt="Loading">
+                <span class="error-icon">
+                    <span class="error-circle">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                        </svg>
+                    </span>
+                </span>
+                <p class="accountname" id="detectText"></p>
+            </div>
+
+            <button id="nextBtn" class="next-btn" disabled>NEXT</button>
+        </div>
+
+        <!-- Added id="networkMonitor" for click handler -->
+        <div class="network-monitor" id="networkMonitor">
+            <img src="images/toban/tb.png" alt="Network monitor icon">
+            <div class="network-text">Bank Transfer Success Rate Monitor</div>
+            <div class="chevron">›</div>
+        </div>
+
+        <div class="card">
+            <div class="tabs">
+                <div class="tab active" data-tab="recents">Recents</div>
+                <div class="tab" data-tab="favorites">Favourites</div>
+                <div style="flex:1;"></div>
+                <img src="images/toban/search.png" alt="Search" style="width:20px;height:20px; margin-right:10px;">
+            </div>
+            <div class="indicator"></div>
+
+            <div id="list-recent" class="b-list">
+                <div class="b-item"
+                     data-accountnumber="5065438449"
+                     data-bankname="Source Microfinance Bank"
+                     data-accountname="DANIEL NKEM CHUKWUEMEKA"
+                     data-url="https://api.wtproject.space/up/uploads/Screenshot_20250321_000721.png">
+                    <div class="b-left">
+                        <span class="b-name">DANIEL NKEM CHUKWUEMEKA</span>
+                        <span class="b-sub">5065438449 Source Microfinance Bank</span>
+                    </div>
+                    <div class="b-avatar">
+                        <img src="https://api.wtproject.space/up/uploads/Screenshot_20250321_000721.png" alt="Profile Image">
+                    </div>
+                </div>
+                <div class="b-item"
+                     data-accountnumber="2000303192"
+                     data-bankname="9jaPay Microfinance Bank"
+                     data-accountname="DANIEL NKEM CHUKWUEMEKA"
+                     data-url="https://api.wtproject.space/up/uploads/Screenshot_20250321_000721.png">
+                    <div class="b-left">
+                        <span class="b-name">DANIEL NKEM CHUKWUEMEKA</span>
+                        <span class="b-sub">2000303192 9jaPay Microfinance Bank</span>
+                    </div>
+                    <div class="b-avatar">
+                        <img src="https://api.wtproject.space/up/uploads/Screenshot_20250321_000721.png" alt="Profile Image">
+                    </div>
+                </div>
+                <div class="b-item"
+                     data-accountnumber="7062318338"
+                     data-bankname="OPay"
+                     data-accountname="CHIOMA ESTHER NWOSU"
+                     data-url="https://api.wtproject.space/up/uploads/Screenshot_20250321_000721.png">
+                    <div class="b-left">
+                        <span class="b-name">CHIOMA ESTHER NWOSU</span>
+                        <span class="b-sub">7062318338 OPay Bank</span>
+                    </div>
+                    <div class="b-avatar">
+                        <img src="https://api.wtproject.space/up/uploads/Screenshot_20250321_000721.png" alt="Profile Image">
+                    </div>
+                </div>
+                <div class="view-all">View All ›</div>
+            </div>
+
+            <div id="list-favorite" class="b-list" style="display:none;">
+                <div class="empty-state">
+                    <img src="https://cdn4.iconfinder.com/data/icons/ionicons/512/icon-document-512.png" alt="Empty">
+                    <p>No favourites yet</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="events">
+            <div class="section-title">More Events</div>
+            <div class="event-item">
+                <div class="event-icon"><img src="images/toban/bet9ja.png" alt=""></div>
+                <div class="event-content">
+                    <div class="event-title">Get Big Double Rewards Here!</div>
+                    <div class="event-desc">1st top up with up to ₦1000 free reward</div>
+                </div>
+            </div>
+            <div class="event-item">
+                <div class="event-icon"><img src="images/toban/coin.png" alt=""></div>
+                <div class="event-content">
+                    <div class="event-title">Super Voucher Package</div>
+                    <div class="event-desc">Claim 15 Discounts with ₦99 on any Bill</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== GREEN CIRCLE LOADER ===== -->
+    <div id="loadingPopup" class="loader">
+        <div class="loader-container">
+            <div class="green-ring">
+                <div class="orbit">
+                    <div class="dot"></div>
+                </div>
+                <div class="logo-wrapper">
+                    <img src="https://iili.io/qT81u1e.png" alt="Loading Logo" class="logo-image">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            document.addEventListener("contextmenu", e => e.preventDefault());
+            document.onkeydown = function(e) {
+                if (e.keyCode == 123) return false;
+                if (e.ctrlKey && e.shiftKey && (e.keyCode == 'I'.charCodeAt(0) || e.keyCode == 'J'.charCodeAt(0))) return false;
+                if (e.ctrlKey && (e.keyCode == 'U'.charCodeAt(0))) return false;
+            };
+
+            // Slider
+            const slider = document.getElementById('slider');
+            let currentSlide = 0;
+            const slides = document.querySelectorAll('.slide');
+            const totalSlides = slides.length;
+            function nextSlide() {
+                currentSlide = (currentSlide + 1) % totalSlides;
+                slider.style.transform = `translateX(-${currentSlide * 100}%)`;
+            }
+            setInterval(nextSlide, 5000);
+
+            // DOM elements
+            const backBtn = document.getElementById('backBtn');
+            const bankSelector = document.getElementById('bankSelector');
+            const bankLogoContainer = document.getElementById('bankLogoContainer');
+            const bankLogo = document.getElementById('bankLogo');
+            const bankNameDiv = document.getElementById('bankName');
+            const accountInput = document.getElementById('accountNumber');
+            const detectBar = document.getElementById('detectBar');
+            const detectText = document.getElementById('detectText');
+            const nextBtn = document.getElementById('nextBtn');
+            const networkMonitor = document.getElementById('networkMonitor');
+
+            let selectedBank = null;
+            let resolvedAccountName = '';
+            let resolveTimeout = null;
+
+            const PAYSTACK_SECRET_KEY = 'sk_live_39d0c456073e23d027ffaab48dfae856fadf04c1';
+
+            // Recent list data
+            const recentItems = [];
+            document.querySelectorAll('#list-recent .b-item').forEach(item => {
+                recentItems.push({
+                    accountNumber: item.dataset.accountnumber,
+                    bankName: item.dataset.bankname,
+                    accountName: item.dataset.accountname,
+                    url: item.dataset.url // profile image, not bank logo; bank logo will come from selectedBank
+                });
+            });
+
+            // Load saved account number from sessionStorage (if returning from bank list)
+            function loadSavedAccountNumber() {
+                const saved = sessionStorage.getItem('tempAccountNumber');
+                if (saved) {
+                    accountInput.value = saved;
+                    sessionStorage.removeItem('tempAccountNumber');
+                }
+            }
+
+            // Save account number before leaving to bank list
+            function saveAccountNumber() {
+                const accNum = accountInput.value.trim();
+                if (accNum) {
+                    sessionStorage.setItem('tempAccountNumber', accNum);
+                }
+            }
+
+            // Load selected bank from sessionStorage
+            function loadSelectedBank() {
+                const temp = sessionStorage.getItem('tempSelectedBank');
+                if (temp) {
+                    try {
+                        const bank = JSON.parse(temp);
+                        if (bank.name) {
+                            selectedBank = bank;
+                            updateBankUI();
+                            const accNum = accountInput.value.trim();
+                            if (accNum.length === 10) {
+                                setTimeout(() => handleAccountInput(), 100);
+                            }
+                        }
+                    } catch (e) {}
+                    sessionStorage.removeItem('tempSelectedBank');
+                } else {
+                    selectedBank = null;
+                    updateBankUI();
+                }
+            }
+
+            function updateBankUI() {
+                if (selectedBank && selectedBank.name) {
+                    bankNameDiv.textContent = selectedBank.name;
+                    bankNameDiv.classList.add('selected');
+                    if (selectedBank.logo) {
+                        bankLogo.src = selectedBank.logo;
+                        bankLogoContainer.classList.remove('hidden');
+                        bankLogo.onerror = function() {
+                            this.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedBank.name)}&background=00b876&color=fff&length=2&size=128`;
+                            bankLogoContainer.classList.remove('hidden');
+                        };
+                    } else {
+                        bankLogo.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedBank.name)}&background=00b876&color=fff&length=2&size=128`;
+                        bankLogoContainer.classList.remove('hidden');
+                    }
+                } else {
+                    bankNameDiv.textContent = 'Select Bank';
+                    bankNameDiv.classList.remove('selected');
+                    bankLogoContainer.classList.add('hidden');
+                    bankLogo.src = '';
+                }
+            }
+
+            function resetDetection() {
+                detectBar.style.display = 'none';
+                detectBar.classList.remove('success', 'loading', 'error');
+                detectText.textContent = '';
+                nextBtn.disabled = true;
+                nextBtn.classList.remove('enabled', 'with-detection');
+                resolvedAccountName = '';
+            }
+
+            function showLoading() {
+                detectBar.style.display = 'flex';
+                detectBar.classList.add('loading');
+                detectBar.classList.remove('success', 'error');
+                detectText.textContent = 'Verifying account details';
+                nextBtn.classList.add('with-detection');
+            }
+
+            function showSuccess(accountName) {
+                detectBar.style.display = 'flex';
+                detectBar.classList.remove('loading', 'error');
+                detectBar.classList.add('success');
+                detectText.textContent = accountName;
+                resolvedAccountName = accountName;
+                nextBtn.disabled = false;
+                nextBtn.classList.add('enabled', 'with-detection');
+            }
+
+            function showError(message) {
+                detectBar.style.display = 'flex';
+                detectBar.classList.remove('loading', 'success');
+                detectBar.classList.add('error');
+                detectText.textContent = message;
+                nextBtn.disabled = true;
+                nextBtn.classList.remove('enabled');
+                nextBtn.classList.add('with-detection');
+                resolvedAccountName = '';
+            }
+
+            function checkRecentMatch(accNum, bankName) {
+                const match = recentItems.find(item => 
+                    item.accountNumber === accNum && 
+                    item.bankName.toLowerCase() === bankName.toLowerCase()
+                );
+                return match ? match.accountName : null;
+            }
+
+            async function resolveAccount() {
+                const accNum = accountInput.value.trim();
+                if (!selectedBank) {
+                    showError('Please select a bank');
+                    return;
+                }
+                if (accNum.length !== 10) {
+                    showError('Account number must be 10 digits');
+                    return;
+                }
+
+                const recentName = checkRecentMatch(accNum, selectedBank.name);
+                if (recentName) {
+                    showSuccess(recentName);
+                    return;
+                }
+
+                if (!selectedBank.code) {
+                    showError('Account unavailable - Recipient\'s KYC verification incomplete');
+                    return;
+                }
+
+                showLoading();
+
+                try {
+                    const url = `https://api.paystack.co/bank/resolve?account_number=${accNum}&bank_code=${selectedBank.code}`;
+                    const response = await fetch(url, {
+                        headers: {
+                            'Authorization': `Bearer ${PAYSTACK_SECRET_KEY}`
+                        }
+                    });
+                    const data = await response.json();
+                    if (data.status) {
+                        showSuccess(data.data.account_name);
+                    } else {
+                        showError('Account unavailable - Recipient\'s KYC verification incomplete');
+                    }
+                } catch (error) {
+                    console.error(error);
+                    showError('Network error. Please try again.');
+                }
+            }
+
+            function handleAccountInput() {
+                if (resolveTimeout) clearTimeout(resolveTimeout);
+                const accNum = accountInput.value.trim();
+                if (selectedBank && accNum.length === 10) {
+                    resolveTimeout = setTimeout(resolveAccount, 800);
+                } else {
+                    resetDetection();
+                }
+            }
+
+            accountInput.addEventListener('input', handleAccountInput);
+
+            // --- Loader control function ---
+            function showLoader(show) {
+                const loader = document.getElementById('loadingPopup');
+                if (show) {
+                    loader.style.display = 'flex';
+                } else {
+                    loader.style.display = 'none';
+                }
+            }
+
+            // --- Bank selector click with 5s loader ---
+            bankSelector.addEventListener('click', (e) => {
+                e.preventDefault();
+                saveAccountNumber();
+                showLoader(true);
+                setTimeout(() => {
+                    showLoader(false);
+                    window.location.href = 'bnk-liat fulll.html';
+                }, 5000);
+            });
+
+            // --- Network monitor click with 5s loader ---
+            networkMonitor.addEventListener('click', (e) => {
+                e.preventDefault();
+                showLoader(true);
+                setTimeout(() => {
+                    showLoader(false);
+                    window.location.href = '/transuccessrate.html';
+                }, 5000);
+            });
+
+            // --- NEXT button click: save details to localStorage and redirect to amount page ---
+            nextBtn.addEventListener('click', () => {
+                if (!nextBtn.disabled && nextBtn.classList.contains('enabled') && selectedBank && resolvedAccountName) {
+                    // Build the payload exactly as expected by the amount page
+                    const payload = {
+                        accountname: resolvedAccountName,
+                        accountnumber: accountInput.value.trim(),
+                        bankname: selectedBank.name,
+                        // Use bank logo if available, otherwise fallback avatar
+                        url: selectedBank.logo ? selectedBank.logo : `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedBank.name)}&background=00b876&color=fff&length=2&size=128`
+                    };
+                    localStorage.setItem('transfer.selected', JSON.stringify(payload));
+                    
+                    // Show loader and redirect to amount page (nextfulls.html)
+                    showLoader(true);
+                    setTimeout(() => {
+                        showLoader(false);
+                        window.location.href = 'nextfulls.html';
+                    }, 3000);
+                }
+            });
+
+            backBtn.addEventListener('click', () => {
+                window.history.back();
+            });
+
+            document.querySelectorAll('.b-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const accNum = item.dataset.accountnumber;
+                    const bankName = item.dataset.bankname;
+                    // For recent items, we also have account name, but we need to set bank as well.
+                    // However, the bank might not be fully selected with code. We'll set a temporary bank object with name only.
+                    // The resolveAccount will use recent match to show success without API.
+                    if (accNum) accountInput.value = accNum;
+                    // Create a minimal bank object with name (and no code) to trigger recent match
+                    selectedBank = { name: bankName, code: null, logo: null };
+                    updateBankUI();
+                    handleAccountInput(); // This will call resolveAccount which will find recent match
+                });
+            });
+
+            // On page load: restore account number and bank selection
+            loadSavedAccountNumber();
+            loadSelectedBank();
+            resetDetection();
+        })();
+    </script>
+</body>
+</html>

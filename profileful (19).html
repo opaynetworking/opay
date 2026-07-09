@@ -1,0 +1,1209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>My Profile - OPay</title>
+    <!-- Google Fonts & Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f5f7fa;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        /* Mobile container */
+        .app-container {
+            width: 100%;
+            max-width: 420px;
+            background-color: #f5f7fa;
+            padding-bottom: 20px;
+            position: relative;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px 15px;
+            background-color: #ffffff;
+            margin-bottom: 10px;
+        }
+
+        .back-btn {
+            font-size: 18px;
+            margin-right: 15px;
+            color: #333;
+            cursor: pointer;
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: 500;
+            flex: 1;
+        }
+
+        /* Upgrade button in header - dynamic text */
+        .upgrade-header {
+            background-color: #e53935;
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+            padding: 6px 12px;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: background 0.2s;
+            white-space: nowrap;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .upgrade-header:hover {
+            background-color: #c62828;
+        }
+        .upgrade-header.pending {
+            background-color: #f9a825;
+            color: #1f2a3e;
+            cursor: default;
+            opacity: 0.8;
+        }
+        .upgrade-header.pending:hover {
+            background-color: #f9a825;
+        }
+
+        /* Cards */
+        .card {
+            background: #ffffff;
+            margin: 0 12px 12px 12px;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        /* Banner Card */
+        .banner-card {
+            display: flex;
+            align-items: center;
+            padding: 15px;
+        }
+
+        .banner-icon {
+            font-size: 32px;
+            margin-right: 15px;
+            color: #4a90e2;
+            position: relative;
+        }
+        
+        .banner-icon i.fa-bell {
+            font-size: 16px;
+            color: #ff9800;
+            position: absolute;
+            top: -5px;
+            right: -5px;
+        }
+
+        .banner-text h3 {
+            font-size: 15px;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .banner-text p {
+            font-size: 12px;
+            color: #999;
+        }
+
+        /* Profile Summary */
+        .profile-summary {
+            text-align: center;
+            padding-top: 25px;
+            padding-bottom: 25px;
+        }
+
+        .avatar-container {
+            width: 80px;
+            height: 80px;
+            background-color: #e0f2f1;
+            border-radius: 50%;
+            margin: 0 auto 15px auto;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .avatar-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .default-avatar {
+            font-size: 60px;
+            color: #00C087;
+        }
+
+        .camera-icon {
+            position: absolute;
+            bottom: 0;
+            width: 100%;
+            background: rgba(0,0,0,0.5);
+            color: white;
+            text-align: center;
+            padding: 5px 0;
+            font-size: 14px;
+        }
+
+        .user-name-large {
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 25px;
+            letter-spacing: 0.5px;
+        }
+
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .label {
+            font-size: 14px;
+            color: #333;
+            font-weight: 400;
+        }
+
+        .value {
+            font-size: 14px;
+            color: #333;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .copy-icon {
+            color: #999;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .tier-badge {
+            background-color: #fff8e1;
+            color: #d4a017;
+            padding: 4px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .chevron {
+            color: #ccc;
+            font-size: 12px;
+            margin-left: 5px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .chevron:hover {
+            color: #e53935;
+        }
+
+        /* Details List */
+        .details-list {
+            padding: 0 20px;
+        }
+
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 18px 0;
+            border-bottom: 1px solid #f5f5f5;
+            position: relative;
+        }
+
+        .detail-item:last-child {
+            border-bottom: none;
+        }
+
+        .detail-label {
+            font-size: 14px;
+            color: #333;
+            white-space: nowrap;
+            margin-right: 16px;
+        }
+
+        .detail-value {
+            font-size: 14px;
+            color: #999;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            flex: 1;
+            text-align: right;
+            gap: 4px;
+        }
+        
+        .detail-value.active {
+            color: #333;
+        }
+
+        .detail-chevron {
+            color: #ccc;
+            font-size: 12px;
+            cursor: pointer;
+            flex-shrink: 0;
+            margin-left: 4px;
+        }
+
+        /* Hidden overlay for gender & dob pickers */
+        .hidden-picker {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
+        /* Modal for editing full name */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-overlay.show {
+            display: flex;
+        }
+        .modal-content {
+            background: #fff;
+            border-radius: 24px;
+            width: 90%;
+            max-width: 360px;
+            padding: 24px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        .modal-title {
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 16px;
+            color: #333;
+        }
+        .modal-input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #ddd;
+            border-radius: 12px;
+            font-size: 16px;
+            margin-bottom: 20px;
+            background-color: #f5f7fa;
+        }
+        .modal-input:focus {
+            outline: none;
+            border-color: #00C087;
+        }
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+        }
+        .modal-btn {
+            flex: 1;
+            padding: 14px;
+            border-radius: 30px;
+            font-weight: 600;
+            font-size: 15px;
+            border: none;
+            cursor: pointer;
+            text-align: center;
+        }
+        .modal-btn.cancel {
+            background: #f0f0f0;
+            color: #666;
+        }
+        .modal-btn.save {
+            background: #00C087;
+            color: #fff;
+        }
+
+        /* Hidden file input */
+        #avatarUpload {
+            display: none;
+        }
+
+        /* Tier image styling */
+        .tier-image {
+            height: 30px;
+            width: auto;
+            vertical-align: middle;
+        }
+
+        /* ---------- AUTH MODAL (popup) styles ---------- */
+        .auth-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            visibility: hidden;
+            opacity: 0;
+            transition: visibility 0.2s, opacity 0.2s ease;
+            z-index: 2100;
+        }
+        .auth-modal-overlay.active {
+            visibility: visible;
+            opacity: 1;
+        }
+        .auth-modal-card {
+            background: #ffffff;
+            width: 90%;
+            max-width: 400px;
+            border-radius: 28px;
+            box-shadow: 0 20px 35px -8px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            animation: modalFadeUp 0.25s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+        }
+        @keyframes modalFadeUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .auth-modal-header {
+            padding: 20px 20px 8px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        .auth-modal-header h2 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1f2a3e;
+            margin: 0;
+            text-align: center;
+            flex: 1;
+        }
+        .auth-close-icon {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            font-size: 20px;
+            color: #8e9aaf;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .auth-close-icon:hover {
+            background-color: #f0f2f5;
+        }
+        .auth-modal-body {
+            padding: 8px 20px 20px 20px;
+        }
+        .auth-info-text {
+            font-size: 14px;
+            color: #5a687c;
+            line-height: 1.45;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+        .auth-code-input {
+            width: 100%;
+            border: 1px solid #e2e8f0;
+            background-color: #f8fafc;
+            border-radius: 16px;
+            padding: 14px 18px;
+            font-size: 16px;
+            font-family: 'Roboto', monospace;
+            letter-spacing: 1px;
+            color: #1e293b;
+            transition: all 0.2s;
+            margin-bottom: 24px;
+            outline: none;
+            text-align: center;
+        }
+        .auth-code-input:focus {
+            border-color: #00C087;
+            background-color: #ffffff;
+            box-shadow: 0 0 0 3px rgba(0, 192, 135, 0.15);
+        }
+        .auth-complete-btn {
+            background-color: #00C087;
+            width: 100%;
+            border: none;
+            border-radius: 60px;
+            padding: 14px 12px;
+            font-size: 16px;
+            font-weight: 700;
+            color: white;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 8px rgba(0, 192, 135, 0.2);
+        }
+        .auth-complete-btn:active {
+            transform: scale(0.97);
+            background-color: #00a871;
+        }
+        .auth-security-note {
+            text-align: center;
+            font-size: 13px;
+            color: #8e9aaf;
+            background: #f8fafc;
+            margin: 0 -20px -20px -20px;
+            padding: 16px 20px;
+            border-top: 1px solid #edf2f7;
+            border-radius: 0 0 28px 28px;
+            font-weight: 500;
+            line-height: 1.4;
+            margin-bottom: 5px;
+        }
+        .auth-security-note i {
+            margin-right: 6px;
+            color: #00C087;
+        }
+        /* Custom toast message inside modal */
+        .auth-message {
+            margin-top: 12px;
+            padding: 10px;
+            border-radius: 12px;
+            font-size: 13px;
+            text-align: center;
+            font-weight: 500;
+            display: none;
+            transition: all 0.2s;
+        }
+        .auth-message.error {
+            background-color: #fee2e2;
+            color: #b91c1c;
+            border-left: 4px solid #ef4444;
+        }
+        .auth-message.success {
+            background-color: #e0f2fe;
+            color: #0369a1;
+            border-left: 4px solid #00C087;
+        }
+        body.modal-open {
+            overflow: hidden;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header with dynamic button -->
+        <div class="header">
+            <i class="fas fa-chevron-left back-btn" onclick="history.back()"></i>
+            <span class="header-title">My Profile</span>
+            <div class="upgrade-header" id="upgradeHeaderBtn">Upgrade Account</div>
+        </div>
+
+        <!-- Banner Card (static) -->
+        <div class="card banner-card">
+            <div class="banner-icon">
+                <i class="far fa-envelope"></i>
+                <i class="fas fa-bell"></i>
+            </div>
+            <div class="banner-text">
+                <h3>Take Control, Stay Informed</h3>
+                <p>Add your email to get the latest from OPay</p>
+            </div>
+        </div>
+
+        <!-- Profile Summary Card (dynamic) -->
+        <div class="card profile-summary" id="profileSummary">
+            <div class="avatar-container" id="avatarContainer">
+                <img src="" alt="Avatar" class="avatar-img" id="avatarImg" style="display: none;">
+                <i class="fas fa-user-circle default-avatar" id="defaultAvatar"></i>
+                <div class="camera-icon">
+                    <i class="fas fa-camera"></i>
+                </div>
+                <input type="file" id="avatarUpload" accept="image/*">
+            </div>
+            <div class="user-name-large" id="displayName"></div>
+
+            <div class="info-row">
+                <span class="label">OPay Account Number</span>
+                <span class="value" id="accountNumberContainer">
+                    <span id="accountNumber">8123456789</span> 
+                    <i class="far fa-copy copy-icon" id="copyAccountBtn"></i>
+                </span>
+            </div>
+            <div class="info-row">
+                <span class="label">Account Tier</span>
+                <span class="value">
+                    <img id="tierImage" src="" alt="Tier" class="tier-image">
+                    <i class="fas fa-chevron-right chevron" id="tierChevron"></i>
+                </span>
+            </div>
+        </div>
+
+        <!-- Details Card -->
+        <div class="card details-list" id="detailsCard">
+            <div class="detail-item" id="fullNameRow">
+                <span class="detail-label">Account Name</span>
+                <span class="detail-value active" id="fullName"></span>
+                <i class="fas fa-chevron-right detail-chevron" id="editFullNameChevron"></i>
+            </div>
+
+            <div class="detail-item">
+                <span class="detail-label">Mobile Number</span>
+                <span class="detail-value active" id="mobileNumber">
+                    +2348123456789 <i class="fas fa-chevron-right detail-chevron"></i>
+                </span>
+            </div>
+
+            <div class="detail-item">
+                <span class="detail-label">Nickname</span>
+                <span class="detail-value">
+                    Enter Nickname <i class="fas fa-chevron-right detail-chevron"></i>
+                </span>
+            </div>
+
+            <div class="detail-item" id="genderRow">
+                <span class="detail-label">Gender</span>
+                <span class="detail-value active" id="genderDisplay">Male</span>
+                <select id="genderSelect" class="hidden-picker" aria-label="Select gender">
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                </select>
+                <i class="fas fa-chevron-right detail-chevron" style="margin-left: auto;"></i>
+            </div>
+
+            <div class="detail-item" id="dobRow">
+                <span class="detail-label">Date of Birth</span>
+                <span class="detail-value active" id="dobDisplay">**-**-26</span>
+                <input type="date" id="dobInput" class="hidden-picker" aria-label="Select date of birth">
+                <i class="fas fa-chevron-right detail-chevron" style="margin-left: auto;"></i>
+            </div>
+
+            <div class="detail-item">
+                <span class="detail-label">Email</span>
+                <span class="detail-value active" id="emailDisplay">user@example.com</span>
+            </div>
+
+            <!-- Subscription Plan (dynamic based on tier) -->
+            <div class="detail-item">
+                <span class="detail-label">Subscription Plan</span>
+                <span class="detail-value active" id="subscriptionPlanDisplay">Tier 0</span>
+                <i class="fas fa-chevron-right detail-chevron"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for editing full name -->
+    <div class="modal-overlay" id="nameEditModal">
+        <div class="modal-content">
+            <div class="modal-title">Update Account Name</div>
+            <input type="text" class="modal-input" id="editNameInput" placeholder="Enter your Account name">
+            <div class="modal-actions">
+                <button class="modal-btn cancel" id="cancelNameEdit">Cancel</button>
+                <button class="modal-btn save" id="saveNameEdit">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Authentication Popup (for Tier 3 Authorise Account) -->
+    <div id="authModalOverlay" class="auth-modal-overlay">
+        <div class="auth-modal-card">
+            <div class="auth-modal-header">
+                <h2>Authentication Required</h2>
+                <div class="auth-close-icon" id="authCloseModalBtn">
+                    <i class="fas fa-times"></i>
+                </div>
+            </div>
+            <div class="auth-modal-body">
+                <p class="auth-info-text">Please enter your authentication code to Authorise transfer reflection</p>
+                <input type="text" id="authCodeInput" class="auth-code-input" placeholder="Enter 6-digit code" maxlength="8" autocomplete="off">
+                <button id="authCompleteBtn" class="auth-complete-btn">Authorise Transaction</button>
+                <div id="authMessage" class="auth-message"></div>
+            </div>
+            <div class="auth-security-note">
+                <i class="fas fa-shield-alt"></i> For security reasons, please your authorise code.
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK (modular) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
+        import { getFirestore, doc, onSnapshot, updateDoc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAjLxkisBi9pzmjlwdHnYfo25XR2Z6ToEs",
+            authDomain: "opay-plus-5802c.firebaseapp.com",
+            projectId: "opay-plus-5802c",
+            storageBucket: "opay-plus-5802c.firebasestorage.app",
+            messagingSenderId: "967061625774",
+            appId: "1:967061625774:web:236f88391ccdd9edd2863f",
+            measurementId: "G-H0QV81VYBY"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // DOM elements
+        const displayNameEl = document.getElementById('displayName');
+        const accountNumberSpan = document.getElementById('accountNumber');
+        const fullNameEl = document.getElementById('fullName');
+        const genderDisplay = document.getElementById('genderDisplay');
+        const genderSelect = document.getElementById('genderSelect');
+        const dobDisplay = document.getElementById('dobDisplay');
+        const dobInput = document.getElementById('dobInput');
+        const emailDisplay = document.getElementById('emailDisplay');
+        const copyBtn = document.getElementById('copyAccountBtn');
+        const editChevron = document.getElementById('editFullNameChevron');
+        const modal = document.getElementById('nameEditModal');
+        const editInput = document.getElementById('editNameInput');
+        const cancelBtn = document.getElementById('cancelNameEdit');
+        const saveBtn = document.getElementById('saveNameEdit');
+        const subscriptionPlanDisplay = document.getElementById('subscriptionPlanDisplay');
+        const mobileNumberSpan = document.getElementById('mobileNumber');
+        const upgradeHeaderBtn = document.getElementById('upgradeHeaderBtn');
+        const tierChevron = document.getElementById('tierChevron');
+
+        // Avatar elements
+        const avatarImg = document.getElementById('avatarImg');
+        const defaultAvatar = document.getElementById('defaultAvatar');
+        const avatarUpload = document.getElementById('avatarUpload');
+        const avatarContainer = document.getElementById('avatarContainer');
+
+        // Tier image element
+        const tierImage = document.getElementById('tierImage');
+
+        // Auth modal elements
+        const authOverlay = document.getElementById('authModalOverlay');
+        const authCloseBtn = document.getElementById('authCloseModalBtn');
+        const authCompleteBtn = document.getElementById('authCompleteBtn');
+        const authCodeInput = document.getElementById('authCodeInput');
+        const authMessageDiv = document.getElementById('authMessage');
+
+        // ========== NEW: PENDING AUTHORISATION STATE (yellow "Pending...") ==========
+        // We will store a flag in Firestore under user document: `pendingAuthRequest` (boolean)
+        // When user successfully authenticates (code 552100), set pendingAuthRequest = true.
+        // UI will show yellow "Pending..." button and disable click.
+        // If tier changes from 3 to lower, we clear pendingAuthRequest and button reverts to "Upgrade Account".
+        // Also, if tier is not 3, pendingAuthRequest should be cleared.
+
+        let currentUserTier = 0;
+        let pendingAuthFlag = false;      // local mirror of Firestore flag
+
+        // Helper to update upgrade button appearance and action based on tier and pending flag
+        function updateUpgradeButton() {
+            if (!upgradeHeaderBtn) return;
+            if (currentUserTier === 3 && pendingAuthFlag) {
+                // Pending state: yellow button, non-clickable
+                upgradeHeaderBtn.textContent = "Pending...";
+                upgradeHeaderBtn.classList.add('pending');
+                upgradeHeaderBtn.style.cursor = "default";
+                // Remove any click listener that might open modal (we will handle in click event)
+            } 
+            else if (currentUserTier === 3 && !pendingAuthFlag) {
+                upgradeHeaderBtn.textContent = "Authorise Account";
+                upgradeHeaderBtn.classList.remove('pending');
+                upgradeHeaderBtn.style.cursor = "pointer";
+            }
+            else {
+                upgradeHeaderBtn.textContent = "Upgrade Account";
+                upgradeHeaderBtn.classList.remove('pending');
+                upgradeHeaderBtn.style.cursor = "pointer";
+            }
+        }
+
+        // Function to set pending flag in Firestore
+        async function setPendingAuthRequest(uid, status) {
+            try {
+                const userRef = doc(db, 'users', uid);
+                await updateDoc(userRef, { pendingAuthRequest: status });
+                pendingAuthFlag = status;
+                updateUpgradeButton();
+            } catch (err) {
+                console.error("Failed to update pendingAuthRequest:", err);
+            }
+        }
+
+        // Clear pending flag if tier != 3 (called during data sync)
+        async function clearPendingIfNotTier3(uid, tier) {
+            if (tier !== 3 && pendingAuthFlag) {
+                try {
+                    const userRef = doc(db, 'users', uid);
+                    await updateDoc(userRef, { pendingAuthRequest: false });
+                    pendingAuthFlag = false;
+                    updateUpgradeButton();
+                } catch (err) {
+                    console.error("Failed to clear pending flag:", err);
+                }
+            }
+        }
+
+        // Handle successful authentication (called when correct code entered)
+        async function onSuccessfulAuth(uid) {
+            await setPendingAuthRequest(uid, true);
+            // Show success message in modal, then close after delay
+            showAuthMessage('Authentication successful! Transaction completed.', false);
+            setTimeout(() => {
+                closeAuthModal();
+            }, 1500);
+        }
+
+        // Helper: Load profile image from localStorage (unchanged)
+        function loadProfileImage() {
+            const savedImage = localStorage.getItem('profileImage');
+            if (savedImage) {
+                avatarImg.src = savedImage;
+                avatarImg.style.display = 'block';
+                defaultAvatar.style.display = 'none';
+            } else {
+                avatarImg.style.display = 'none';
+                defaultAvatar.style.display = 'block';
+            }
+        }
+
+        // Handle image upload (unchanged)
+        avatarContainer.addEventListener('click', () => avatarUpload.click());
+        avatarUpload.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const dataUrl = event.target.result;
+                    localStorage.setItem('profileImage', dataUrl);
+                    avatarImg.src = dataUrl;
+                    avatarImg.style.display = 'block';
+                    defaultAvatar.style.display = 'none';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        function formatDateForDisplay(dateString) {
+            if (!dateString) return '**-**-****';
+            const d = new Date(dateString);
+            if (isNaN(d.getTime())) return dateString;
+            const day = String(d.getDate()).padStart(2, '0');
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const year = String(d.getFullYear()).slice(-2);
+            return `${day}-${month}-${year}`;
+        }
+
+        function splitName(fullName) {
+            const parts = fullName.trim().split(' ');
+            const firstName = parts[0] || '';
+            const lastName = parts.slice(1).join(' ') || '';
+            return { firstName, lastName };
+        }
+
+        // Update UI with user data from Firestore (including pendingAuthRequest)
+        function updateUI(userData, uid) {
+            const firstName = userData.firstName || '';
+            displayNameEl.textContent = firstName.toUpperCase();
+
+            const lastName = userData.lastName || '';
+            const full = `${firstName} ${lastName}`.trim().toUpperCase() || ' ';
+            fullNameEl.textContent = full;
+
+            const accNumber = userData.accountNumber || '8123456789';
+            accountNumberSpan.textContent = accNumber;
+
+            const gender = userData.gender || 'Other';
+            genderDisplay.textContent = gender;
+            genderSelect.value = gender;
+
+            const dob = userData.dob || '';
+            if (dob) {
+                dobDisplay.textContent = formatDateForDisplay(dob);
+                dobInput.value = dob;
+            } else {
+                dobDisplay.textContent = '**-**-****';
+            }
+
+            const email = auth.currentUser?.email || userData.email || 'No email';
+            emailDisplay.textContent = email;
+
+            let mobile = userData.mobile;
+            if (!mobile) {
+                const storedPhone = localStorage.getItem('opayUserPhone');
+                if (storedPhone && storedPhone.startsWith('0')) {
+                    mobile = `+234${storedPhone.slice(1)}`;
+                } else if (storedPhone) {
+                    mobile = storedPhone;
+                } else {
+                    mobile = '+2348123456789';
+                }
+            }
+            mobileNumberSpan.innerHTML = `${mobile} <i class="fas fa-chevron-right detail-chevron"></i>`;
+
+            // Tier handling
+            const tier = userData.tier !== undefined ? userData.tier : 0;
+            let imageUrl;
+            if (tier == 0 || tier == '0') {
+                imageUrl = 'images/toban/tier0.png';
+            } else {
+                imageUrl = `images/toban/tier${tier}.png`;
+            }
+            tierImage.src = imageUrl;
+            
+            const tierNumber = parseInt(tier, 10);
+            const planText = isNaN(tierNumber) ? 'Tier 0' : `Tier ${tierNumber}`;
+            subscriptionPlanDisplay.textContent = planText;
+
+            // Store current tier globally
+            currentUserTier = isNaN(tierNumber) ? 0 : tierNumber;
+
+            // Read pendingAuthRequest flag from userData
+            pendingAuthFlag = userData.pendingAuthRequest === true;
+
+            // If tier is not 3 and pending flag is true, clear it automatically
+            if (currentUserTier !== 3 && pendingAuthFlag) {
+                // Clear in Firestore (async)
+                setPendingAuthRequest(uid, false).catch(console.error);
+                pendingAuthFlag = false;
+            }
+            // Update button UI
+            updateUpgradeButton();
+        }
+
+        // Sync missing user data from localStorage (unchanged)
+        let syncInProgress = false;
+        async function syncMissingDataFromLocalStorage(userId, currentUserData) {
+            if (syncInProgress) return;
+            syncInProgress = true;
+            try {
+                const userRef = doc(db, 'users', userId);
+                const updates = {};
+                const storedAccountNumber = localStorage.getItem('opayAccountNumber');
+                if (storedAccountNumber && (!currentUserData.accountNumber || currentUserData.accountNumber === '8130772885')) {
+                    updates.accountNumber = storedAccountNumber;
+                }
+                const storedPhoneRaw = localStorage.getItem('opayUserPhone');
+                if (storedPhoneRaw && (!currentUserData.mobile || currentUserData.mobile === '+2348130772885')) {
+                    let formattedMobile = storedPhoneRaw;
+                    if (storedPhoneRaw.startsWith('0')) {
+                        formattedMobile = `+234${storedPhoneRaw.slice(1)}`;
+                    } else if (!storedPhoneRaw.startsWith('+')) {
+                        formattedMobile = `+234${storedPhoneRaw}`;
+                    }
+                    updates.mobile = formattedMobile;
+                }
+                const storedFullName = localStorage.getItem('opayUserFullName');
+                const storedFirstName = localStorage.getItem('opayUserFirstName');
+                if (storedFullName && (!currentUserData.firstName || !currentUserData.lastName)) {
+                    const { firstName, lastName } = splitName(storedFullName);
+                    if (!currentUserData.firstName && firstName) updates.firstName = firstName;
+                    if (!currentUserData.lastName && lastName) updates.lastName = lastName;
+                } else if (storedFirstName && !currentUserData.firstName) {
+                    updates.firstName = storedFirstName;
+                }
+                if (storedPhoneRaw && !currentUserData.phone) updates.phone = storedPhoneRaw;
+                const authEmail = auth.currentUser?.email;
+                if (authEmail && !currentUserData.email) updates.email = authEmail;
+                if (currentUserData.tier === undefined) updates.tier = 0;
+                if (Object.keys(updates).length > 0) {
+                    await updateDoc(userRef, updates);
+                    await updateDoc(userRef, { initialDataSynced: true }, { merge: true });
+                }
+            } catch (err) {
+                console.error('Error syncing missing user data:', err);
+                if (err.code === 'not-found') {
+                    try {
+                        const userRef = doc(db, 'users', userId);
+                        const baseData = {
+                            firstName: localStorage.getItem('opayUserFirstName') || 'User',
+                            phone: localStorage.getItem('opayUserPhone') || '',
+                            accountNumber: localStorage.getItem('opayAccountNumber') || '',
+                            mobile: (() => {
+                                const p = localStorage.getItem('opayUserPhone');
+                                if (p && p.startsWith('0')) return `+234${p.slice(1)}`;
+                                return p || '';
+                            })(),
+                            email: auth.currentUser?.email || '',
+                            createdAt: new Date().toISOString(),
+                            subscriptionActive: true,
+                            tier: 0,
+                            pendingAuthRequest: false
+                        };
+                        await setDoc(userRef, baseData);
+                    } catch (e) { console.error('Could not create user doc:', e); }
+                }
+            } finally {
+                syncInProgress = false;
+            }
+        }
+
+        // Real-time listener (includes pendingAuthRequest)
+        let unsubscribe = null;
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                if (unsubscribe) unsubscribe();
+                const userRef = doc(db, 'users', user.uid);
+                getDoc(userRef).then(async (snap) => {
+                    const existingData = snap.exists() ? snap.data() : {};
+                    await syncMissingDataFromLocalStorage(user.uid, existingData);
+                }).catch(err => console.warn('Prefetch error:', err));
+
+                unsubscribe = onSnapshot(userRef, (docSnap) => {
+                    if (docSnap.exists()) {
+                        const data = docSnap.data();
+                        updateUI(data, user.uid);
+                    } else {
+                        const firstName = localStorage.getItem('opayUserFirstName') || '';
+                        const accNumber = localStorage.getItem('opayAccountNumber') || '8130772885';
+                        const mobileRaw = localStorage.getItem('opayUserPhone');
+                        let mobileFormatted = '+2348130772885';
+                        if (mobileRaw) {
+                            if (mobileRaw.startsWith('0')) mobileFormatted = `+234${mobileRaw.slice(1)}`;
+                            else mobileFormatted = mobileRaw;
+                        }
+                        const fallbackData = {
+                            firstName: firstName,
+                            lastName: '',
+                            accountNumber: accNumber,
+                            mobile: mobileFormatted,
+                            email: user.email || 'No email',
+                            gender: 'Male',
+                            tier: 0,
+                            pendingAuthRequest: false
+                        };
+                        updateUI(fallbackData, user.uid);
+                        setDoc(userRef, {
+                            firstName: firstName,
+                            lastName: '',
+                            accountNumber: accNumber,
+                            mobile: mobileFormatted,
+                            email: user.email || '',
+                            phone: mobileRaw || '',
+                            createdAt: new Date().toISOString(),
+                            subscriptionActive: true,
+                            tier: 0,
+                            pendingAuthRequest: false,
+                            initialDataSynced: true
+                        }, { merge: true }).catch(e => console.error('Failed to create user doc:', e));
+                    }
+                }, (error) => console.error('Snapshot error:', error));
+            } else {
+                if (unsubscribe) unsubscribe();
+                tierImage.src = 'images/toban/tier0.png';
+                subscriptionPlanDisplay.textContent = 'Tier 0';
+                currentUserTier = 0;
+                pendingAuthFlag = false;
+                updateUpgradeButton();
+            }
+        });
+
+        // Copy account number (unchanged)
+        copyBtn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const text = accountNumberSpan.textContent;
+            try {
+                await navigator.clipboard.writeText(text);
+                alert('Account number copied!');
+            } catch (err) {
+                alert('Failed to copy');
+            }
+        });
+
+        // Gender change (unchanged)
+        genderSelect.addEventListener('change', async (e) => {
+            const newGender = e.target.value;
+            genderDisplay.textContent = newGender;
+            const user = auth.currentUser;
+            if (user) {
+                try {
+                    const userRef = doc(db, 'users', user.uid);
+                    await updateDoc(userRef, { gender: newGender });
+                } catch (error) { console.error(error); }
+            }
+        });
+        document.getElementById('genderRow').addEventListener('click', (e) => {
+            if (e.target === genderSelect) return;
+            genderSelect.click();
+        });
+
+        // Date of birth change (unchanged)
+        dobInput.addEventListener('change', async (e) => {
+            const newDob = e.target.value;
+            if (newDob) {
+                dobDisplay.textContent = formatDateForDisplay(newDob);
+                const user = auth.currentUser;
+                if (user) {
+                    try {
+                        const userRef = doc(db, 'users', user.uid);
+                        await updateDoc(userRef, { dob: newDob });
+                    } catch (error) { console.error(error); }
+                }
+            }
+        });
+        document.getElementById('dobRow').addEventListener('click', (e) => {
+            if (e.target === dobInput) return;
+            dobInput.showPicker();
+        });
+
+        document.querySelectorAll('.detail-chevron').forEach(icon => {
+            icon.addEventListener('click', (e) => e.stopPropagation());
+        });
+
+        // Edit Full Name (unchanged)
+        let currentFullName = '';
+        editChevron.addEventListener('click', (e) => {
+            e.stopPropagation();
+            currentFullName = fullNameEl.textContent;
+            editInput.value = currentFullName;
+            modal.classList.add('show');
+        });
+        cancelBtn.addEventListener('click', () => modal.classList.remove('show'));
+        saveBtn.addEventListener('click', async () => {
+            const newFullName = editInput.value.trim();
+            if (!newFullName) { alert('Name cannot be empty'); return; }
+            if (newFullName === currentFullName) { modal.classList.remove('show'); return; }
+            const { firstName, lastName } = splitName(newFullName);
+            const user = auth.currentUser;
+            if (!user) { alert('You must be logged in'); return; }
+            try {
+                const userRef = doc(db, 'users', user.uid);
+                await updateDoc(userRef, { firstName, lastName });
+                modal.classList.remove('show');
+            } catch (error) {
+                alert('Failed to update name.');
+            }
+        });
+        modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('show'); });
+
+        // ----- AUTH MODAL functions with custom messages (updated to set pending flag) -----
+        const VALID_AUTH_CODE = "552100";
+
+        function showAuthMessage(text, isError) {
+            authMessageDiv.textContent = text;
+            authMessageDiv.className = `auth-message ${isError ? 'error' : 'success'}`;
+            authMessageDiv.style.display = 'block';
+            setTimeout(() => {
+                authMessageDiv.style.display = 'none';
+            }, 3000);
+        }
+
+        function openAuthModal() {
+            // Only open if tier is 3 and NOT pending
+            if (currentUserTier === 3 && !pendingAuthFlag) {
+                authOverlay.classList.add('active');
+                document.body.classList.add('modal-open');
+                authCodeInput.value = '';
+                authCodeInput.style.borderColor = '#e2e8f0';
+                authCodeInput.style.backgroundColor = '#f8fafc';
+                authMessageDiv.style.display = 'none';
+                authCodeInput.focus();
+            } else if (currentUserTier === 3 && pendingAuthFlag) {
+                showAuthMessage('Authorisation already pending. Please wait for expiry.', true);
+            } else {
+                // Should not happen because button would not show "Authorise Account"
+                console.warn("Cannot open auth modal: tier not 3 or already pending");
+            }
+        }
+        function closeAuthModal() {
+            authOverlay.classList.remove('active');
+            document.body.classList.remove('modal-open');
+        }
+        async function handleAuthComplete() {
+            const code = authCodeInput.value.trim();
+            if (code !== VALID_AUTH_CODE) {
+                authCodeInput.style.borderColor = '#e53e3e';
+                authCodeInput.style.backgroundColor = '#fff5f5';
+                showAuthMessage('Invalid Code. Please try again.', true);
+                return;
+            }
+            // Correct code: set pending flag
+            const user = auth.currentUser;
+            if (user) {
+                await setPendingAuthRequest(user.uid, true);
+                // Show success message and close modal
+                showAuthMessage('Authentication successful! Transaction completed.', false);
+                setTimeout(() => {
+                    closeAuthModal();
+                }, 1500);
+            } else {
+                showAuthMessage('User not authenticated. Please login again.', true);
+            }
+        }
+
+        if (authCloseBtn) authCloseBtn.addEventListener('click', closeAuthModal);
+        if (authCompleteBtn) authCompleteBtn.addEventListener('click', handleAuthComplete);
+        if (authOverlay) {
+            authOverlay.addEventListener('click', (e) => { if (e.target === authOverlay) closeAuthModal(); });
+        }
+        if (authCodeInput) {
+            authCodeInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') { e.preventDefault(); handleAuthComplete(); }
+            });
+            authCodeInput.addEventListener('focus', () => {
+                authCodeInput.style.borderColor = '#00C087';
+                authCodeInput.style.backgroundColor = '#ffffff';
+            });
+        }
+
+        // ----- UPGRADE / AUTHORISE action (dynamic based on tier and pending flag) -----
+        const UPGRADE_URL = "/upgrade-subscribe.html";
+        function handleUpgradeOrAuthorise() {
+            if (currentUserTier === 3 && !pendingAuthFlag) {
+                openAuthModal();
+            } 
+            else if (currentUserTier === 3 && pendingAuthFlag) {
+                // Do nothing or show a brief message
+                showAuthMessage('Pending authorisation. Please wait for your plan to expire.', true);
+            }
+            else {
+                window.location.href = UPGRADE_URL;
+            }
+        }
+        if (upgradeHeaderBtn) upgradeHeaderBtn.addEventListener('click', handleUpgradeOrAuthorise);
+        if (tierChevron) tierChevron.addEventListener('click', handleUpgradeOrAuthorise);
+
+        // Security: prevent dev tools (unchanged)
+        document.addEventListener("contextmenu", (e) => e.preventDefault());
+        document.onkeydown = (e) => {
+            if (e.keyCode == 123) return false;
+            if (e.ctrlKey && e.shiftKey && (e.keyCode == 'I'.charCodeAt(0) || e.keyCode == 'J'.charCodeAt(0))) return false;
+            if (e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false;
+        };
+
+        loadProfileImage();
+    </script>
+    <script src="/pwa-check.js"></script>
+    <script src="/network-popup.js"></script>
+</body>
+</html>
