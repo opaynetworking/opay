@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Bank Selection | OPay</title>
+    <style>
+        :root {
+            --bg-color: #f5f5f5;
+            --text-color: #212121;
+            --card-bg: #FFFFFF;
+            --search-bg: #F8F8FB;
+            --border-color: #f0f0f0;
+            --secondary-text: #9E9E9E;
+            --header-text: #616161;
+        }
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-color: #121212;
+                --text-color: #e0e0e0;
+                --card-bg: #1e1e1e;
+                --search-bg: #2d2d2d;
+                --border-color: #333333;
+                --secondary-text: #9E9E9E;
+                --header-text: #b0b0b0;
+            }
+        }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+        }
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.5;
+            overflow-x: hidden;
+        }
+        .linear-layout {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            max-width: 100%;
+            margin: 0 auto;
+            background: var(--card-bg);
+        }
+        .linear1 {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            background: var(--card-bg);
+        }
+        .linear2 {
+            display: flex;
+            align-items: center;
+            padding: 8px;
+            width: 100%;
+        }
+        .linear-sracg {
+            display: flex;
+            align-items: center;
+            background: var(--search-bg);
+            margin: 0 10px;
+            padding: 0 8px;
+            border-radius: 10px;
+            flex: 1;
+        }
+        .linear18 {
+            display: flex;
+            width: 100%;
+            background: var(--card-bg);
+            justify-content: center;
+            align-items: flex-start;
+        }
+        .linear8 {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            padding: 8px 0;
+            background: var(--card-bg);
+            max-width: 100%;
+        }
+        .linear-frequent, .linearA {
+            display: flex;
+            align-items: center;
+            padding: 0 8px;
+        }
+        .linear-frequent {
+            margin: 5px 0 3px 0;
+        }
+        .linear5 {
+            display: flex;
+            flex-direction: column;
+            background: var(--search-bg);
+            margin: 0 0 15px 10px;
+            padding: 10px;
+            border-radius: 4px;
+        }
+        .linear10, .linear11 {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+        }
+        .linear12, .linear13, .linear14, .linear15, .linear16, .linear17 {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex: 1 1 30%;
+            max-width: 33%;
+            padding: 5px;
+            cursor: pointer;
+            transition: background 0.2s;
+            border-radius: 8px;
+        }
+        .linear12:hover, .linear13:hover, .linear14:hover, .linear15:hover, .linear16:hover, .linear17:hover {
+            background: var(--border-color);
+        }
+        .text-view {
+            font-size: 14px;
+            color: var(--text-color);
+        }
+        .text-view-small {
+            font-size: 12px;
+            color: var(--text-color);
+            text-align: center;
+            padding-top: 8px;
+        }
+        .text-view-gray {
+            font-size: 14px;
+            color: var(--secondary-text);
+        }
+        .text-view-header {
+            font-size: 16px;
+            color: var(--header-text);
+        }
+        .edit-text {
+            width: 100%;
+            padding: 8px;
+            background: transparent;
+            border: none;
+            outline: none;
+            font-size: 16px;
+            color: var(--text-color);
+        }
+        .edit-text::placeholder {
+            color: var(--secondary-text);
+        }
+        .image-view {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .image-view img {
+            max-width: 100%;
+            height: auto;
+            object-fit: contain;
+        }
+        .alphabet-sidebar {
+            width: 25px;
+            background: var(--card-bg);
+            font-size: 10px;
+            color: var(--text-color);
+            text-align: center;
+            line-height: 1.5;
+            padding: 5px 0;
+            position: sticky;
+            right: 0;
+            top: 0;
+            z-index: 5;
+        }
+        .list-view {
+            width: 100%;
+            padding: 0;
+            list-style-type: none;
+        }
+        .linear4 {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            background: var(--card-bg);
+            padding: 8px;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: background 0.15s;
+        }
+        .linear4:hover {
+            background: var(--search-bg);
+        }
+        .circle-image-view {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: var(--border-color);
+            flex-shrink: 0;
+        }
+        .circle-image-view img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .list-item-text {
+            flex: 1;
+            padding: 8px;
+            font-size: 14px;
+            color: var(--text-color);
+            word-break: break-word;
+        }
+        .linearA {
+            margin: 5px 0 3px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="linear-layout">
+        <div class="linear1">
+            <div class="linear2">
+                <div class="image-view" id="clearSearchBtn" style="cursor: pointer;">
+                    <img src="https://cdn3.iconfinder.com/data/icons/feather-5/24/x-512.png" alt="Clear" width="20" height="20">
+                </div>
+                <div class="text-view-header" style="padding: 8px;">Select Bank</div>
+            </div>
+            <div class="linear-sracg">
+                <div class="image-view">
+                    <img src="https://cdn3.iconfinder.com/data/icons/feather-5/24/search-512.png" alt="Search" width="20" height="20">
+                </div>
+                <input type="text" class="edit-text" id="searchInput" placeholder="Search Bank Name">
+            </div>
+        </div>
+
+        <div class="linear18">
+            <div class="linear8">
+                <div class="linear-frequent">
+                    <div class="text-view">Frequently Used Bank</div>
+                </div>
+
+                <div class="linear5" id="frequentBankSection">
+                    <div class="linear10">
+                        <div class="linear12" data-bank-name="OPay" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250321_000721.png">
+                            <div class="image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250321_000721.png" alt="OPay" width="50" height="50" onerror="this.src='https://ui-avatars.com/api/?name=OPay&background=00b876&color=fff&length=2&size=128';"></div>
+                            <div class="text-view-small">OPay</div>
+                        </div>
+                        <div class="linear14" data-bank-name="Access Bank" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250319_143447.png">
+                            <div class="image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250319_143447.png" alt="Access Bank" width="50" height="50" onerror="this.src='https://ui-avatars.com/api/?name=Access+Bank&background=00b876&color=fff&length=2&size=128';"></div>
+                            <div class="text-view-small">Access Bank</div>
+                        </div>
+                        <div class="linear13" data-bank-name="United Bank For Africa" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250331_223428.png">
+                            <div class="image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250331_223428.png" alt="UBA" width="45" height="45" onerror="this.src='https://ui-avatars.com/api/?name=UBA&background=00b876&color=fff&length=2&size=128';"></div>
+                            <div class="text-view-small">United Bank For<br>Africa</div>
+                        </div>
+                    </div>
+                    <div class="linear11">
+                        <div class="linear15" data-bank-name="First Bank Of Nigeria" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250320_234751.png">
+                            <div class="image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250320_234751.png" alt="First Bank" width="45" height="45" style="margin-top: 15px;" onerror="this.src='https://ui-avatars.com/api/?name=First+Bank&background=00b876&color=fff&length=2&size=128';"></div>
+                            <div class="text-view-small">First Bank Of<br>Nigeria</div>
+                        </div>
+                        <div class="linear16" data-bank-name="Guaranty Trust Bank" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250320_235009.png">
+                            <div class="image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250320_235009.png" alt="GTBank" width="45" height="45" onerror="this.src='https://ui-avatars.com/api/?name=GTBank&background=00b876&color=fff&length=2&size=128';"></div>
+                            <div class="text-view-small">Guaranty Trust Bank</div>
+                        </div>
+                        <div class="linear17" data-bank-name="Zenith Bank" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250331_223551.png">
+                            <div class="image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250331_223551.png" alt="Zenith Bank" width="45" height="45" onerror="this.src='https://ui-avatars.com/api/?name=Zenith&background=00b876&color=fff&length=2&size=128';"></div>
+                            <div class="text-view-small">Zenith Bank</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="linearA"><div class="text-view-gray">A</div></div>
+                <ul class="list-view" id="bankList">
+                    <!-- All original banks (full list from original file) -->
+                    <li class="linear4" data-bank-name="AB Microfinance Bank" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250319_142130.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250319_142130.png" alt="AB Microfinance Bank" onerror="this.src='https://ui-avatars.com/api/?name=AB+Microfinance+Bank&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">AB Microfinance Bank</div></li>
+                    <li class="linear4" data-bank-name="AKU Microfinance Bank" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250319_142318.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250319_142318.png" alt="AKU Microfinance Bank" onerror="this.src='https://ui-avatars.com/api/?name=AKU+Microfinance+Bank&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">AKU Microfinance Bank</div></li>
+                    <li class="linear4" data-bank-name="AWAKASH MICROFINANCE BANK" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250319_142510.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250319_142510.png" alt="AWAKASH MICROFINANCE BANK" onerror="this.src='https://ui-avatars.com/api/?name=AWAKASH+MICROFINANCE+BANK&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">AWAKASH MICROFINANCE BANK</div></li>
+                    <li class="linear4" data-bank-name="Abbey Mortgage Bank" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250319_142627.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250319_142627.png" alt="Abbey Mortgage Bank" onerror="this.src='https://ui-avatars.com/api/?name=Abbey+Mortgage+Bank&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">Abbey Mortgage Bank</div></li>
+                    <li class="linear4" data-bank-name="Access Bank" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250319_143447.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250319_143447.png" alt="Access Bank" onerror="this.src='https://ui-avatars.com/api/?name=Access+Bank&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">Access Bank</div></li>
+                    <li class="linear4" data-bank-name="Access Money" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250319_143447.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250319_143447.png" alt="Access Money" onerror="this.src='https://ui-avatars.com/api/?name=Access+Money&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">Access Money</div></li>
+                    <li class="linear4" data-bank-name="Accion MFB" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250319_143543.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250319_143543.png" alt="Accion MFB" onerror="this.src='https://ui-avatars.com/api/?name=Accion+MFB&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">Accion MFB</div></li>
+                    <li class="linear4" data-bank-name="Addosser Microfinance Bank" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250319_143702.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250319_143702.png" alt="Addosser Microfinance Bank" onerror="this.src='https://ui-avatars.com/api/?name=Addosser+Microfinance+Bank&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">Addosser Microfinance Bank</div></li>
+                    <li class="linear4" data-bank-name="Advans La Fayette" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250319_143752.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250319_143752.png" alt="Advans La Fayette" onerror="this.src='https://ui-avatars.com/api/?name=Advans+La+Fayette&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">Advans La Fayette</div></li>
+                    <li class="linear4" data-bank-name="Afemai Microfinance Bank" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250319_143917.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250319_143917.png" alt="Afemai Microfinance Bank" onerror="this.src='https://ui-avatars.com/api/?name=Afemai+Microfinance+Bank&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">Afemai Microfinance Bank</div></li>
+                    <li class="linear4" data-bank-name="Alvana Microfinance Bank" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250319_161955.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250319_161955.png" alt="Alvana Microfinance Bank" onerror="this.src='https://ui-avatars.com/api/?name=Alvana+Microfinance+Bank&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">Alvana Microfinance Bank</div></li>
+                    <li class="linear4" data-bank-name="Aniocha Microfinance Bank" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250319_161955.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250319_161955.png" alt="Aniocha Microfinance Bank" onerror="this.src='https://ui-avatars.com/api/?name=Aniocha+Microfinance+Bank&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">Aniocha Microfinance Bank</div></li>
+                    <li class="linear4" data-bank-name="AssetMatrix MFB" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250319_162128.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250319_162128.png" alt="AssetMatrix MFB" onerror="this.src='https://ui-avatars.com/api/?name=AssetMatrix+MFB&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">AssetMatrix MFB</div></li>
+                    <li class="linear4" data-bank-name="BOSAK MFB" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250319_162234.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250319_162234.png" alt="BOSAK MFB" onerror="this.src='https://ui-avatars.com/api/?name=BOSAK+MFB&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">BOSAK MFB</div></li>
+                    <li class="linear4" data-bank-name="Baobab Microfinance Bank" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250319_162321.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250319_162321.png" alt="Baobab Microfinance Bank" onerror="this.src='https://ui-avatars.com/api/?name=Baobab+Microfinance+Bank&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">Baobab Microfinance Bank</div></li>
+                    <li class="linear4" data-bank-name="Branch International Finance Company Limited" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250319_162405.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250319_162405.png" alt="Branch International Finance Company Limited" onerror="this.src='https://ui-avatars.com/api/?name=Branch+International+Finance+Company+Limited&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">Branch International Finance Company Limited</div></li>
+                    <li class="linear4" data-bank-name="CARBON" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250319_162631.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250319_162631.png" alt="CARBON" onerror="this.src='https://ui-avatars.com/api/?name=CARBON&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">CARBON</div></li>
+                    <li class="linear4" data-bank-name="Brightway Microfinance Bank" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250319_162738.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250319_162738.png" alt="Brightway Microfinance Bank" onerror="this.src='https://ui-avatars.com/api/?name=Brightway+Microfinance+Bank&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">Brightway Microfinance Bank</div></li>
+                    <li class="linear4" data-bank-name="CORESTEB MFB" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250319_162903.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250319_162903.png" alt="CORESTEB MFB" onerror="this.src='https://ui-avatars.com/api/?name=CORESTEB+MFB&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">CORESTEB MFB</div></li>
+                    <li class="linear4" data-bank-name="CROSS RIVER MICROFINANCE LTD" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250319_162955.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250319_162955.png" alt="CROSS RIVER MICROFINANCE LTD" onerror="this.src='https://ui-avatars.com/api/?name=CROSS+RIVER+MICROFINANCE+LTD&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">CROSS RIVER MICROFINANCE LTD</div></li>
+                    <li class="linear4" data-bank-name="CashConnect Microfinance Bank" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250319_163036.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250319_163036.png" alt="CashConnect Microfinance Bank" onerror="this.src='https://ui-avatars.com/api/?name=CashConnect+Microfinance+Bank&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">CashConnect Microfinance Bank</div></li>
+                    <li class="linear4" data-bank-name="Dot Microfinance Bank" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250319_163224.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250319_163224.png" alt="Dot Microfinance Bank" onerror="this.src='https://ui-avatars.com/api/?name=Dot+Microfinance+Bank&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">Dot Microfinance Bank</div></li>
+                    <li class="linear4" data-bank-name="Chanelle Microfinance Bank" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250319_174819.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250319_174819.png" alt="Chanelle Microfinance Bank" onerror="this.src='https://ui-avatars.com/api/?name=Chanelle+Microfinance+Bank&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">Chanelle Microfinance Bank</div></li>
+                    <li class="linear4" data-bank-name="Diamond Bank" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250319_143447.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250319_143447.png" alt="Diamond Bank" onerror="this.src='https://ui-avatars.com/api/?name=Diamond+Bank&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">Diamond Bank</div></li>
+                    <li class="linear4" data-bank-name="Eagle Flight MFB" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250319_175214.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250319_175214.png" alt="Eagle Flight MFB" onerror="this.src='https://ui-avatars.com/api/?name=Eagle+Flight+MFB&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">Eagle Flight MFB</div></li>
+                    <li class="linear4" data-bank-name="Ecobank Xpress Account" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250319_163430.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250319_163430.png" alt="Ecobank Xpress Account" onerror="this.src='https://ui-avatars.com/api/?name=Ecobank+Xpress+Account&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">Ecobank Xpress Account</div></li>
+                    <li class="linear4" data-bank-name="Enterprise Bank" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250319_163505.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250319_163505.png" alt="Enterprise Bank" onerror="this.src='https://ui-avatars.com/api/?name=Enterprise+Bank&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">Enterprise Bank</div></li>
+                    <li class="linear4" data-bank-name="eTranzact" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250319_163540.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250319_163540.png" alt="eTranzact" onerror="this.src='https://ui-avatars.com/api/?name=eTranzact&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">eTranzact</div></li>
+                    <li class="linear4" data-bank-name="FCMB Easy Account" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250319_163634.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250319_163634.png" alt="FCMB Easy Account" onerror="this.src='https://ui-avatars.com/api/?name=FCMB+Easy+Account&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">FCMB Easy Account</div></li>
+                    <li class="linear4" data-bank-name="FCMB MFB" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250319_163634.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250319_163634.png" alt="FCMB MFB" onerror="this.src='https://ui-avatars.com/api/?name=FCMB+MFB&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">FCMB MFB</div></li>
+                    <li class="linear4" data-bank-name="Fet" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250319_161955.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250319_161955.png" alt="Fet" onerror="this.src='https://ui-avatars.com/api/?name=Fet&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">Fet</div></li>
+                    <li class="linear4" data-bank-name="FFS MFB" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250319_163734.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250319_163734.png" alt="FFS MFB" onerror="this.src='https://ui-avatars.com/api/?name=FFS+MFB&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">FFS MFB</div></li>
+                    <li class="linear4" data-bank-name="FINCA MFB" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250319_163808.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250319_163808.png" alt="FINCA MFB" onerror="this.src='https://ui-avatars.com/api/?name=FINCA+MFB&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">FINCA MFB</div></li>
+                    <li class="linear4" data-bank-name="FIRSTMONIE WALLET" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250319_163853.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250319_163853.png" alt="FIRSTMONIE WALLET" onerror="this.src='https://ui-avatars.com/api/?name=FIRSTMONIE+WALLET&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">FIRSTMONIE WALLET</div></li>
+                    <li class="linear4" data-bank-name="FSDH Merchant Bank Limited" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250319_163956.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250319_163956.png" alt="FSDH Merchant Bank Limited" onerror="this.src='https://ui-avatars.com/api/?name=FSDH+Merchant+Bank+Limited&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">FSDH Merchant Bank Limited</div></li>
+                    <li class="linear4" data-bank-name="Fair money MFB" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250319_164031.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250319_164031.png" alt="Fair money MFB" onerror="this.src='https://ui-avatars.com/api/?name=Fair+money+MFB&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">Fair money MFB</div></li>
+                    <li class="linear4" data-bank-name="Fidelity Bank" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250319_164105.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250319_164105.png" alt="Fidelity Bank" onerror="this.src='https://ui-avatars.com/api/?name=Fidelity+Bank&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">Fidelity Bank</div></li>
+                    <li class="linear4" data-bank-name="Fidelity Mobile" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250319_164105.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250319_164105.png" alt="Fidelity Mobile" onerror="this.src='https://ui-avatars.com/api/?name=Fidelity+Mobile&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">Fidelity Mobile</div></li>
+                    <li class="linear4" data-bank-name="FinaTrust MFB" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250319_164129.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250319_164129.png" alt="FinaTrust MFB" onerror="this.src='https://ui-avatars.com/api/?name=FinaTrust+MFB&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">FinaTrust MFB</div></li>
+                    <li class="linear4" data-bank-name="Firmus Microfinance Bank" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250319_164214.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250319_164214.png" alt="Firmus Microfinance Bank" onerror="this.src='https://ui-avatars.com/api/?name=Firmus+Microfinance+Bank&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">Firmus Microfinance Bank</div></li>
+                    <li class="linear4" data-bank-name="Gateway Mortgage Bank" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250319_164522.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250319_164522.png" alt="Gateway Mortgage Bank" onerror="this.src='https://ui-avatars.com/api/?name=Gateway+Mortgage+Bank&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">Gateway Mortgage Bank</div></li>
+                    <li class="linear4" data-bank-name="Glory Microfinance Bank" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250319_182358.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250319_182358.png" alt="Glory Microfinance Bank" onerror="this.src='https://ui-avatars.com/api/?name=Glory+Microfinance+Bank&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">Glory Microfinance Bank</div></li>
+                    <li class="linear4" data-bank-name="GoMoney" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250319_164426.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250319_164426.png" alt="GoMoney" onerror="this.src='https://ui-avatars.com/api/?name=GoMoney&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">GoMoney</div></li>
+                    <li class="linear4" data-bank-name="Hope PSB" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250319_164718.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250319_164718.png" alt="Hope PSB" onerror="this.src='https://ui-avatars.com/api/?name=Hope+PSB&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">Hope PSB</div></li>
+                    <li class="linear4" data-bank-name="Intellifin" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250319_164828.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250319_164828.png" alt="Intellifin" onerror="this.src='https://ui-avatars.com/api/?name=Intellifin&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">Intellifin</div></li>
+                    <li class="linear4" data-bank-name="Jaiz Bank Plc" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250319_164904.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250319_164904.png" alt="Jaiz Bank Plc" onerror="this.src='https://ui-avatars.com/api/?name=Jaiz+Bank+Plc&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">Jaiz Bank Plc</div></li>
+                    <li class="linear4" data-bank-name="Jubilee Life Mortgage" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250319_164923.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250319_164923.png" alt="Jubilee Life Mortgage" onerror="this.src='https://ui-avatars.com/api/?name=Jubilee+Life+Mortgage&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">Jubilee Life Mortgage</div></li>
+                    <li class="linear4" data-bank-name="Keystone Bank" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250319_165006.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250319_165006.png" alt="Keystone Bank" onerror="this.src='https://ui-avatars.com/api/?name=Keystone+Bank&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">Keystone Bank</div></li>
+                    <li class="linear4" data-bank-name="KongaPay Technologies Limited" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250319_165041.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250319_165041.png" alt="KongaPay Technologies Limited" onerror="this.src='https://ui-avatars.com/api/?name=KongaPay+Technologies+Limited&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">KongaPay Technologies Limited</div></li>
+                    <li class="linear4" data-bank-name="Lapo Microfinance Bank" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250319_165119.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250319_165119.png" alt="Lapo Microfinance Bank" onerror="this.src='https://ui-avatars.com/api/?name=Lapo+Microfinance+Bank&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">Lapo Microfinance Bank</div></li>
+                    <li class="linear4" data-bank-name="Lotus Bank" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250319_165154.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250319_165154.png" alt="Lotus Bank" onerror="this.src='https://ui-avatars.com/api/?name=Lotus+Bank&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">Lotus Bank</div></li>
+                    <li class="linear4" data-bank-name="MONIE POINT" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250319_165229.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250319_165229.png" alt="MONIE POINT" onerror="this.src='https://ui-avatars.com/api/?name=MONIE+POINT&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">MONIE POINT</div></li>
+                    <li class="linear4" data-bank-name="Momo Payment Service Bank" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250319_161955.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250319_161955.png" alt="Momo Payment Service Bank" onerror="this.src='https://ui-avatars.com/api/?name=Momo+Payment+Service+Bank&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">Momo Payment Service Bank</div></li>
+                    <li class="linear4" data-bank-name="Kuda MFB" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250320_234057.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250320_234057.png" alt="Kuda MFB" onerror="this.src='https://ui-avatars.com/api/?name=Kuda+MFB&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">Kuda MFB</div></li>
+                    <li class="linear4" data-bank-name="Heritage Banking" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250320_234611.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250320_234611.png" alt="Heritage Banking" onerror="this.src='https://ui-avatars.com/api/?name=Heritage+Banking&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">Heritage Banking</div></li>
+                    <li class="linear4" data-bank-name="GTMobile" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250320_235009.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250320_235009.png" alt="GTMobile" onerror="this.src='https://ui-avatars.com/api/?name=GTMobile&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">GTMobile</div></li>
+                    <li class="linear4" data-bank-name="First Bank Of Nigeria" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250320_234751.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250320_234751.png" alt="First Bank Of Nigeria" onerror="this.src='https://ui-avatars.com/api/?name=First+Bank+Of+Nigeria&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">First Bank Of Nigeria</div></li>
+                    <li class="linear4" data-bank-name="Guaranty Trust Bank" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250320_235009.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250320_235009.png" alt="Guaranty Trust Bank" onerror="this.src='https://ui-avatars.com/api/?name=Guaranty+Trust+Bank&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">Guaranty Trust Bank</div></li>
+                    <li class="linear4" data-bank-name="Paga" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250319_165434.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250319_165434.png" alt="Paga" onerror="this.src='https://ui-avatars.com/api/?name=Paga&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">Paga</div></li>
+                    <li class="linear4" data-bank-name="PalmPay" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250319_165505.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250319_165505.png" alt="PalmPay" onerror="this.src='https://ui-avatars.com/api/?name=PalmPay&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">PalmPay</div></li>
+                    <li class="linear4" data-bank-name="OPay" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250321_000721.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250321_000721.png" alt="OPay" onerror="this.src='https://ui-avatars.com/api/?name=OPay&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">OPay</div></li>
+                    <li class="linear4" data-bank-name="Polaris Bank Plc" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250321_001007.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250321_001007.png" alt="Polaris Bank Plc" onerror="this.src='https://ui-avatars.com/api/?name=Polaris+Bank+Plc&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">Polaris Bank Plc</div></li>
+                    <li class="linear4" data-bank-name="Ecobank Nigeria Plc" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250321_070604.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250321_070604.png" alt="Ecobank Nigeria Plc" onerror="this.src='https://ui-avatars.com/api/?name=Ecobank+Nigeria+Plc&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">Ecobank Nigeria Plc</div></li>
+                    <li class="linear4" data-bank-name="Beststar MFB" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250321_070825.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250321_070825.png" alt="Beststar MFB" onerror="this.src='https://ui-avatars.com/api/?name=Beststar+MFB&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">Beststar MFB</div></li>
+                    <li class="linear4" data-bank-name="Providus Bank Plc" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250319_165553.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250319_165553.png" alt="Providus Bank Plc" onerror="this.src='https://ui-avatars.com/api/?name=Providus+Bank+Plc&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">Providus Bank Plc</div></li>
+                    <li class="linear4" data-bank-name="Standard Chartered Bank" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250319_165706.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250319_165706.png" alt="Standard Chartered Bank" onerror="this.src='https://ui-avatars.com/api/?name=Standard+Chartered+Bank&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">Standard Chartered Bank</div></li>
+                    <li class="linear4" data-bank-name="Sterling Bank" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250319_165733.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250319_165733.png" alt="Sterling Bank" onerror="this.src='https://ui-avatars.com/api/?name=Sterling+Bank&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">Sterling Bank</div></li>
+                    <li class="linear4" data-bank-name="TajBank" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250319_165815.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250319_165815.png" alt="TajBank" onerror="this.src='https://ui-avatars.com/api/?name=TajBank&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">TajBank</div></li>
+                    <li class="linear4" data-bank-name="Titan Trust Bank" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250319_165900.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250319_165900.png" alt="Titan Trust Bank" onerror="this.src='https://ui-avatars.com/api/?name=Titan+Trust+Bank&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">Titan Trust Bank</div></li>
+                    <li class="linear4" data-bank-name="Unity Bank Plc" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250319_165951.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250319_165951.png" alt="Unity Bank Plc" onerror="this.src='https://ui-avatars.com/api/?name=Unity+Bank+Plc&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">Unity Bank Plc</div></li>
+                    <li class="linear4" data-bank-name="VFD MFB" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250319_170024.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250319_170024.png" alt="VFD MFB" onerror="this.src='https://ui-avatars.com/api/?name=VFD+MFB&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">VFD MFB</div></li>
+                    <li class="linear4" data-bank-name="Zenith Bank" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250331_223551.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250331_223551.png" alt="Zenith Bank" onerror="this.src='https://ui-avatars.com/api/?name=Zenith+Bank&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">Zenith Bank</div></li>
+                    <li class="linear4" data-bank-name="Wema Bank Plc" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250331_223512.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250331_223512.png" alt="Wema Bank Plc" onerror="this.src='https://ui-avatars.com/api/?name=Wema+Bank+Plc&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">Wema Bank Plc</div></li>
+                    <li class="linear4" data-bank-name="United Bank For Africa" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250331_223428.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250331_223428.png" alt="United Bank For Africa" onerror="this.src='https://ui-avatars.com/api/?name=United+Bank+For+Africa&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">United Bank For Africa</div></li>
+                    <li class="linear4" data-bank-name="Union Bank Of Nigeria" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250331_223352.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250331_223352.png" alt="Union Bank Of Nigeria" onerror="this.src='https://ui-avatars.com/api/?name=Union+Bank+Of+Nigeria&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">Union Bank Of Nigeria</div></li>
+                    <li class="linear4" data-bank-name="9PSB" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250319_170113.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250319_170113.png" alt="9PSB" onerror="this.src='https://ui-avatars.com/api/?name=9PSB&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">9PSB</div></li>
+                    <li class="linear4" data-bank-name="Stanbic IBTC @ease Wallet" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250319_165633.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250319_165633.png" alt="Stanbic IBTC @ease Wallet" onerror="this.src='https://ui-avatars.com/api/?name=Stanbic+IBTC+@ease+Wallet&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">Stanbic IBTC @ease Wallet</div></li>
+                    <li class="linear4" data-bank-name="Stanbic-ibtc Bank Plc" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250319_165633.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250319_165633.png" alt="Stanbic-ibtc Bank Plc" onerror="this.src='https://ui-avatars.com/api/?name=Stanbic-ibtc+Bank+Plc&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">Stanbic-ibtc Bank Plc</div></li>
+                    <li class="linear4" data-bank-name="Sparkle" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250401_113712.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250401_113712.png" alt="Sparkle" onerror="this.src='https://ui-avatars.com/api/?name=Sparkle&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">Sparkle</div></li>
+                    <li class="linear4" data-bank-name="SmartCash Payment Service bank" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250401_211041.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250401_211041.png" alt="SmartCash Payment Service bank" onerror="this.src='https://ui-avatars.com/api/?name=SmartCash+Payment+Service+bank&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">SmartCash Payment Service bank</div></li>
+                    <li class="linear4" data-bank-name="AUCHI MFB" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/1000344869.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/1000344869.png" alt="AUCHI MFB" onerror="this.src='https://ui-avatars.com/api/?name=AUCHI+MFB&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">AUCHI MFB</div></li>
+                    <li class="linear4" data-bank-name="Fcmb (first city monument bank Plc)" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250319_163634.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250319_163634.png" alt="Fcmb" onerror="this.src='https://ui-avatars.com/api/?name=FCMB&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">FCMB (First City Monument Bank)</div></li>
+                    <li class="linear4" data-bank-name="Globus Bank" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/1000344877.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/1000344877.png" alt="Globus Bank" onerror="this.src='https://ui-avatars.com/api/?name=Globus+Bank&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">Globus Bank</div></li>
+                    <li class="linear4" data-bank-name="Nova Bank" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250404_141948.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250404_141948.png" alt="Nova Bank" onerror="this.src='https://ui-avatars.com/api/?name=Nova+Bank&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">Nova Bank</div></li>
+                    <li class="linear4" data-bank-name="Safe Haven Microfinance Bank" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250405_231020.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250405_231020.png" alt="Safe Haven Microfinance Bank" onerror="this.src='https://ui-avatars.com/api/?name=Safe+Haven+Microfinance+Bank&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">Safe Haven Microfinance Bank</div></li>
+                    <li class="linear4" data-bank-name="Paystack Payment Limited" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250319_170213.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250319_170213.png" alt="Paystack" onerror="this.src='https://ui-avatars.com/api/?name=Paystack&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">Paystack Payment Limited</div></li>
+                    <li class="linear4" data-bank-name="Flutterwave Technology Solutions Limited" data-bank-code="" data-bank-logo="https://api.wtproject.space/up/uploads/Screenshot_20250430_135037.png"><div class="circle-image-view"><img src="https://api.wtproject.space/up/uploads/Screenshot_20250430_135037.png" alt="Flutterwave" onerror="this.src='https://ui-avatars.com/api/?name=Flutterwave&background=00b876&color=fff&length=2&size=128';"></div><div class="list-item-text">Flutterwave Technology Solutions</div></li>
+                    <!-- Additional banks: Moniepoint is already present as "MONIE POINT" above -->
+                </ul>
+            </div>
+            <div class="alphabet-sidebar">A<br><br>B<br><br>C<br><br>D<br><br>E<br><br>F<br><br>G<br><br>H<br><br>I<br><br>J<br><br>K<br><br>L<br><br>M<br><br>N<br><br>O<br><br>P<br><br>Q<br><br>R<br><br>S<br><br>T<br><br>U<br><br>V<br><br>W<br><br>X<br><br>Y<br><br>Z</div>
+        </div>
+    </div>
+    <script>
+        (function() {
+            document.addEventListener("contextmenu", e => e.preventDefault());
+            document.onkeydown = function(e) {
+                if (e.keyCode == 123) return false;
+                if (e.ctrlKey && e.shiftKey && (e.keyCode == 'I'.charCodeAt(0) || e.keyCode == 'J'.charCodeAt(0))) return false;
+                if (e.ctrlKey && (e.keyCode == 'U'.charCodeAt(0))) return false;
+            };
+
+            const searchInput = document.getElementById('searchInput');
+            const clearBtn = document.getElementById('clearSearchBtn');
+            const bankItems = document.querySelectorAll('.linear4');
+            const frequentItems = document.querySelectorAll('.linear12, .linear13, .linear14, .linear15, .linear16, .linear17');
+
+            async function fetchBankCodes() {
+                try {
+                    const res = await fetch('https://nigerianbanks.xyz/');
+                    if (!res.ok) throw new Error();
+                    const banks = await res.json();
+                    const codeMap = new Map();
+                    banks.forEach(b => {
+                        if (b.name && b.code) {
+                            let normalized = b.name.trim().toLowerCase().replace(/\s+/g, ' ');
+                            codeMap.set(normalized, b.code);
+                        }
+                    });
+                    // Special handling for Moniepoint
+                    const monieEntry = banks.find(b => b.name && b.name.toLowerCase().includes('moniepoint'));
+                    if (monieEntry && monieEntry.code) {
+                        codeMap.set('monie point', monieEntry.code);
+                        codeMap.set('moniepoint', monieEntry.code);
+                    }
+                    function getCode(bankName) {
+                        if (!bankName) return '';
+                        let norm = bankName.trim().toLowerCase().replace(/\s+/g, ' ');
+                        if (codeMap.has(norm)) return codeMap.get(norm);
+                        if (norm.includes('moniepoint') || norm === 'monie point') {
+                            if (monieEntry && monieEntry.code) return monieEntry.code;
+                        }
+                        for (let [key, val] of codeMap.entries()) {
+                            if (norm.includes(key) || key.includes(norm)) return val;
+                        }
+                        return '';
+                    }
+                    bankItems.forEach(item => {
+                        const bankName = item.dataset.bankName;
+                        if (bankName) item.dataset.bankCode = getCode(bankName);
+                    });
+                    frequentItems.forEach(item => {
+                        const bankName = item.dataset.bankName;
+                        if (bankName) item.dataset.bankCode = getCode(bankName);
+                    });
+                } catch (err) {
+                    console.warn("Bank code fetch failed, using fallback");
+                }
+            }
+
+            function filterBanks(searchTerm) {
+                const term = searchTerm.trim().toLowerCase();
+                bankItems.forEach(item => {
+                    const bankName = item.querySelector('.list-item-text')?.textContent.toLowerCase() || '';
+                    item.style.display = bankName.includes(term) || term === '' ? 'flex' : 'none';
+                });
+            }
+
+            searchInput.addEventListener('input', (e) => filterBanks(e.target.value));
+            clearBtn.addEventListener('click', () => {
+                searchInput.value = '';
+                filterBanks('');
+            });
+
+            function selectBank(event) {
+                const item = event.currentTarget;
+                const bankName = item.dataset.bankName;
+                const bankCode = item.dataset.bankCode || '';
+                const bankLogo = item.dataset.bankLogo;
+                const img = item.querySelector('img');
+                const finalLogo = img ? img.src : bankLogo;
+                const selectedBank = { name: bankName, code: bankCode, logo: finalLogo };
+                sessionStorage.setItem('tempSelectedBank', JSON.stringify(selectedBank));
+                window.location.href = 'to-bnkful.html';
+            }
+
+            bankItems.forEach(item => item.addEventListener('click', selectBank));
+            frequentItems.forEach(item => item.addEventListener('click', selectBank));
+            fetchBankCodes();
+        })();
+    </script>
+</body>
+</html>
