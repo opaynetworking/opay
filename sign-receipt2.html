@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OPay Transaction Receipt</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --opay-green: #00C896;
+            --text-dark: #1a1a1a;
+            --text-gray: #888888;
+            --bg-color: #f7f8fa;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Top Navigation */
+        .navbar {
+            background: #fff;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .back-btn {
+            font-size: 18px;
+            color: #333;
+            margin-right: 15px;
+            cursor: pointer;
+        }
+
+        .nav-title {
+            font-size: 18px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        /* Main Content */
+        .container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 20px;
+            padding-bottom: 80px; /* Space for bottom bar */
+        }
+
+        /* Receipt Card – no shadow, only the image */
+        .receipt-card {
+            width: 100%;
+            max-width: 400px;
+            background-color: transparent;
+            /* Default background for display */
+            background-image: url('receipt/rpt.png');
+            background-size: contain;      /* Entire image visible */
+            background-position: top center;
+            background-repeat: no-repeat;
+            overflow: hidden;               /* Keeps content inside image area */
+        }
+
+        .card-content {
+            padding: 30px 25px;
+            background-color: transparent;
+            position: relative;
+            z-index: 1;
+            color: var(--text-dark);
+        }
+
+        /* Header with logo and title */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .logo {
+            height: 40px;
+        }
+
+        .logo img {
+            height: 100%;
+            width: auto;
+        }
+
+        .receipt-title {
+            font-size: 16px;
+            color: var(--text-dark);
+            font-weight: 500;
+        }
+
+        /* Amount Section */
+        .amount-section {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .amount {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--opay-green);
+            margin-bottom: 5px;
+        }
+
+        .status {
+            font-size: 20px;
+            color: var(--text-dark);
+            margin-bottom: 5px;
+        }
+
+        .date {
+            font-size: 12px;
+            color: var(--text-gray);
+        }
+
+        /* Details Section */
+        .divider {
+            height: 1px;
+            background-color: rgba(0,0,0,0.1);
+            margin: 20px 0;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 18px;
+            font-size: 14px;
+        }
+
+        .label {
+            color: var(--text-gray);
+            width: 40%;
+        }
+
+        .value {
+            color: var(--text-dark);
+            width: 60%;
+            text-align: right;
+            font-weight: 500;
+            word-break: break-word;
+        }
+
+        .sub-value {
+            display: block;
+            font-size: 12px;
+            color: var(--text-gray);
+            font-weight: 400;
+            margin-top: 4px;
+            text-align: right;
+        }
+
+        /* Footer Text */
+        .footer-text {
+            font-size: 11px;
+            color: var(--text-gray);
+            line-height: 1.5;
+            margin-top: 25px;
+            text-align: justify;
+        }
+
+        /* Bottom Action Bar */
+        .action-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: #fff;
+            display: flex;
+            border-top: 1px solid #eee;
+            z-index: 100;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            background: none;
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--opay-green);
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.2s;
+        }
+
+        .action-btn:first-child {
+            border-right: 1px solid #eee;
+        }
+
+        .action-btn:active {
+            background-color: #f0fdf9;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Top Nav -->
+    <div class="navbar">
+        <i class="fas fa-chevron-left back-btn" onclick="history.back()"></i>
+        <span class="nav-title">Share Receipt</span>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container">
+        
+        <!-- Receipt Card (Target for Screenshot/PDF) -->
+        <div class="receipt-card" id="receipt-to-capture">
+            <div class="card-content">
+                <div class="header">
+                    <div class="logo">
+                        <img src="receipt/log.png" alt="OPay Logo">
+                    </div>
+                    <div class="receipt-title">Transaction Receipt</div>
+                </div>
+
+                <div class="amount-section">
+                    <div class="amount">₦500.00</div>
+                    <div class="status">Successful</div>
+                    <div class="date">Feb 20th, 2026 16:43:54</div>
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="detail-row">
+                    <div class="label">Recipient Details</div>
+                    <div class="value">
+                        BAOBABMICROFI/CHUKWUEMEKA DANIEL
+                        <span class="sub-value">PAYSTACK-TITAN | 9947550950</span>
+                    </div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="label">Sender Details</div>
+                    <div class="value">
+                        DANIEL NKEM CHUKWUEMEKA
+                        <span class="sub-value">OPay | 813****885</span>
+                    </div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="label">Transaction No.</div>
+                    <div class="value">260220020100384263361612</div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="label">Session ID</div>
+                    <div class="value">100004260220154401152834380925</div>
+                </div>
+
+                <div class="footer-text">
+                    Enjoy a better life with OPay. Get free transfers, withdrawals, bill payments, instant loans, and good annual interest on your savings. OPay is licensed by the Central Bank of Nigeria and insured by the NDIC.
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Bottom Buttons -->
+    <div class="action-bar">
+        <button class="action-btn" onclick="shareAsImage()">
+            <i class="far fa-image"></i> Share as image
+        </button>
+        <button class="action-btn" onclick="shareAsPDF()">
+            <i class="far fa-file-pdf"></i> Share as PDF
+        </button>
+    </div>
+
+    <!-- Libraries for Functionality -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <script>
+        // Store original and share backgrounds
+        const originalBackground = 'url("receipt/rpt.png")';
+        const shareBackground = 'url("receipt/sharebg.png")';
+        const receiptCard = document.getElementById('receipt-to-capture');
+
+        // Helper function to capture with share background
+        function captureWithBackground(callback) {
+            // Switch to share background
+            receiptCard.style.backgroundImage = shareBackground;
+            
+            // Short delay to allow repaint
+            setTimeout(() => {
+                html2canvas(receiptCard, {
+                    scale: 2,
+                    backgroundColor: null,
+                    useCORS: true,
+                    allowTaint: false,
+                    logging: true
+                }).then(canvas => {
+                    // Restore original background
+                    receiptCard.style.backgroundImage = originalBackground;
+                    callback(canvas);
+                }).catch(error => {
+                    // Restore even on error
+                    receiptCard.style.backgroundImage = originalBackground;
+                    console.error('html2canvas error:', error);
+                });
+            }, 50);
+        }
+
+        // Share as Image
+        function shareAsImage() {
+            captureWithBackground((canvas) => {
+                const image = canvas.toDataURL('image/png');
+                const link = document.createElement('a');
+                link.download = 'OPay_Receipt.png';
+                link.href = image;
+                link.click();
+            });
+        }
+
+        // Share as PDF
+        function shareAsPDF() {
+            captureWithBackground((canvas) => {
+                const imgData = canvas.toDataURL('image/png');
+                const imgWidth = 210; // A4 width in mm
+                const imgHeight = canvas.height * imgWidth / canvas.width;
+                
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                pdf.addImage(imgData, 'PNG', 0, 10, imgWidth, imgHeight, undefined, 'FAST');
+                pdf.save('OPay_Receipt.pdf');
+            });
+        }
+    </script>
+</body>
+</html>

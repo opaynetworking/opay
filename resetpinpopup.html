@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PIN Error Popup</title>
+    <style>
+        /* Reset and Base Styles */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* Overlay Background */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(2px);
+            z-index: 1000;
+        }
+
+        /* Modal Container */
+        .modal-content {
+            background: #ffffff;
+            width: 90%;
+            max-width: 400px;
+            padding: 40px 24px;
+            border-radius: 24px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            text-align: center;
+            animation: slideUp 0.3s ease-out;
+        }
+
+        /* Text Styles */
+        .modal-text {
+            color: #333333;
+            font-size: 18px;
+            line-height: 1.5;
+            margin-bottom: 32px;
+            font-weight: 400;
+        }
+
+        /* Button Container */
+        .button-group {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+        }
+
+        /* Button Base Styles */
+        .btn {
+            flex: 1;
+            padding: 14px 20px;
+            border-radius: 50px; /* Pill shape */
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+            outline: none;
+            text-decoration: none;
+            display: inline-flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        /* Specific Button: Forgot PIN */
+        .btn-forgot {
+            background-color: #E0F7FA; /* Very light teal */
+            color: #009688; /* Teal text */
+            border: 1px solid #009688;
+        }
+
+        .btn-forgot:hover {
+            background-color: #B2EBF2;
+        }
+
+        /* Specific Button: Retry */
+        .btn-retry {
+            background-color: #00C853; /* Bright Green */
+            color: #ffffff;
+            border: none;
+        }
+
+        .btn-retry:hover {
+            background-color: #00E676;
+            box-shadow: 0 4px 12px rgba(0, 200, 83, 0.3);
+        }
+
+        /* Animation */
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="modal-overlay">
+        <div class="modal-content">
+            <p class="modal-text">
+                The PIN you entered is incorrect. You have 3 attempts remaining before your account is locked.
+            </p>
+            
+            <div class="button-group">
+                <button class="btn btn-forgot" onclick="handleForgot()">Forgot PIN</button>
+                <button class="btn btn-retry" onclick="handleRetry()">Retry</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function handleForgot() {
+            alert("Redirecting to Forgot PIN flow...");
+        }
+
+        function handleRetry() {
+            alert("Retrying PIN entry...");
+        }
+    </script>
+</body>
+</html>
+

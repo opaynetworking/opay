@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Transaction Processing</title>
+    <!-- Preload the image to ensure it loads quickly on iPhone -->
+    <link rel="preload" href="images/toban/loading.png" as="image">
+    <style>
+        :root {
+            --bg-color: #F8F8FB;
+            --text-color: #000000;
+            --accent-color: #00B876;
+        }
+        
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-color: #121212;
+                --text-color: #FFFFFF;
+                --accent-color: #00D88A;
+            }
+        }
+        
+        body {
+            margin: 0;
+            padding: 0;
+            background: var(--bg-color);
+            display: flex;
+            justify-content: center;
+            height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: var(--text-color);
+            transition: background-color 0.3s ease;
+        }
+        
+        .container {
+            text-align: center;
+            padding: 8px;
+            margin-top: 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .loading-container {
+            position: relative;
+            width: 100px;
+            height: 100px;
+            margin-top: 20px;
+        }
+        
+        .loading-image {
+            width: 70%;
+            height: 70%;
+            animation: spin 5s linear infinite; /* Slowed down from 0.5s to 5s */
+            object-fit: contain;
+        }
+        
+        /* Fallback for image loading issues */
+        .loading-image::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 50%;
+            background: var(--accent-color);
+            opacity: 0.1;
+            border-radius: 50%;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .subtitle {
+            margin-top: 15px;
+            font-size: 14px;
+            color: var(--accent-color);
+            white-space: pre-line;
+            max-width: 300px;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="loading-container">
+            <!-- onerror removed to ensure the element stays visible and animation runs even if image is missing -->
+            <img src="images/toban/loading.png" alt="Processing" class="loading-image">
+        </div>
+        <div class="title">Transaction is currently being processed</div>
+        <div class="subtitle">Please do not close this page until the process is complete</div>
+    </div>
+    
+    <script>
+        (function() {
+            // ========== PAGE ACCESS CONTROL ==========
+            // Check if there is a pending transaction; if not, redirect to dashboard
+            const pendingTx = localStorage.getItem("transfer.tx.pending");
+            if (!pendingTx) {
+                // No pending transaction – this page was accessed illegally
+                window.location.replace("dashboardful.html");
+                return;
+            }
+
+            // Also prevent back/forward navigation to this page after it's been used
+            // Push a new state to break the back button chain
+            history.pushState(null, null, location.href);
+            window.addEventListener('popstate', function() {
+                // If user tries to go back, force redirect to dashboard
+                window.location.replace("dashboardful.html");
+            });
+
+            // ========== PRELOAD IMAGE FOR iOS ==========
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+            if (isIOS) {
+                const img = new Image();
+                img.src = "images/toban/loading.png";
+            }
+            
+            // Retrieve transaction data (optional, can be used for logging or future enhancements)
+            const tx = JSON.parse(pendingTx || "{}");
+            if (tx.accountnumber && tx.amount) {
+                console.log("Transaction data loaded:", tx);
+            } else {
+                console.error("⚠️ No transaction data found", tx);
+            }
+            
+            // Do NOT clear the pending transaction here; it will be used by transaction-successful.html
+            // Wait 3 seconds, then redirect to success page
+            setTimeout(() => {
+                window.location.href = "transaction-successful.html";
+            }, 3000); // 3000ms = 3 seconds
+        })();
+    </script>
+</body>
+</html>

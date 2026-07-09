@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Transfer Successful</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <!-- Lottie Player library -->
+    <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
+    <style>
+        /* Disable tap highlight on mobile */
+        .my-div {
+            -webkit-tap-highlight-color: transparent;
+            -webkit-touch-callout: none;
+        }
+
+        :root {
+            --bg-color: #F8F8FB;
+            --text-color: #000000;
+            --accent-color: #00B876;
+            --card-bg: #FFFFFF;
+            --secondary-text: #666666;
+            --grey-text: #888888;
+        }
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-color: #121212;
+                --text-color: #FFFFFF;
+                --accent-color: #00D88A;
+                --card-bg: #1E1E1E;
+                --secondary-text: #AAAAAA;
+                --grey-text: #AAAAAA;
+            }
+            .banner {
+                opacity: 0.9;
+                filter: brightness(0.8);
+            }
+            .banner-secondary {
+                opacity: 0.9;
+                filter: brightness(0.8);
+            }
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: var(--bg-color);
+            font-family: 'Inter', Arial, sans-serif;
+            overflow-x: hidden;
+            color: var(--text-color);
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        .scroll-container {
+            height: 100vh;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 8px;
+            width: 100%;
+        }
+        .done-text {
+            align-self: flex-end;
+            margin-right: 15px;
+            font-size: 16px;
+            color: var(--accent-color);
+            font-weight: 500;
+            margin-top: 5px;
+            cursor: pointer;
+        }
+        lottie-player {
+            margin-top: -17px;
+            width: 100%;
+            max-width: 400px;
+            height: 130px;
+        }
+        .main-content {
+            text-align: center;
+            padding: 8px;
+            width: 100%;
+            max-width: 420px;
+            transform: translateY(-40px);
+        }
+        .main-content h2 {
+            font-size: 18px;
+            margin: 8px 0;
+            color: var(--text-color);
+            font-weight: 400;
+        }
+        .main-content .amount {
+            font-size: 25px;
+            font-weight: 500;
+            color: var(--text-color);
+        }
+        .main-content .desc {
+            font-size: 12px;
+            color: var(--accent-color);
+            padding-top: 5px;
+        }
+        .actions, .fav-actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+            width: 100%;
+            padding: 0 10px;
+            gap: 8px;
+        }
+        .action-box, .fav-actions .item {
+            flex: 1;
+            background: var(--card-bg);
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border-radius: 8px;
+            min-width: 0;
+            transition: background-color 0.3s ease;
+        }
+        .fav-actions .item {
+            flex-direction: row;
+            justify-content: center;
+            height: 50px;
+            gap: 6px;
+        }
+        .action-box img, .fav-actions img {
+            width: 32px;
+            height: 32px;
+            object-fit: contain;
+        }
+        .action-box span, .fav-actions span {
+            font-size: 12px;
+            margin-top: 4px;
+            color: var(--text-color);
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        /* Style for when favourite is added */
+        .favourite-added span {
+            color: var(--grey-text) !important;
+        }
+        .banner {
+            margin: 10px;
+            border-radius: 8px;
+            width: calc(100% - 20px);
+            height: 135%;
+            background: url('images/toban/tf_success_1.png') no-repeat center/cover;
+            transition: filter 0.3s ease;
+        }
+        .banner-secondary {
+            margin: 10px;
+            border-radius: 8px;
+            width: calc(100% - 20px);
+            height: 50px;
+            background: url('images/toban/unbanner.png') no-repeat center/cover;
+            transition: filter 0.3s ease;
+        }
+        .action-box, .fav-actions .item {
+            cursor: pointer;
+        }
+
+        @media (hover: hover) {
+            .action-box:hover, .fav-actions .item:hover {
+                transform: translateY(-2px);
+            }
+        }
+
+        /* ---------- Upgrade Modal Styles ---------- */
+        .upgrade-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        }
+        .upgrade-modal {
+            max-width: 340px;
+            width: 90%;
+            background: #FFFFFF;
+            border-radius: 28px;
+            padding: 32px 24px 28px;
+            text-align: center;
+            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.25);
+            animation: popIn 0.4s cubic-bezier(0.21, 1.11, 0.38, 1);
+            transform-origin: center;
+        }
+        @keyframes popIn {
+            0% {
+                opacity: 0;
+                transform: scale(0.9) translateY(10px);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+        .upgrade-modal-exit {
+            animation: popOut 0.25s forwards;
+        }
+        @keyframes popOut {
+            0% {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+            100% {
+                opacity: 0;
+                transform: scale(0.9) translateY(10px);
+                visibility: hidden;
+            }
+        }
+        .upgrade-icon-wrapper {
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .lock-svg {
+            filter: drop-shadow(0 2px 6px rgba(0,184,118,0.2));
+            animation: lockPulse 1.2s ease-in-out infinite;
+            transform-origin: center;
+        }
+        @keyframes lockPulse {
+            0% {
+                transform: scale(1);
+                opacity: 0.9;
+            }
+            50% {
+                transform: scale(1.08);
+                opacity: 1;
+                filter: drop-shadow(0 4px 12px rgba(0,184,118,0.35));
+            }
+            100% {
+                transform: scale(1);
+                opacity: 0.9;
+            }
+        }
+        .upgrade-message {
+            font-size: 16px;
+            line-height: 1.4;
+            color: #1F2937;
+            margin-bottom: 28px;
+            font-weight: 500;
+            letter-spacing: -0.2px;
+        }
+        .upgrade-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+        .upgrade-btn {
+            flex: 1;
+            padding: 12px 0;
+            border-radius: 40px;
+            font-size: 15px;
+            font-weight: 600;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+            background: none;
+        }
+        .upgrade-btn-dismiss {
+            background: #F3F4F6;
+            color: #1F2937;
+        }
+        .upgrade-btn-upgrade {
+            background: #00B876;
+            color: white;
+            box-shadow: 0 2px 8px rgba(0,184,118,0.3);
+        }
+        .upgrade-btn-upgrade:active {
+            background: #009e63;
+            transform: scale(0.97);
+        }
+        @media (max-width: 400px) {
+            .upgrade-modal {
+                padding: 28px 20px 24px;
+            }
+            .upgrade-message {
+                font-size: 15px;
+            }
+            .upgrade-btn {
+                padding: 10px 0;
+                font-size: 14px;
+            }
+        }
+
+        /* Loader inside upgrade modal */
+        .upgrade-loader-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(3px);
+            z-index: 10001;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        .upgrade-loader-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .upgrade-green-ring {
+            position: relative;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: #1e9c43;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .upgrade-logo-wrapper {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 50%;
+            background: white;
+            box-shadow: 0 4px 0px rgba(0, 0, 0, 0.05);
+            animation: pulse-zoom 0.7s ease-in-out infinite;
+            z-index: 3;
+        }
+        .upgrade-logo-image {
+            width: 30px;
+            height: 30px;
+            object-fit: contain;
+            border-radius: 50%;
+        }
+        .upgrade-orbit {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            animation: rotate-dot 1.5s linear infinite;
+            transform-origin: center center;
+            z-index: 2;
+        }
+        .upgrade-dot {
+            position: absolute;
+            top: 28px;
+            left: 100%;
+            transform: translateX(-1400%);
+            width: 2px;
+            height: 2px;
+            background: white;
+            border-radius: 60%;
+            box-shadow: 0 0 8px 9px rgba(255, 255, 255, 0.6);
+        }
+        @keyframes pulse-zoom {
+            0% {
+                transform: scale(1.03);
+                opacity: 0.8;
+            }
+            50% {
+                transform: scale(1.15);
+                opacity: 1;
+            }
+            100% {
+                transform: scale(1.03);
+                opacity: 0.8;
+            }
+        }
+        @keyframes rotate-dot {
+            from { transform: rotate(0deg); }
+            to   { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="scroll-container">
+        <div class="done-text" onclick="window.location.href='dashboardful.html'">Done</div>
+
+        <!-- Lottie player element – animation will be loaded via JavaScript using embedded JSON -->
+        <lottie-player id="successAnimation" background="transparent" speed="1" autoplay></lottie-player>
+
+        <div class="main-content">
+            <h2>Transfer successful</h2>
+            <div class="amount" id="displayAmount"></div>
+            <div class="desc">
+                The recipient account is expected to be credited within 5 minutes,
+                subject to notification by the bank.
+            </div>
+
+            <!-- Normal Actions -->
+            <div class="actions">
+                <div class="action-box" id="shareReceiptBtn">
+                    <img src="images/toban/share.png" alt="Share Receipt">
+                    <span>Share Receipt</span>
+                </div>
+                <div class="action-box" id="favourite-box">
+                    <img src="images/toban/add.png" alt="Add to Favourites">
+                    <span>Add to Favourites</span>
+                </div>
+                <div class="action-box" id="viewDetailsBtn">
+                    <img src="images/toban/view.png" alt="View Details">
+                    <span>View Details</span>
+                </div>
+            </div>
+
+            <div class="banner"></div>
+            <div class="banner-secondary"></div>
+        </div>
+    </div>
+
+    <!-- Green Circle Loader -->
+    <div id="loadingPopup" class="loader" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); justify-content:center; align-items:center; z-index:9999;">
+        <div class="loader-container" style="display:flex; flex-direction:column; align-items:center;">
+            <div class="green-ring" style="position:relative; width:60px; height:60px; border-radius:50%; border:10px solid #00B876; display:flex; align-items:center; justify-content:center;">
+                <div class="orbit" style="position:absolute; top:0; left:0; width:100%; height:100%; animation:rotate-dot 1s linear infinite;">
+                    <div class="dot" style="position:absolute; top:-2px; left:50%; transform:translateX(-800%); width:1px; height:2px; background:white; border-radius:50%; box-shadow:0 0 9px 6px rgba(255,255,255,0.5);"></div>
+                </div>
+                <div class="logo-wrapper" style="width:43px; height:43px; border-radius:50%; background:white; animation:pulse-zoom 1s ease-in-out infinite;">
+                    <img src="https://iili.io/qT81u1e.png" alt="Loading Logo" style="width:100%; height:100%; object-fit:contain; border-radius:50%;">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upgrade Modal (hidden initially) -->
+    <div id="upgradeModalOverlay" class="upgrade-modal-overlay">
+        <div class="upgrade-modal" id="upgradeModal">
+            <div class="upgrade-icon-wrapper">
+                <svg class="lock-svg" width="56" height="56" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 3C9.79 3 8 4.79 8 7v2H6v10h12V9h-2V7c0-2.21-1.79-4-4-4z" fill="#00B876" stroke="none"/>
+                    <rect x="10" y="12" width="4" height="4" rx="1" fill="white"/>
+                    <path d="M16 9h-2V7c0-1.1-.9-2-2-2s-2 .9-2 2v2H8v8h8V9z" fill="#00B876" stroke="none"/>
+                    <circle cx="12" cy="14" r="1.2" fill="white"/>
+                </svg>
+            </div>
+            <div class="upgrade-message">
+                You don't have an active Subscription plan to access this feature.<br>Kindly Upgrade your account to Continue.
+            </div>
+            <div class="upgrade-buttons">
+                <button class="upgrade-btn upgrade-btn-dismiss" id="upgradeDismissBtn">Dismiss</button>
+                <button class="upgrade-btn upgrade-btn-upgrade" id="upgradeActionBtn">Upgrade Account</button>
+            </div>
+        </div>
+    </div>
+    <div id="upgradeLoaderOverlay" class="upgrade-loader-overlay">
+        <div class="upgrade-loader-container">
+            <div class="upgrade-green-ring">
+                <div class="upgrade-orbit"><div class="upgrade-dot"></div></div>
+                <div class="upgrade-logo-wrapper">
+                    <img src="https://iili.io/qT81u1e.png" class="upgrade-logo-image">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK (module) for adding favourites and fetching tier -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
+        import { getFirestore, doc, runTransaction, getDoc } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAjLxkisBi9pzmjlwdHnYfo25XR2Z6ToEs",
+            authDomain: "opay-plus-5802c.firebaseapp.com",
+            projectId: "opay-plus-5802c",
+            storageBucket: "opay-plus-5802c.firebasestorage.app",
+            messagingSenderId: "967061625774",
+            appId: "1:967061625774:web:236f88391ccdd9edd2863f",
+            measurementId: "G-H0QV81VYBY"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentUserTier = 0; // default tier 0
+        let currentUser = null;
+
+        // Get user tier on auth change
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUser = user;
+                try {
+                    const userRef = doc(db, 'users', user.uid);
+                    const userSnap = await getDoc(userRef);
+                    if (userSnap.exists()) {
+                        const data = userSnap.data();
+                        let tier = data.tier !== undefined ? data.tier : 0;
+                        if (tier === undefined && data.subscriptionPlan) {
+                            const plan = data.subscriptionPlan;
+                            if (plan === 'tier1') tier = 1;
+                            else if (plan === 'tier2') tier = 2;
+                            else if (plan === 'tier3') tier = 3;
+                            else tier = 0;
+                        }
+                        currentUserTier = tier;
+                    }
+                } catch (err) {
+                    console.error('Failed to fetch tier', err);
+                }
+            } else {
+                currentUser = null;
+                currentUserTier = 0;
+            }
+        });
+
+        window.addToFavourites = async function(recipient) {
+            const user = auth.currentUser;
+            if (!user) {
+                // If not logged in, still update localStorage
+                updateLocalFavourites(recipient);
+                return true;
+            }
+            try {
+                const userRef = doc(db, 'users', user.uid);
+                await runTransaction(db, async (transaction) => {
+                    const userDoc = await transaction.get(userRef);
+                    if (!userDoc.exists()) return;
+                    let favs = userDoc.data().favourites || [];
+                    // Remove if already exists (same account+bank)
+                    favs = favs.filter(f => !(f.accountNumber === recipient.accountnumber && f.bankName === recipient.bankname));
+                    // Add to beginning
+                    favs.unshift({
+                        accountName: recipient.accountname,
+                        accountNumber: recipient.accountnumber,
+                        bankName: recipient.bankname,
+                        url: recipient.url
+                    });
+                    // Keep only latest 20
+                    if (favs.length > 20) favs = favs.slice(0, 20);
+                    transaction.update(userRef, { favourites: favs });
+                });
+                // Also update localStorage cache
+                updateLocalFavourites(recipient);
+                return true;
+            } catch (error) {
+                console.error('Error adding favourite:', error);
+                return false;
+            }
+        };
+
+        function updateLocalFavourites(recipient) {
+            const stored = localStorage.getItem('transfer.favourites');
+            let localFavs = stored ? JSON.parse(stored) : [];
+            localFavs = localFavs.filter(f => !(f.accountNumber === recipient.accountnumber && f.bankName === recipient.bankname));
+            localFavs.unshift({
+                accountName: recipient.accountname,
+                accountNumber: recipient.accountnumber,
+                bankName: recipient.bankname,
+                url: recipient.url
+            });
+            if (localFavs.length > 20) localFavs = localFavs.slice(0, 20);
+            localStorage.setItem('transfer.favourites', JSON.stringify(localFavs));
+        }
+
+        // Expose tier globally for non-module scripts
+        window.getUserTier = () => currentUserTier;
+    </script>
+
+    <script>
+        // ---------- Full Lottie JSON (from the original working animation) ----------
+        const LOTTIE_JSON_DATA = {"v":"5.12.1","fr":24,"ip":0,"op":60,"w":720,"h":280,"nm":"zhifu_chenggong","ddd":0,"assets":[],"layers":[{"ddd":0,"ind":2,"ty":4,"nm":"LOGO_01","sr":1,"ks":{"o":{"a":0,"k":100,"ix":11},"r":{"a":0,"k":0,"ix":10},"p":{"a":1,"k":[{"i":{"x":0.36,"y":1},"o":{"x":0.62,"y":0},"t":6,"s":[328,140,0],"to":[-1.333,0,0],"ti":[0.167,0,0]},{"i":{"x":0.833,"y":0.833},"o":{"x":0.69,"y":0},"t":8,"s":[320,140,0],"to":[-0.167,0,0],"ti":[-1.167,0,0]},{"t":12,"s":[327,140,0]}],"ix":2,"l":2},"a":{"a":0,"k":[0,0,0],"ix":1,"l":2},"s":{"a":0,"k":[100,100,100],"ix":6,"l":2}},"ao":0,"shapes":[{"ty":"gr","it":[{"ty":"rc","d":1,"s":{"a":1,"k":[{"i":{"x":[0.833,0.833],"y":[0.833,0.833]},"o":{"x":[0.167,0.167],"y":[0,0]},"t":8,"s":[22,14]},{"t":12,"s":[16,4]}],"ix":2},"p":{"a":0,"k":[0,0],"ix":3},"r":{"a":0,"k":2,"ix":4},"nm":"Rectangle Path 1","mn":"ADBE Vector Shape - Rect","hd":false},{"ty":"fl","c":{"a":0,"k":[0,0.721568627451,0.462745127958,1],"ix":4},"o":{"a":0,"k":100,"ix":5},"r":1,"bm":0,"nm":"Fill 1","mn":"ADBE Vector Graphic - Fill","hd":false},{"ty":"tr","p":{"a":0,"k":[0,0],"ix":2},"a":{"a":0,"k":[0,0],"ix":1},"s":{"a":0,"k":[100,100],"ix":3},"r":{"a":0,"k":0,"ix":6},"o":{"a":0,"k":100,"ix":7},"sk":{"a":0,"k":0,"ix":4},"sa":{"a":0,"k":0,"ix":5},"nm":"Transform"}],"nm":"Rectangle 1","np":2,"cix":2,"bm":0,"ix":1,"mn":"ADBE Vector Group","hd":false}],"ip":0,"op":12,"st":0,"ct":1,"bm":0},{"ddd":0,"ind":3,"ty":4,"nm":"LOGO","sr":1,"ks":{"o":{"a":0,"k":100,"ix":11},"r":{"a":0,"k":0,"ix":10},"p":{"a":0,"k":[360,140,0],"ix":2,"l":2},"a":{"a":0,"k":[0,0,0],"ix":1,"l":2},"s":{"a":0,"k":[100,100,100],"ix":6,"l":2}},"ao":0,"shapes":[{"ty":"gr","it":[{"ind":0,"ty":"sh","ix":1,"ks":{"a":0,"k":{"i":[[21.833,0.075],[5.086,-16.255],[-0.496,0],[0,0],[-0.124,0.186],[-9.552,-0.24],[-0.444,-12.346],[13.708,0],[4.032,7.693],[0.31,0],[0,0],[-0.186,-0.496],[-17.926,0],[0.189,22.15]],"o":[[-17.988,-0.062],[-0.124,0.496],[0,0],[0.248,0],[4.156,-7.88],[12.343,0.31],[0.496,13.774],[-9.304,0],[-0.124,-0.248],[0,0],[-0.496,0],[5.024,16.256],[22.143,0],[-0.187,-21.901]],"v":[[0.118,-39.96],[-38.153,-11.916],[-37.471,-10.923],[-22.088,-10.923],[-21.406,-11.295],[0.614,-24.2],[24.122,-0.934],[-0.069,24.194],[-21.468,11.289],[-22.15,10.916],[-37.409,10.916],[-38.091,11.909],[0.056,39.953],[39.939,-0.252]],"c":true},"ix":2},"nm":"Path 1","mn":"ADBE Vector Shape - Group","hd":false},{"ty":"fl","c":{"a":0,"k":[0,0.721568627451,0.462745098039,1],"ix":4},"o":{"a":0,"k":100,"ix":5},"r":1,"bm":0,"nm":"Fill 1","mn":"ADBE Vector Graphic - Fill","hd":false},{"ty":"tr","p":{"a":0,"k":[0,0],"ix":2},"a":{"a":0,"k":[0,0],"ix":1},"s":{"a":0,"k":[100,100],"ix":3},"r":{"a":0,"k":0,"ix":6},"o":{"a":0,"k":100,"ix":7},"sk":{"a":0,"k":0,"ix":4},"sa":{"a":0,"k":0,"ix":5},"nm":"Transform"}],"nm":"Group 1","np":2,"cix":2,"bm":0,"ix":1,"mn":"ADBE Vector Group","hd":false}],"ip":0,"op":12,"st":0,"ct":1,"bm":0},{"ddd":0,"ind":4,"ty":4,"nm":"duihao","sr":1,"ks":{"o":{"a":0,"k":100,"ix":11},"r":{"a":1,"k":[{"i":{"x":[0.353],"y":[1]},"o":{"x":[0.167],"y":[0.167]},"t":12,"s":[-45]},{"t":24,"s":[0]}],"ix":10},"p":{"a":1,"k":[{"i":{"x":0.414,"y":0.88},"o":{"x":0.167,"y":0.167},"t":12,"s":[353,127,0],"to":[4.312,0.796,0],"ti":[0,-2.916,0]},{"i":{"x":0.325,"y":1},"o":{"x":0.211,"y":0.156},"t":16,"s":[365,134.155,0],"to":[0,2.48,0],"ti":[2.062,-0.996,0]},{"t":24,"s":[360,140,0]}],"ix":2,"l":2},"a":{"a":0,"k":[0,0,0],"ix":1,"l":2},"s":{"a":0,"k":[100,100,100],"ix":6,"l":2}},"ao":0,"shapes":[{"ty":"gr","it":[{"ind":0,"ty":"sh","ix":1,"ks":{"a":0,"k":{"i":[[0,0],[0,0],[0,0]],"o":[[0,0],[0,0],[0,0]],"v":[[-16.805,-0.32],[-5.312,11.062],[16.719,-10.946]],"c":false},"ix":2},"nm":"Path 1","mn":"ADBE Vector Shape - Group","hd":false},{"ty":"tm","s":{"a":0,"k":0,"ix":1},"e":{"a":1,"k":[{"i":{"x":[0.2],"y":[1]},"o":{"x":[0.167],"y":[0.167]},"t":12,"s":[0]},{"t":24,"s":[100]}],"ix":2},"o":{"a":0,"k":0,"ix":3},"m":1,"ix":2,"nm":"Trim Paths 1","mn":"ADBE Vector Filter - Trim","hd":false},{"ty":"st","c":{"a":0,"k":[1,1,1,1],"ix":3},"o":{"a":0,"k":100,"ix":4},"w":{"a":0,"k":6,"ix":5},"lc":2,"lj":2,"bm":0,"nm":"Stroke 1","mn":"ADBE Vector Graphic - Stroke","hd":false},{"ty":"tr","p":{"a":0,"k":[0,0],"ix":2},"a":{"a":0,"k":[0,0],"ix":1},"s":{"a":0,"k":[100,100],"ix":3},"r":{"a":0,"k":0,"ix":6},"o":{"a":0,"k":100,"ix":7},"sk":{"a":0,"k":0,"ix":4},"sa":{"a":0,"k":0,"ix":5},"nm":"Transform"}],"nm":"Ellipse 1","np":3,"cix":2,"bm":0,"ix":1,"mn":"ADBE Vector Group","hd":false}],"ip":12,"op":300,"st":12,"ct":1,"bm":0},{"ddd":0,"ind":5,"ty":4,"nm":"line08","sr":1,"ks":{"o":{"a":0,"k":100,"ix":11},"r":{"a":0,"k":0,"ix":10},"p":{"a":0,"k":[360,708,0],"ix":2,"l":2},"a":{"a":0,"k":[0,0,0],"ix":1,"l":2},"s":{"a":0,"k":[100,100,100],"ix":6,"l":2}},"ao":0,"shapes":[{"ty":"gr","it":[{"ind":0,"ty":"sh","ix":1,"ks":{"a":0,"k":{"i":[[-31.488,0.092],[-44.294,1.509]],"o":[[57.555,-0.168],[51.947,-1.77]],"v":[[49.215,-549.832],[168.303,-514.759]],"c":false},"ix":2},"nm":"Path 1","mn":"ADBE Vector Shape - Group","hd":false},{"ty":"st","c":{"a":0,"k":[0.023529413635,0.870588295133,0.85882358925,1],"ix":3},"o":{"a":0,"k":100,"ix":4},"w":{"a":0,"k":2,"ix":5},"lc":2,"lj":1,"ml":4,"bm":0,"nm":"Stroke 1","mn":"ADBE Vector Graphic - Stroke","hd":false},{"ty":"tm","s":{"a":1,"k":[{"i":{"x":[0.667],"y":[1]},"o":{"x":[0.167],"y":[0.167]},"t":27,"s":[0]},{"t":40,"s":[100]}],"ix":1},"e":{"a":1,"k":[{"i":{"x":[0.667],"y":[1]},"o":{"x":[0.167],"y":[0.167]},"t":22,"s":[0]},{"t":35,"s":[100]}],"ix":2},"o":{"a":0,"k":0,"ix":3},"m":1,"ix":3,"nm":"Trim Paths 1","mn":"ADBE Vector Filter - Trim","hd":false},{"ty":"tr","p":{"a":0,"k":[0,0],"ix":2},"a":{"a":0,"k":[0,0],"ix":1},"s":{"a":0,"k":[100,100],"ix":3},"r":{"a":0,"k":0,"ix":6},"o":{"a":0,"k":100,"ix":7},"sk":{"a":0,"k":0,"ix":4},"sa":{"a":0,"k":0,"ix":5},"nm":"Transform"}],"nm":"Shape 1","np":3,"cix":2,"bm":0,"ix":1,"mn":"ADBE Vector Group","hd":false}],"ip":22,"op":41,"st":22,"ct":1,"bm":0},{"ddd":0,"ind":6,"ty":4,"nm":"line07","sr":1,"ks":{"o":{"a":0,"k":100,"ix":11},"r":{"a":0,"k":0,"ix":10},"p":{"a":0,"k":[360,708,0],"ix":2,"l":2},"a":{"a":0,"k":[0,0,0],"ix":1,"l":2},"s":{"a":0,"k":[100,100,100],"ix":6,"l":2}},"ao":0,"shapes":[{"ty":"gr","it":[{"ind":0,"ty":"sh","ix":1,"ks":{"a":0,"k":{"i":[[-27.411,-2.872],[-56.73,-23.591]],"o":[[54.386,5.698],[42.121,17.516]],"v":[[34.364,-569.198],[140.23,-580.409]],"c":false},"ix":2},"nm":"Path 1","mn":"ADBE Vector Shape - Group","hd":false},{"ty":"st","c":{"a":0,"k":[1,0.439215716194,0.639215686275,1],"ix":3},"o":{"a":0,"k":100,"ix":4},"w":{"a":0,"k":2,"ix":5},"lc":2,"lj":1,"ml":4,"bm":0,"nm":"Stroke 1","mn":"ADBE Vector Graphic - Stroke","hd":false},{"ty":"tm","s":{"a":1,"k":[{"i":{"x":[0.667],"y":[1]},"o":{"x":[0.167],"y":[0.167]},"t":23,"s":[0]},{"t":36,"s":[100]}],"ix":1},"e":{"a":1,"k":[{"i":{"x":[0.667],"y":[1]},"o":{"x":[0.167],"y":[0.167]},"t":18,"s":[0]},{"t":31,"s":[100]}],"ix":2},"o":{"a":0,"k":0,"ix":3},"m":1,"ix":3,"nm":"Trim Paths 1","mn":"ADBE Vector Filter - Trim","hd":false},{"ty":"tr","p":{"a":0,"k":[0,0],"ix":2},"a":{"a":0,"k":[0,0],"ix":1},"s":{"a":0,"k":[100,100],"ix":3},"r":{"a":0,"k":0,"ix":6},"o":{"a":0,"k":100,"ix":7},"sk":{"a":0,"k":0,"ix":4},"sa":{"a":0,"k":0,"ix":5},"nm":"Transform"}],"nm":"Shape 1","np":3,"cix":2,"bm":0,"ix":1,"mn":"ADBE Vector Group","hd":false}],"ip":18,"op":37,"st":18,"ct":1,"bm":0},{"ddd":0,"ind":7,"ty":4,"nm":"line06","sr":1,"ks":{"o":{"a":0,"k":100,"ix":11},"r":{"a":0,"k":0,"ix":10},"p":{"a":0,"k":[360,708,0],"ix":2,"l":2},"a":{"a":0,"k":[0,0,0],"ix":1,"l":2},"s":{"a":0,"k":[100,100,100],"ix":6,"l":2}},"ao":0,"shapes":[{"ty":"gr","it":[{"ind":0,"ty":"sh","ix":1,"ks":{"a":0,"k":{"i":[[-25.457,-10.956],[-13.001,-15.577],[-21.656,18.175]],"o":[[15.538,6.687],[11.783,14.117],[18.265,-15.329]],"v":[[31.712,-543.187],[63.501,-504.923],[147.656,-504.675]],"c":false},"ix":2},"nm":"Path 1","mn":"ADBE Vector Shape - Group","hd":false},{"ty":"st","c":{"a":0,"k":[1,0.415686304429,0.623529411765,1],"ix":3},"o":{"a":0,"k":100,"ix":4},"w":{"a":0,"k":2,"ix":5},"lc":2,"lj":1,"ml":4,"bm":0,"nm":"Stroke 1","mn":"ADBE Vector Graphic - Stroke","hd":false},{"ty":"tm","s":{"a":1,"k":[{"i":{"x":[0.667],"y":[1]},"o":{"x":[0.167],"y":[0.167]},"t":19,"s":[0]},{"t":32,"s":[100]}],"ix":1},"e":{"a":1,"k":[{"i":{"x":[0.667],"y":[1]},"o":{"x":[0.167],"y":[0.167]},"t":14,"s":[0]},{"t":27,"s":[100]}],"ix":2},"o":{"a":0,"k":0,"ix":3},"m":1,"ix":3,"nm":"Trim Paths 1","mn":"ADBE Vector Filter - Trim","hd":false},{"ty":"tr","p":{"a":0,"k":[0,0],"ix":2},"a":{"a":0,"k":[0,0],"ix":1},"s":{"a":0,"k":[100,100],"ix":3},"r":{"a":0,"k":0,"ix":6},"o":{"a":0,"k":100,"ix":7},"sk":{"a":0,"k":0,"ix":4},"sa":{"a":0,"k":0,"ix":5},"nm":"Transform"}],"nm":"Shape 1","np":3,"cix":2,"bm":0,"ix":1,"mn":"ADBE Vector Group","hd":false}],"ip":14,"op":33,"st":14,"ct":1,"bm":0},{"ddd":0,"ind":8,"ty":4,"nm":"line05","sr":1,"ks":{"o":{"a":0,"k":100,"ix":11},"r":{"a":0,"k":0,"ix":10},"p":{"a":0,"k":[360,708,0],"ix":2,"l":2},"a":{"a":0,"k":[0,0,0],"ix":1,"l":2},"s":{"a":0,"k":[100,100,100],"ix":6,"l":2}},"ao":0,"shapes":[{"ty":"gr","it":[{"ind":0,"ty":"sh","ix":1,"ks":{"a":0,"k":{"i":[[-26.709,11.744],[14.711,-8.667],[-39.012,46.138]],"o":[[50.044,-22.005],[-20.113,11.85],[31.838,-37.654]],"v":[[24.956,-593.495],[47.113,-638.35],[114.512,-644.388]],"c":false},"ix":2},"nm":"Path 1","mn":"ADBE Vector Shape - Group","hd":false},{"ty":"st","c":{"a":0,"k":[0.454901990704,0.298039215686,0.913725550034,1],"ix":3},"o":{"a":0,"k":100,"ix":4},"w":{"a":0,"k":2,"ix":5},"lc":2,"lj":1,"ml":4,"bm":0,"nm":"Stroke 1","mn":"ADBE Vector Graphic - Stroke","hd":false},{"ty":"tm","s":{"a":1,"k":[{"i":{"x":[0.667],"y":[1]},"o":{"x":[0.167],"y":[0.167]},"t":17,"s":[0]},{"t":30,"s":[100]}],"ix":1},"e":{"a":1,"k":[{"i":{"x":[0.667],"y":[1]},"o":{"x":[0.167],"y":[0.167]},"t":12,"s":[0]},{"t":25,"s":[100]}],"ix":2},"o":{"a":0,"k":0,"ix":3},"m":1,"ix":3,"nm":"Trim Paths 1","mn":"ADBE Vector Filter - Trim","hd":false},{"ty":"tr","p":{"a":0,"k":[0,0],"ix":2},"a":{"a":0,"k":[0,0],"ix":1},"s":{"a":0,"k":[100,100],"ix":3},"r":{"a":0,"k":0,"ix":6},"o":{"a":0,"k":100,"ix":7},"sk":{"a":0,"k":0,"ix":4},"sa":{"a":0,"k":0,"ix":5},"nm":"Transform"}],"nm":"Shape 1","np":3,"cix":2,"bm":0,"ix":1,"mn":"ADBE Vector Group","hd":false}],"ip":12,"op":31,"st":12,"ct":1,"bm":0},{"ddd":0,"ind":9,"ty":4,"nm":"line04","sr":1,"ks":{"o":{"a":0,"k":100,"ix":11},"r":{"a":0,"k":0,"ix":10},"p":{"a":0,"k":[360,708,0],"ix":2,"l":2},"a":{"a":0,"k":[0,0,0],"ix":1,"l":2},"s":{"a":0,"k":[100,100,100],"ix":6,"l":2}},"ao":0,"shapes":[{"ty":"gr","it":[{"ind":0,"ty":"sh","ix":1,"ks":{"a":0,"k":{"i":[[27.398,-0.1],[38.54,-1.643]],"o":[[-50.079,0.183],[-45.199,1.926]],"v":[[-138.921,-546.683],[-242.54,-584.857]],"c":false},"ix":2},"nm":"Path 1","mn":"ADBE Vector Shape - Group","hd":false},{"ty":"st","c":{"a":0,"k":[0.023529413635,0.870588295133,0.85882358925,1],"ix":3},"o":{"a":0,"k":100,"ix":4},"w":{"a":0,"k":2,"ix":5},"lc":2,"lj":1,"ml":4,"bm":0,"nm":"Stroke 1","mn":"ADBE Vector Graphic - Stroke","hd":false},{"ty":"tm","s":{"a":1,"k":[{"i":{"x":[0.667],"y":[1]},"o":{"x":[0.167],"y":[0.167]},"t":27,"s":[0]},{"t":40,"s":[100]}],"ix":1},"e":{"a":1,"k":[{"i":{"x":[0.667],"y":[1]},"o":{"x":[0.167],"y":[0.167]},"t":22,"s":[0]},{"t":35,"s":[100]}],"ix":2},"o":{"a":0,"k":0,"ix":3},"m":1,"ix":3,"nm":"Trim Paths 1","mn":"ADBE Vector Filter - Trim","hd":false},{"ty":"tr","p":{"a":0,"k":[0,0],"ix":2},"a":{"a":0,"k":[0,0],"ix":1},"s":{"a":0,"k":[100,100],"ix":3},"r":{"a":0,"k":0,"ix":6},"o":{"a":0,"k":100,"ix":7},"sk":{"a":0,"k":0,"ix":4},"sa":{"a":0,"k":0,"ix":5},"nm":"Transform"}],"nm":"Shape 1","np":3,"cix":2,"bm":0,"ix":1,"mn":"ADBE Vector Group","hd":false}],"ip":22,"op":41,"st":22,"ct":1,"bm":0},{"ddd":0,"ind":10,"ty":4,"nm":"line03","sr":1,"ks":{"o":{"a":0,"k":100,"ix":11},"r":{"a":0,"k":0,"ix":10},"p":{"a":0,"k":[360,708,0],"ix":2,"l":2},"a":{"a":0,"k":[0,0,0],"ix":1,"l":2},"s":{"a":0,"k":[100,100,100],"ix":6,"l":2}},"ao":0,"shapes":[{"ty":"gr","it":[{"ind":0,"ty":"sh","ix":1,"ks":{"a":0,"k":{"i":[[21.275,17.264],[-24.432,-2.81],[47.664,-20.341]],"o":[[-32.104,-26.052],[20.009,2.301],[-41.61,17.757]],"v":[[-35.646,-566.698],[-84.759,-564.051],[-121.664,-583.659]],"c":false},"ix":2},"nm":"Path 1","mn":"ADBE Vector Shape - Group","hd":false},{"ty":"st","c":{"a":0,"k":[0.454901990704,0.298039215686,0.913725550034,1],"ix":3},"o":{"a":0,"k":100,"ix":4},"w":{"a":0,"k":2,"ix":5},"lc":2,"lj":1,"ml":4,"bm":0,"nm":"Stroke 1","mn":"ADBE Vector Graphic - Stroke","hd":false},{"ty":"tm","s":{"a":1,"k":[{"i":{"x":[0.667],"y":[1]},"o":{"x":[0.167],"y":[0.167]},"t":23,"s":[0]},{"t":36,"s":[100]}],"ix":1},"e":{"a":1,"k":[{"i":{"x":[0.667],"y":[1]},"o":{"x":[0.167],"y":[0.167]},"t":18,"s":[0]},{"t":31,"s":[100]}],"ix":2},"o":{"a":0,"k":0,"ix":3},"m":1,"ix":3,"nm":"Trim Paths 1","mn":"ADBE Vector Filter - Trim","hd":false},{"ty":"tr","p":{"a":0,"k":[0,0],"ix":2},"a":{"a":0,"k":[0,0],"ix":1},"s":{"a":0,"k":[100,100],"ix":3},"r":{"a":0,"k":0,"ix":6},"o":{"a":0,"k":100,"ix":7},"sk":{"a":0,"k":0,"ix":4},"sa":{"a":0,"k":0,"ix":5},"nm":"Transform"}],"nm":"Shape 1","np":3,"cix":2,"bm":0,"ix":1,"mn":"ADBE Vector Group","hd":false}],"ip":18,"op":37,"st":18,"ct":1,"bm":0},{"ddd":0,"ind":11,"ty":4,"nm":"line02","sr":1,"ks":{"o":{"a":0,"k":100,"ix":11},"r":{"a":0,"k":0,"ix":10},"p":{"a":0,"k":[360,708,0],"ix":2,"l":2},"a":{"a":0,"k":[0,0,0],"ix":1,"l":2},"s":{"a":0,"k":[100,100,100],"ix":6,"l":2}},"ao":0,"shapes":[{"ty":"gr","it":[{"ind":0,"ty":"sh","ix":1,"ks":{"a":0,"k":{"i":[[17.173,-26.195],[15.369,-2.316],[53.596,-0.341]],"o":[[-20.491,31.255],[-29.553,4.454],[-45.239,0.288]],"v":[[-18.262,-534.687],[-77.628,-515.173],[-159.983,-476.675]],"c":false},"ix":2},"nm":"Path 1","mn":"ADBE Vector Shape - Group","hd":false},{"ty":"st","c":{"a":0,"k":[1,0.415686304429,0.623529411765,1],"ix":3},"o":{"a":0,"k":100,"ix":4},"w":{"a":0,"k":2,"ix":5},"lc":2,"lj":1,"ml":4,"bm":0,"nm":"Stroke 1","mn":"ADBE Vector Graphic - Stroke","hd":false},{"ty":"tm","s":{"a":1,"k":[{"i":{"x":[0.667],"y":[1]},"o":{"x":[0.167],"y":[0.167]},"t":19,"s":[0]},{"t":32,"s":[100]}],"ix":1},"e":{"a":1,"k":[{"i":{"x":[0.667],"y":[1]},"o":{"x":[0.167],"y":[0.167]},"t":14,"s":[0]},{"t":27,"s":[100]}],"ix":2},"o":{"a":0,"k":0,"ix":3},"m":1,"ix":3,"nm":"Trim Paths 1","mn":"ADBE Vector Filter - Trim","hd":false},{"ty":"tr","p":{"a":0,"k":[0,0],"ix":2},"a":{"a":0,"k":[0,0],"ix":1},"s":{"a":0,"k":[100,100],"ix":3},"r":{"a":0,"k":0,"ix":6},"o":{"a":0,"k":100,"ix":7},"sk":{"a":0,"k":0,"ix":4},"sa":{"a":0,"k":0,"ix":5},"nm":"Transform"}],"nm":"Shape 1","np":3,"cix":2,"bm":0,"ix":1,"mn":"ADBE Vector Group","hd":false}],"ip":14,"op":33,"st":14,"ct":1,"bm":0},{"ddd":0,"ind":12,"ty":4,"nm":"line01","sr":1,"ks":{"o":{"a":0,"k":100,"ix":11},"r":{"a":0,"k":0,"ix":10},"p":{"a":0,"k":[360,708,0],"ix":2,"l":2},"a":{"a":0,"k":[0,0,0],"ix":1,"l":2},"s":{"a":0,"k":[100,100,100],"ix":6,"l":2}},"ao":0,"shapes":[{"ty":"gr","it":[{"ind":0,"ty":"sh","ix":1,"ks":{"a":0,"k":{"i":[[24.368,26.138],[-15.18,-4.431],[50.229,11.56]],"o":[[-44.111,-47.315],[22.474,6.56],[-44.576,-10.259]],"v":[[-16.219,-599.14],[-64.901,-601.297],[-93.245,-649.41]],"c":false},"ix":2},"nm":"Path 1","mn":"ADBE Vector Shape - Group","hd":false},{"ty":"st","c":{"a":0,"k":[1,0.61960786581,0.266666680574,1],"ix":3},"o":{"a":0,"k":100,"ix":4},"w":{"a":0,"k":2,"ix":5},"lc":2,"lj":1,"ml":4,"bm":0,"nm":"Stroke 1","mn":"ADBE Vector Graphic - Stroke","hd":false},{"ty":"tm","s":{"a":1,"k":[{"i":{"x":[0.667],"y":[1]},"o":{"x":[0.167],"y":[0.167]},"t":17,"s":[0]},{"t":30,"s":[100]}],"ix":1},"e":{"a":1,"k":[{"i":{"x":[0.667],"y":[1]},"o":{"x":[0.167],"y":[0.167]},"t":12,"s":[0]},{"t":25,"s":[100]}],"ix":2},"o":{"a":0,"k":0,"ix":3},"m":1,"ix":3,"nm":"Trim Paths 1","mn":"ADBE Vector Filter - Trim","hd":false},{"ty":"tr","p":{"a":0,"k":[0,0],"ix":2},"a":{"a":0,"k":[0,0],"ix":1},"s":{"a":0,"k":[100,100],"ix":3},"r":{"a":0,"k":0,"ix":6},"o":{"a":0,"k":100,"ix":7},"sk":{"a":0,"k":0,"ix":4},"sa":{"a":0,"k":0,"ix":5},"nm":"Transform"}],"nm":"Shape 1","np":3,"cix":2,"bm":0,"ix":1,"mn":"ADBE Vector Group","hd":false}],"ip":12,"op":31,"st":12,"ct":1,"bm":0},{"ddd":0,"ind":13,"ty":4,"nm":"12","sr":1,"ks":{"o":{"a":1,"k":[{"i":{"x":[0.667],"y":[1]},"o":{"x":[0.333],"y":[0]},"t":26,"s":[100]},{"t":34,"s":[0]}],"ix":11},"r":{"a":1,"k":[{"i":{"x":[0.2],"y":[1]},"o":{"x":[0.167],"y":[0.167]},"t":14,"s":[-89]},{"t":34,"s":[119]}],"ix":10},"p":{"a":1,"k":[{"i":{"x":0.2,"y":1},"o":{"x":0.167,"y":0.167},"t":14,"s":[372.938,114.062,0],"to":[22.708,-20.25,0],"ti":[-19.958,-24.375,0]},{"t":34,"s":[460.312,136.312,0]}],"ix":2,"l":2},"a":{"a":0,"k":[0,0,0],"ix":1,"l":2},"s":{"a":0,"k":[100,100,100],"ix":6,"l":2}},"ao":0,"shapes":[{"ty":"gr","it":[{"ind":0,"ty":"sh","ix":1,"ks":{"a":0,"k":{"i":[[-3.287,-1.74],[0.33,3.269],[3.419,-2.748],[0.049,-2.655]],"o":[[0.466,-5.491],[-4.824,1.448],[1.211,2.328],[1.87,-4.952]],"v":[[9.373,1.574],[8.739,-8.353],[-5.69,-0.945],[-3.512,5.779]],"c":true},"ix":2},"nm":"Path 1","mn":"ADBE Vector Shape - Group","hd":false},{"ty":"fl","c":{"a":0,"k":[0.454901990704,0.298039215686,0.913725550034,1],"ix":4},"o":{"a":0,"k":100,"ix":5},"r":1,"bm":0,"nm":"Fill 1","mn":"ADBE Vector Graphic - Fill","hd":false},{"ty":"tr","p":{"a":0,"k":[0,0],"ix":2},"a":{"a":0,"k":[0,0],"ix":1},"s":{"a":0,"k":[100,100],"ix":3},"r":{"a":0,"k":0,"ix":6},"o":{"a":0,"k":100,"ix":7},"sk":{"a":0,"k":0,"ix":4},"sa":{"a":0,"k":0,"ix":5},"nm":"Transform"}],"nm":"Shape 1","np":2,"cix":2,"bm":0,"ix":1,"mn":"ADBE Vector Group","hd":false}],"ip":14,"op":51,"st":14,"ct":1,"bm":0},{"ddd":0,"ind":14,"ty":4,"nm":"11","sr":1,"ks":{"o":{"a":1,"k":[{"i":{"x":[0.667],"y":[1]},"o":{"x":[0.333],"y":[0]},"t":26,"s":[100]},{"t":34,"s":[0]}],"ix":11},"r":{"a":1,"k":[{"i":{"x":[0.2],"y":[1]},"o":{"x":[0.167],"y":[0.167]},"t":14,"s":[-43]},{"t":34,"s":[184]}],"ix":10},"p":{"a":1,"k":[{"i":{"x":0.2,"y":1},"o":{"x":0.167,"y":0.167},"t":14,"s":[387.188,126.812,0],"to":[39.083,-30.5,0],"ti":[-59.208,11,0]},{"t":34,"s":[544.562,52.062,0]}],"ix":2,"l":2},"a":{"a":0,"k":[0,0,0],"ix":1,"l":2},"s":{"a":0,"k":[100,100,100],"ix":6,"l":2}},"ao":0,"shapes":[{"ty":"gr","it":[{"ind":0,"ty":"sh","ix":1,"ks":{"a":0,"k":{"i":[[-3.287,-1.74],[0.33,3.269],[3.419,-2.748],[0.049,-2.655]],"o":[[0.466,-5.491],[-4.824,1.448],[1.211,2.328],[1.87,-4.952]],"v":[[9.373,1.574],[8.739,-8.353],[-5.69,-0.945],[-3.512,5.779]],"c":true},"ix":2},"nm":"Path 1","mn":"ADBE Vector Shape - Group","hd":false},{"ty":"fl","c":{"a":0,"k":[0.526797066483,0.946185003542,1,1],"ix":4},"o":{"a":0,"k":100,"ix":5},"r":1,"bm":0,"nm":"Fill 1","mn":"ADBE Vector Graphic - Fill","hd":false},{"ty":"tr","p":{"a":0,"k":[0,0],"ix":2},"a":{"a":0,"k":[0,0],"ix":1},"s":{"a":0,"k":[100,100],"ix":3},"r":{"a":0,"k":0,"ix":6},"o":{"a":0,"k":100,"ix":7},"sk":{"a":0,"k":0,"ix":4},"sa":{"a":0,"k":0,"ix":5},"nm":"Transform"}],"nm":"Shape 1","np":2,"cix":2,"bm":0,"ix":1,"mn":"ADBE Vector Group","hd":false}],"ip":14,"op":51,"st":14,"ct":1,"bm":0},{"ddd":0,"ind":15,"ty":4,"nm":"10","sr":1,"ks":{"o":{"a":1,"k":[{"i":{"x":[0.667],"y":[1]},"o":{"x":[0.333],"y":[0]},"t":26,"s":[100]},{"t":34,"s":[0]}],"ix":11},"r":{"a":1,"k":[{"i":{"x":[0.2],"y":[1]},"o":{"x":[0.167],"y":[0.167]},"t":14,"s":[-90]},{"t":34,"s":[251]}],"ix":10},"p":{"a":1,"k":[{"i":{"x":0.2,"y":1},"o":{"x":0.167,"y":0.167},"t":14,"s":[385.312,133.188,0],"to":[36.833,-23.25,0],"ti":[-44.583,-16.75,0]},{"t":34,"s":[539.312,109.938,0]}],"ix":2,"l":2},"a":{"a":0,"k":[0,0,0],"ix":1,"l":2},"s":{"a":0,"k":[100,100,100],"ix":6,"l":2}},"ao":0,"shapes":[{"ty":"gr","it":[{"ind":0,"ty":"sh","ix":1,"ks":{"a":0,"k":{"i":[[-1.139,6.537],[3.071,-1.183],[-4.975,-1.429],[-1.702,2.498]],"o":[[-5.392,1.784],[2.339,7.936],[1.408,-1.906],[-5.25,-2.194]],"v":[[0.698,-9.431],[-9.406,-5.405],[3.197,8.002],[7.984,1.611]],"c":true},"ix":2},"nm":"Path 1","mn":"ADBE Vector Shape - Group","hd":false},{"ty":"fl","c":{"a":0,"k":[1,0.411773681641,0.619598388672,1],"ix":4},"o":{"a":0,"k":100,"ix":5},"r":1,"bm":0,"nm":"Fill 1","mn":"ADBE Vector Graphic - Fill","hd":false},{"ty":"tr","p":{"a":0,"k":[0,0],"ix":2},"a":{"a":0,"k":[0,0],"ix":1},"s":{"a":0,"k":[100,100],"ix":3},"r":{"a":0,"k":0,"ix":6},"o":{"a":0,"k":100,"ix":7},"sk":{"a":0,"k":0,"ix":4},"sa":{"a":0,"k":0,"ix":5},"nm":"Transform"}],"nm":"Shape 1","np":2,"cix":2,"bm":0,"ix":1,"mn":"ADBE Vector Group","hd":false}],"ip":14,"op":51,"st":14,"ct":1,"bm":0},{"ddd":0,"ind":16,"ty":4,"nm":"09","sr":1,"ks":{"o":{"a":1,"k":[{"i":{"x":[0.667],"y":[1]},"o":{"x":[0.333],"y":[0]},"t":26,"s":[100]},{"t":38,"s":[0]}],"ix":11},"r":{"a":1,"k":[{"i":{"x":[0.2],"y":[1]},"o":{"x":[0.167],"y":[0.167]},"t":14,"s":[0]},{"t":38,"s":[226]}],"ix":10},"p":{"a":1,"k":[{"i":{"x":0.2,"y":1},"o":{"x":0.167,"y":0.167},"t":14,"s":[390.812,151.062,0],"to":[26.333,-11.125,0],"ti":[-47.208,-55.375,0]},{"t":38,"s":[520.812,186.438,0]}],"ix":2,"l":2},"a":{"a":0,"k":[0,0,0],"ix":1,"l":2},"s":{"a":0,"k":[100,100,100],"ix":6,"l":2}},"ao":0,"shapes":[{"ty":"gr","it":[{"ind":0,"ty":"sh","ix":1,"ks":{"a":0,"k":{"i":[[-6.355,1.624],[-0.094,2.685],[0.902,-10.571],[-2.672,-0.74]],"o":[[-5.064,-0.918],[-8.431,3.026],[2.295,1.892],[-1.278,-8.013]],"v":[[12.264,-3.688],[4.959,-10.149],[-6.326,5.862],[1.575,9.836]],"c":true},"ix":2},"nm":"Path 1","mn":"ADBE Vector Shape - Group","hd":false},{"ty":"fl","c":{"a":0,"k":[1,0.411773681641,0.619598388672,1],"ix":4},"o":{"a":0,"k":100,"ix":5},"r":1,"bm":0,"nm":"Fill 1","mn":"ADBE Vector Graphic - Fill","hd":false},{"ty":"tr","p":{"a":0,"k":[0,0],"ix":2},"a":{"a":0,"k":[0,0],"ix":1},"s":{"a":0,"k":[100,100],"ix":3},"r":{"a":0,"k":0,"ix":6},"o":{"a":0,"k":100,"ix":7},"sk":{"a":0,"k":0,"ix":4},"sa":{"a":0,"k":0,"ix":5},"nm":"Transform"}],"nm":"Shape 1","np":2,"cix":2,"bm":0,"ix":1,"mn":"ADBE Vector Group","hd":false}],"ip":14,"op":51,"st":14,"ct":1,"bm":0},{"ddd":0,"ind":17,"ty":4,"nm":"08","sr":1,"ks":{"o":{"a":1,"k":[{"i":{"x":[0.667],"y":[1]},"o":{"x":[0.333],"y":[0]},"t":31,"s":[100]},{"t":43,"s":[0]}],"ix":11},"r":{"a":1,"k":[{"i":{"x":[0.2],"y":[1]},"o":{"x":[0.167],"y":[0.167]},"t":13,"s":[0]},{"t":43,"s":[150]}],"ix":10},"p":{"a":1,"k":[{"i":{"x":0.2,"y":1},"o":{"x":0.167,"y":0.167},"t":13,"s":[387.188,143.812,0],"to":[51.833,-59,0],"ti":[-45.333,-61,0]},{"t":43,"s":[609.812,217.938,0]}],"ix":2,"l":2},"a":{"a":0,"k":[0,0,0],"ix":1,"l":2},"s":{"a":0,"k":[100,100,100],"ix":6,"l":2}},"ao":0,"shapes":[{"ty":"gr","it":[{"ind":0,"ty":"sh","ix":1,"ks":{"a":0,"k":{"i":[[1.522,8.125],[4.185,1.925],[-8.65,-6.641],[-2.714,4.858]],"o":[[-1.691,3.854],[3.116,9.362],[-0.359,-5.887],[-5.244,-0.724]],"v":[[-1.458,-14.6],[-9.636,-10.526],[5.141,12.567],[12.628,3.336]],"c":true},"ix":2},"nm":"Path 1","mn":"ADBE Vector Shape - Group","hd":false},{"ty":"fl","c":{"a":0,"k":[1,0.615692138672,0.262756347656,1],"ix":4},"o":{"a":0,"k":100,"ix":5},"r":1,"bm":0,"nm":"Fill 1","mn":"ADBE Vector Graphic - Fill","hd":false},{"ty":"tr","p":{"a":0,"k":[0,0],"ix":2},"a":{"a":0,"k":[0,0],"ix":1},"s":{"a":0,"k":[100,100],"ix":3},"r":{"a":0,"k":0,"ix":6},"o":{"a":0,"k":100,"ix":7},"sk":{"a":0,"k":0,"ix":4},"sa":{"a":0,"k":0,"ix":5},"nm":"Transform"}],"nm":"Shape 1","np":2,"cix":2,"bm":0,"ix":1,"mn":"ADBE Vector Group","hd":false}],"ip":13,"op":50,"st":13,"ct":1,"bm":0},{"ddd":0,"ind":18,"ty":4,"nm":"07","sr":1,"ks":{"o":{"a":1,"k":[{"i":{"x":[0.667],"y":[1]},"o":{"x":[0.333],"y":[0]},"t":25,"s":[100]},{"t":37,"s":[0]}],"ix":11},"r":{"a":1,"k":[{"i":{"x":[0.2],"y":[1]},"o":{"x":[0.167],"y":[0.167]},"t":13,"s":[0]},{"t":37,"s":[150]}],"ix":10},"p":{"a":1,"k":[{"i":{"x":0.2,"y":1},"o":{"x":0.167,"y":0.167},"t":13,"s":[387.312,161.562,0],"to":[28.083,-11.75,0],"ti":[-33.833,-79,0]},{"t":37,"s":[521.812,245.938,0]}],"ix":2,"l":2},"a":{"a":0,"k":[0,0,0],"ix":1,"l":2},"s":{"a":0,"k":[100,100,100],"ix":6,"l":2}},"ao":0,"shapes":[{"ty":"gr","it":[{"ind":0,"ty":"sh","ix":1,"ks":{"a":0,"k":{"i":[[1.522,8.125],[5.355,-0.493],[-5.285,-3.375],[-2.386,3.562]],"o":[[-2.103,4.562],[2.98,7.819],[2.778,-0.688],[-5.386,-2.125]],"v":[[0.541,-12.5],[-9.167,-6.069],[2.847,10.062],[10.761,2.688]],"c":true},"ix":2},"nm":"Path 1","mn":"ADBE Vector Shape - Group","hd":false},{"ty":"fl","c":{"a":0,"k":[0,0.862731933594,0.850982666016,1],"ix":4},"o":{"a":0,"k":100,"ix":5},"r":1,"bm":0,"nm":"Fill 1","mn":"ADBE Vector Graphic - Fill","hd":false},{"ty":"tr","p":{"a":0,"k":[0,0],"ix":2},"a":{"a":0,"k":[0,0],"ix":1},"s":{"a":0,"k":[100,100],"ix":3},"r":{"a":0,"k":0,"ix":6},"o":{"a":0,"k":100,"ix":7},"sk":{"a":0,"k":0,"ix":4},"sa":{"a":0,"k":0,"ix":5},"nm":"Transform"}],"nm":"Shape 1","np":2,"cix":2,"bm":0,"ix":1,"mn":"ADBE Vector Group","hd":false}],"ip":13,"op":50,"st":13,"ct":1,"bm":0},{"ddd":0,"ind":19,"ty":4,"nm":"06","sr":1,"ks":{"o":{"a":1,"k":[{"i":{"x":[0.667],"y":[1]},"o":{"x":[0.333],"y":[0]},"t":26,"s":[100]},{"t":34,"s":[0]}],"ix":11},"r":{"a":1,"k":[{"i":{"x":[0.2],"y":[1]},"o":{"x":[0.167],"y":[0.167]},"t":14,"s":[10]},{"t":34,"s":[-100]}],"ix":10},"p":{"a":1,"k":[{"i":{"x":0.2,"y":1},"o":{"x":0.167,"y":0.167},"t":14,"s":[338.938,121.562,0],"to":[-16.042,-34,0],"ti":[30.292,-21.375,0]},{"t":34,"s":[225.062,121.812,0]}],"ix":2,"l":2},"a":{"a":0,"k":[0,0,0],"ix":1,"l":2},"s":{"a":0,"k":[100,100,100],"ix":6,"l":2}},"ao":0,"shapes":[{"ty":"gr","it":[{"ind":0,"ty":"sh","ix":1,"ks":{"a":0,"k":{"i":[[-3.287,-1.74],[0.33,3.269],[3.419,-2.748],[0.049,-2.655]],"o":[[0.466,-5.491],[-4.824,1.448],[1.211,2.328],[1.87,-4.952]],"v":[[9.373,1.574],[8.739,-8.353],[-5.69,-0.945],[-3.512,5.779]],"c":true},"ix":2},"nm":"Path 1","mn":"ADBE Vector Shape - Group","hd":false},{"ty":"fl","c":{"a":0,"k":[0.526797066483,0.946185003542,1,1],"ix":4},"o":{"a":0,"k":100,"ix":5},"r":1,"bm":0,"nm":"Fill 1","mn":"ADBE Vector Graphic - Fill","hd":false},{"ty":"tr","p":{"a":0,"k":[0,0],"ix":2},"a":{"a":0,"k":[0,0],"ix":1},"s":{"a":0,"k":[100,100],"ix":3},"r":{"a":0,"k":0,"ix":6},"o":{"a":0,"k":100,"ix":7},"sk":{"a":0,"k":0,"ix":4},"sa":{"a":0,"k":0,"ix":5},"nm":"Transform"}],"nm":"Shape 1","np":2,"cix":2,"bm":0,"ix":1,"mn":"ADBE Vector Group","hd":false}],"ip":14,"op":51,"st":14,"ct":1,"bm":0},{"ddd":0,"ind":20,"ty":4,"nm":"05","sr":1,"ks":{"o":{"a":1,"k":[{"i":{"x":[0.667],"y":[1]},"o":{"x":[0.333],"y":[0]},"t":26,"s":[100]},{"t":34,"s":[0]}],"ix":11},"r":{"a":1,"k":[{"i":{"x":[0.2],"y":[1]},"o":{"x":[0.167],"y":[0.167]},"t":14,"s":[20]},{"t":34,"s":[-275]}],"ix":10},"p":{"a":1,"k":[{"i":{"x":0.2,"y":1},"o":{"x":0.167,"y":0.167},"t":14,"s":[332.188,126.812,0],"to":[-40.667,-25,0],"ti":[62.292,-5.5,0]},{"t":34,"s":[149.562,71.562,0]}],"ix":2,"l":2},"a":{"a":0,"k":[0,0,0],"ix":1,"l":2},"s":{"a":0,"k":[100,100,100],"ix":6,"l":2}},"ao":0,"shapes":[{"ty":"gr","it":[{"ind":0,"ty":"sh","ix":1,"ks":{"a":0,"k":{"i":[[-3.287,-1.74],[0.33,3.269],[3.419,-2.748],[0.049,-2.655]],"o":[[0.466,-5.491],[-4.824,1.448],[1.211,2.328],[1.87,-4.952]],"v":[[9.373,1.574],[8.739,-8.353],[-5.69,-0.945],[-3.512,5.779]],"c":true},"ix":2},"nm":"Path 1","mn":"ADBE Vector Shape - Group","hd":false},{"ty":"fl","c":{"a":0,"k":[1,0.615692138672,0.262756347656,1],"ix":4},"o":{"a":0,"k":100,"ix":5},"r":1,"bm":0,"nm":"Fill 1","mn":"ADBE Vector Graphic - Fill","hd":false},{"ty":"tr","p":{"a":0,"k":[0,0],"ix":2},"a":{"a":0,"k":[0,0],"ix":1},"s":{"a":0,"k":[100,100],"ix":3},"r":{"a":0,"k":0,"ix":6},"o":{"a":0,"k":100,"ix":7},"sk":{"a":0,"k":0,"ix":4},"sa":{"a":0,"k":0,"ix":5},"nm":"Transform"}],"nm":"Shape 1","np":2,"cix":2,"bm":0,"ix":1,"mn":"ADBE Vector Group","hd":false}],"ip":14,"op":51,"st":14,"ct":1,"bm":0},{"ddd":0,"ind":21,"ty":4,"nm":"04","sr":1,"ks":{"o":{"a":1,"k":[{"i":{"x":[0.667],"y":[1]},"o":{"x":[0.333],"y":[0]},"t":26,"s":[100]},{"t":34,"s":[0]}],"ix":11},"r":{"a":1,"k":[{"i":{"x":[0.2],"y":[1]},"o":{"x":[0.167],"y":[0.167]},"t":14,"s":[30]},{"t":34,"s":[-120]}],"ix":10},"p":{"a":1,"k":[{"i":{"x":0.2,"y":1},"o":{"x":0.167,"y":0.167},"t":14,"s":[335.062,135.938,0],"to":[-23.917,-7.5,0],"ti":[37.167,-55.5,0]},{"t":34,"s":[234.812,190.688,0]}],"ix":2,"l":2},"a":{"a":0,"k":[0,0,0],"ix":1,"l":2},"s":{"a":0,"k":[100,100,100],"ix":6,"l":2}},"ao":0,"shapes":[{"ty":"gr","it":[{"ind":0,"ty":"sh","ix":1,"ks":{"a":0,"k":{"i":[[-3.355,3.554],[1.927,2.283],[-9.318,-2.712],[-6.987,-0.504]],"o":[[-4.762,1.075],[1.98,9.786],[-4.201,-3.86],[-10.221,-4.551]],"v":[[1.542,-8.916],[-9.636,-10.526],[5.973,9.258],[12.628,3.336]],"c":true},"ix":2},"nm":"Path 1","mn":"ADBE Vector Shape - Group","hd":false},{"ty":"fl","c":{"a":0,"k":[1,0.411773681641,0.619598388672,1],"ix":4},"o":{"a":0,"k":100,"ix":5},"r":1,"bm":0,"nm":"Fill 1","mn":"ADBE Vector Graphic - Fill","hd":false},{"ty":"tr","p":{"a":0,"k":[0,0],"ix":2},"a":{"a":0,"k":[0,0],"ix":1},"s":{"a":0,"k":[100,100],"ix":3},"r":{"a":0,"k":0,"ix":6},"o":{"a":0,"k":100,"ix":7},"sk":{"a":0,"k":0,"ix":4},"sa":{"a":0,"k":0,"ix":5},"nm":"Transform"}],"nm":"Shape 1","np":2,"cix":2,"bm":0,"ix":1,"mn":"ADBE Vector Group","hd":false}],"ip":14,"op":51,"st":14,"ct":1,"bm":0},{"ddd":0,"ind":22,"ty":4,"nm":"03","sr":1,"ks":{"o":{"a":1,"k":[{"i":{"x":[0.667],"y":[1]},"o":{"x":[0.333],"y":[0]},"t":26,"s":[100]},{"t":38,"s":[0]}],"ix":11},"r":{"a":1,"k":[{"i":{"x":[0.2],"y":[1]},"o":{"x":[0.167],"y":[0.167]},"t":14,"s":[0]},{"t":38,"s":[-174]}],"ix":10},"p":{"a":1,"k":[{"i":{"x":0.2,"y":1},"o":{"x":0.167,"y":0.167},"t":14,"s":[329.812,151.062,0],"to":[-46.667,-17.375,0],"ti":[73.292,-70.875,0]},{"t":38,"s":[155.812,196.688,0]}],"ix":2,"l":2},"a":{"a":0,"k":[0,0,0],"ix":1,"l":2},"s":{"a":0,"k":[100,100,100],"ix":6,"l":2}},"ao":0,"shapes":[{"ty":"gr","it":[{"ind":0,"ty":"sh","ix":1,"ks":{"a":0,"k":{"i":[[-6.355,1.624],[-0.094,2.685],[0.902,-10.571],[-2.672,-0.74]],"o":[[-5.064,-0.918],[-8.431,3.026],[2.295,1.892],[-1.278,-8.013]],"v":[[12.264,-3.688],[4.959,-10.149],[-6.326,5.862],[1.575,9.836]],"c":true},"ix":2},"nm":"Path 1","mn":"ADBE Vector Shape - Group","hd":false},{"ty":"fl","c":{"a":0,"k":[0,0.862731933594,0.850982666016,1],"ix":4},"o":{"a":0,"k":100,"ix":5},"r":1,"bm":0,"nm":"Fill 1","mn":"ADBE Vector Graphic - Fill","hd":false},{"ty":"tr","p":{"a":0,"k":[0,0],"ix":2},"a":{"a":0,"k":[0,0],"ix":1},"s":{"a":0,"k":[100,100],"ix":3},"r":{"a":0,"k":0,"ix":6},"o":{"a":0,"k":100,"ix":7},"sk":{"a":0,"k":0,"ix":4},"sa":{"a":0,"k":0,"ix":5},"nm":"Transform"}],"nm":"Shape 1","np":2,"cix":2,"bm":0,"ix":1,"mn":"ADBE Vector Group","hd":false}],"ip":14,"op":51,"st":14,"ct":1,"bm":0},{"ddd":0,"ind":23,"ty":4,"nm":"02","sr":1,"ks":{"o":{"a":1,"k":[{"i":{"x":[0.667],"y":[1]},"o":{"x":[0.333],"y":[0]},"t":31,"s":[100]},{"t":43,"s":[0]}],"ix":11},"r":{"a":1,"k":[{"i":{"x":[0.2],"y":[1]},"o":{"x":[0.167],"y":[0.167]},"t":13,"s":[40]},{"t":43,"s":[-180]}],"ix":10},"p":{"a":1,"k":[{"i":{"x":0.2,"y":1},"o":{"x":0.167,"y":0.167},"t":13,"s":[334.438,143.812,0],"to":[-48.417,-85,0],"ti":[74.917,-146,0]},{"t":43,"s":[92.312,227.938,0]}],"ix":2,"l":2},"a":{"a":0,"k":[0,0,0],"ix":1,"l":2},"s":{"a":0,"k":[100,100,100],"ix":6,"l":2}},"ao":0,"shapes":[{"ty":"gr","it":[{"ind":0,"ty":"sh","ix":1,"ks":{"a":0,"k":{"i":[[1.522,8.125],[4.185,1.925],[-8.65,-6.641],[-2.714,4.858]],"o":[[-1.691,3.854],[3.116,9.362],[-0.359,-5.887],[-5.244,-0.724]],"v":[[-1.458,-14.6],[-9.636,-10.526],[5.141,12.567],[12.628,3.336]],"c":true},"ix":2},"nm":"Path 1","mn":"ADBE Vector Shape - Group","hd":false},{"ty":"fl","c":{"a":0,"k":[0.454901990704,0.298039215686,0.913725550034,1],"ix":4},"o":{"a":0,"k":100,"ix":5},"r":1,"bm":0,"nm":"Fill 1","mn":"ADBE Vector Graphic - Fill","hd":false},{"ty":"tr","p":{"a":0,"k":[0,0],"ix":2},"a":{"a":0,"k":[0,0],"ix":1},"s":{"a":0,"k":[100,100],"ix":3},"r":{"a":0,"k":0,"ix":6},"o":{"a":0,"k":100,"ix":7},"sk":{"a":0,"k":0,"ix":4},"sa":{"a":0,"k":0,"ix":5},"nm":"Transform"}],"nm":"Shape 1","np":2,"cix":2,"bm":0,"ix":1,"mn":"ADBE Vector Group","hd":false}],"ip":13,"op":50,"st":13,"ct":1,"bm":0},{"ddd":0,"ind":24,"ty":4,"nm":"01","sr":1,"ks":{"o":{"a":1,"k":[{"i":{"x":[0.667],"y":[1]},"o":{"x":[0.333],"y":[0]},"t":25,"s":[100]},{"t":37,"s":[0]}],"ix":11},"r":{"a":1,"k":[{"i":{"x":[0.833],"y":[1]},"o":{"x":[0.167],"y":[0.167]},"t":13,"s":[60]},{"t":37,"s":[-193]}],"ix":10},"p":{"a":1,"k":[{"i":{"x":0.2,"y":1},"o":{"x":0.167,"y":0.167},"t":13,"s":[333.562,161.812,0],"to":[-52.917,5.5,0],"ti":[46.417,-69.5,0]},{"t":37,"s":[193.562,263.688,0]}],"ix":2,"l":2},"a":{"a":0,"k":[0,0,0],"ix":1,"l":2},"s":{"a":0,"k":[100,100,100],"ix":6,"l":2}},"ao":0,"shapes":[{"ty":"gr","it":[{"ind":0,"ty":"sh","ix":1,"ks":{"a":0,"k":{"i":[[1.522,8.125],[5.355,-0.493],[-5.285,-3.375],[-2.386,3.562]],"o":[[-2.103,4.562],[2.98,7.819],[2.778,-0.688],[-5.386,-2.125]],"v":[[0.541,-12.5],[-9.167,-6.069],[2.847,10.062],[10.761,2.688]],"c":true},"ix":2},"nm":"Path 1","mn":"ADBE Vector Shape - Group","hd":false},{"ty":"fl","c":{"a":0,"k":[1,0.615692138672,0.262756347656,1],"ix":4},"o":{"a":0,"k":100,"ix":5},"r":1,"bm":0,"nm":"Fill 1","mn":"ADBE Vector Graphic - Fill","hd":false},{"ty":"tr","p":{"a":0,"k":[0,0],"ix":2},"a":{"a":0,"k":[0,0],"ix":1},"s":{"a":0,"k":[100,100],"ix":3},"r":{"a":0,"k":0,"ix":6},"o":{"a":0,"k":100,"ix":7},"sk":{"a":0,"k":0,"ix":4},"sa":{"a":0,"k":0,"ix":5},"nm":"Transform"}],"nm":"Shape 1","np":2,"cix":2,"bm":0,"ix":1,"mn":"ADBE Vector Group","hd":false}],"ip":13,"op":50,"st":13,"ct":1,"bm":0},{"ddd":0,"ind":25,"ty":4,"nm":"dibu","sr":1,"ks":{"o":{"a":0,"k":100,"ix":11},"r":{"a":0,"k":0,"ix":10},"p":{"a":0,"k":[360,140,0],"ix":2,"l":2},"a":{"a":0,"k":[0,0,0],"ix":1,"l":2},"s":{"a":0,"k":[100,100,100],"ix":6,"l":2}},"ao":0,"shapes":[{"ty":"gr","it":[{"d":1,"ty":"el","s":{"a":1,"k":[{"i":{"x":[0.833,0.833],"y":[0.833,0.833]},"o":{"x":[0.333,0.333],"y":[0,0]},"t":10,"s":[80,80]},{"t":14,"s":[40,40]}],"ix":2},"p":{"a":0,"k":[0,0],"ix":3},"nm":"Ellipse Path 1","mn":"ADBE Vector Shape - Ellipse","hd":false},{"ty":"st","c":{"a":0,"k":[0,0.721568644047,0.462745130062,1],"ix":3},"o":{"a":0,"k":100,"ix":4},"w":{"a":1,"k":[{"i":{"x":[0.833],"y":[0.833]},"o":{"x":[0.333],"y":[0]},"t":10,"s":[0]},{"t":14,"s":[40]}],"ix":5},"lc":1,"lj":1,"ml":4,"bm":0,"nm":"Stroke 1","mn":"ADBE Vector Graphic - Stroke","hd":false},{"ty":"tr","p":{"a":0,"k":[0,0],"ix":2},"a":{"a":0,"k":[0,0],"ix":1},"s":{"a":0,"k":[100,100],"ix":3},"r":{"a":0,"k":0,"ix":6},"o":{"a":0,"k":100,"ix":7},"sk":{"a":0,"k":0,"ix":4},"sa":{"a":0,"k":0,"ix":5},"nm":"Transform"}],"nm":"Ellipse 1","np":2,"cix":2,"bm":0,"ix":1,"mn":"ADBE Vector Group","hd":false}],"ip":0,"op":288,"st":0,"ct":1,"bm":0}],"markers":[],"props":{}};
+
+        async function loadLottieAnimation() {
+            const player = document.getElementById('successAnimation');
+            if (!player) return;
+            await customElements.whenDefined('lottie-player');
+            player.load(LOTTIE_JSON_DATA);
+            player.play();
+        }
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', loadLottieAnimation);
+        } else {
+            loadLottieAnimation();
+        }
+    </script>
+
+    <script>
+        // ---------- Transaction data handling and history saving ----------
+        (function() {
+            const amountEl = document.getElementById('displayAmount');
+            if (!amountEl) return;
+
+            function formatTransactionDate(timestamp) {
+                const date = new Date(timestamp);
+                const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                const month = months[date.getMonth()];
+                const day = date.getDate();
+                const suffix = (day % 10 === 1 && day !== 11) ? 'st' : (day % 10 === 2 && day !== 12) ? 'nd' : (day % 10 === 3 && day !== 13) ? 'rd' : 'th';
+                const year = date.getFullYear();
+                const hh = String(date.getHours()).padStart(2, '0');
+                const min = String(date.getMinutes()).padStart(2, '0');
+                const ss = String(date.getSeconds()).padStart(2, '0');
+                return `${month} ${day}${suffix}, ${year} ${hh}:${min}:${ss}`;
+            }
+
+            function generateTransactionId() {
+                const now = new Date();
+                const yy = now.getFullYear().toString().slice(-2);
+                const mm = String(now.getMonth() + 1).padStart(2, '0');
+                const dd = String(now.getDate()).padStart(2, '0');
+                const randomPart = Math.floor(Math.random() * 1000000000).toString().padStart(9, '0');
+                return `${yy}${mm}${dd}02${randomPart}1`;
+            }
+
+            function generateSessionId() {
+                const now = new Date();
+                const yy = now.getFullYear().toString().slice(-2);
+                const mm = String(now.getMonth() + 1).padStart(2, '0');
+                const dd = String(now.getDate()).padStart(2, '0');
+                const hh = String(now.getHours()).padStart(2, '0');
+                const min = String(now.getMinutes()).padStart(2, '0');
+                const ss = String(now.getSeconds()).padStart(2, '0');
+                const random = Math.floor(Math.random() * 10000000).toString().padStart(7, '0');
+                return `100004${yy}${mm}${dd}${hh}${min}${ss}${random}`;
+            }
+
+            function formatCurrency(amount) {
+                return new Intl.NumberFormat('en-NG', {
+                    style: 'currency',
+                    currency: 'NGN',
+                    minimumFractionDigits: 2
+                }).format(amount);
+            }
+
+            // Load amount from pending transaction first, then from receipt
+            let amountValue = null;
+            const txData = localStorage.getItem('transfer.tx.pending');
+            if (txData) {
+                try {
+                    const tx = JSON.parse(txData);
+                    if (tx && tx.amount != null) {
+                        amountValue = tx.amount;
+                        amountEl.textContent = formatCurrency(tx.amount);
+
+                        // Create receipt from pending
+                        const now = new Date();
+                        const paymentSuccessTime = now.getTime();
+                        const processingTime = paymentSuccessTime;
+                        const receivedTime = paymentSuccessTime + 15 * 1000;
+                        const transactionId = generateTransactionId();
+                        const sessionId = generateSessionId();
+
+                        const receipt = {
+                            ...tx,
+                            paymentSuccessTime,
+                            processingTime,
+                            receivedTime,
+                            transactionId,
+                            sessionId
+                        };
+                        localStorage.setItem('transfer.receipt', JSON.stringify(receipt));
+                        localStorage.removeItem('transfer.tx.pending');
+                    }
+                } catch (e) {
+                    console.error('Failed to process transaction data', e);
+                }
+            }
+
+            if (!amountValue) {
+                const receiptData = localStorage.getItem('transfer.receipt');
+                if (receiptData) {
+                    try {
+                        const receipt = JSON.parse(receiptData);
+                        if (receipt && receipt.amount != null) {
+                            amountValue = receipt.amount;
+                            amountEl.textContent = formatCurrency(receipt.amount);
+                        }
+                    } catch (e) {
+                        console.error('Failed to parse receipt', e);
+                    }
+                }
+            }
+
+            // If still no amount, try to get the most recent sent transaction from history
+            if (!amountValue) {
+                try {
+                    const transactions = JSON.parse(localStorage.getItem('transactions') || '[]');
+                    const recentSent = transactions.find(tx => tx.type === 'sent');
+                    if (recentSent && recentSent.amount != null) {
+                        amountEl.textContent = formatCurrency(recentSent.amount);
+                    } else {
+                        amountEl.textContent = '';
+                    }
+                } catch (e) {
+                    console.error('Failed to load transactions', e);
+                }
+            }
+
+            // Replace the current history entry with dashboard, so that pressing back from this page
+            // goes to dashboard instead of the previous page.
+            history.replaceState(null, '', 'dashboardful.html');
+        })();
+
+        // ----- Upgrade Modal logic -----
+        const upgradeOverlay = document.getElementById('upgradeModalOverlay');
+        const upgradeModal = document.getElementById('upgradeModal');
+        const upgradeDismiss = document.getElementById('upgradeDismissBtn');
+        const upgradeAction = document.getElementById('upgradeActionBtn');
+        const upgradeLoader = document.getElementById('upgradeLoaderOverlay');
+
+        function showUpgradeModal() {
+            if (!upgradeOverlay) return;
+            upgradeOverlay.style.display = 'flex';
+            if (upgradeModal) upgradeModal.classList.remove('upgrade-modal-exit');
+        }
+
+        function hideUpgradeModal() {
+            if (!upgradeModal) return;
+            upgradeModal.classList.add('upgrade-modal-exit');
+            upgradeModal.addEventListener('animationend', function handler() {
+                upgradeModal.removeEventListener('animationend', handler);
+                if (upgradeOverlay) upgradeOverlay.style.display = 'none';
+                upgradeModal.classList.remove('upgrade-modal-exit');
+            });
+        }
+
+        function showLoader() {
+            if (upgradeLoader) upgradeLoader.style.display = 'flex';
+        }
+
+        function hideLoader() {
+            if (upgradeLoader) upgradeLoader.style.display = 'none';
+        }
+
+        if (upgradeDismiss) {
+            upgradeDismiss.addEventListener('click', () => hideUpgradeModal());
+        }
+
+        if (upgradeAction) {
+            upgradeAction.addEventListener('click', () => {
+                showLoader();
+                setTimeout(() => {
+                    window.open('/upgrade-subscribe.html', '_blank');
+                    hideLoader();
+                    hideUpgradeModal();
+                }, 800);
+            });
+        }
+
+        if (upgradeOverlay) {
+            upgradeOverlay.addEventListener('click', (e) => {
+                if (e.target === upgradeOverlay) hideUpgradeModal();
+            });
+        }
+
+        // ----- Modified action handlers with tier check -----
+        function handleShareReceipt() {
+            const tier = window.getUserTier ? window.getUserTier() : 0;
+            if (tier === 0) {
+                showUpgradeModal();
+                return;
+            }
+            // Proceed with original share receipt
+            const receiptData = localStorage.getItem('transfer.receipt');
+            if (receiptData) {
+                try {
+                    localStorage.setItem('shareReceiptData', receiptData);
+                    window.location.href = 'sign-receipt.html';
+                } catch (e) {
+                    alert('Unable to share receipt.');
+                }
+            } else {
+                alert('Receipt data not found.');
+            }
+        }
+
+        function handleAddToFavorites() {
+            const tier = window.getUserTier ? window.getUserTier() : 0;
+            if (tier === 0) {
+                showUpgradeModal();
+                return;
+            }
+            // Original add to favourites
+            const favouriteBox = document.getElementById('favourite-box');
+            const span = favouriteBox.querySelector('span');
+            if (span.textContent === 'Favourites Added') return;
+
+            const receiptData = localStorage.getItem('transfer.receipt');
+            if (!receiptData) {
+                console.warn('No transaction data to add to favourites');
+                return;
+            }
+            try {
+                const tx = JSON.parse(receiptData);
+                const recipient = {
+                    accountname: tx.accountname,
+                    accountnumber: tx.accountnumber,
+                    bankname: tx.bankname,
+                    url: tx.url
+                };
+                if (window.addToFavourites) {
+                    window.addToFavourites(recipient).then(success => {
+                        if (success) {
+                            const img = favouriteBox.querySelector('img');
+                            img.src = 'images/trans/favourite.png';
+                            img.alt = 'Favourites Added';
+                            span.textContent = 'Favourites Added';
+                            favouriteBox.classList.add('favourite-added');
+                        } else {
+                            console.warn('Failed to add favourite');
+                        }
+                    });
+                } else {
+                    console.warn('Favourites function not available');
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        function handleViewDetails() {
+            const receiptData = localStorage.getItem('transfer.receipt');
+            if (receiptData) {
+                try {
+                    const receipt = JSON.parse(receiptData);
+                    const bankName = (receipt.bankname || '').toLowerCase();
+                    if (bankName === 'opay') {
+                        window.location.href = 'opaytransucces.html';
+                    } else {
+                        window.location.href = 'transucc1.html';
+                    }
+                } catch (e) {
+                    window.location.href = 'transucc1.html';
+                }
+            } else {
+                window.location.href = 'transucc1.html';
+            }
+        }
+
+        // Attach event listeners
+        document.getElementById('shareReceiptBtn').addEventListener('click', handleShareReceipt);
+        document.getElementById('favourite-box').addEventListener('click', handleAddToFavorites);
+        document.getElementById('viewDetailsBtn').addEventListener('click', handleViewDetails);
+
+        document.addEventListener("contextmenu", function(e){ e.preventDefault(); });
+        document.onkeydown = function(e) {
+            if (e.keyCode == 123) return false;
+            if (e.ctrlKey && e.shiftKey && (e.keyCode == 'I'.charCodeAt(0) || e.keyCode == 'J'.charCodeAt(0))) return false;
+            if (e.ctrlKey && (e.keyCode == 'U'.charCodeAt(0))) return false;
+        }
+    </script>
+    <script src="/pwa-check.js"></script>
+    <script src="/network-popup.js"></script>
+</body>
+</html>

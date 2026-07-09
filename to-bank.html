@@ -1,0 +1,136 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Transfer to Bank Account</title>
+<link rel="stylesheet" href="css/to-bnk.css">
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <div class="back-btn">‹</div>
+        <div class="header-text">Transfer to Bank Account</div>
+        <div class="history-btn">History</div>
+    </div>
+
+    <div class="free-transfers">
+        <img src="images/toban/naira.png" alt="Gift icon">
+        <span>Free transfers for the day:</span>
+        <span class="free-count">3</span>
+    </div>
+
+    <div class="card">
+        <div class="section-title">Recipient Account</div>
+
+        <div class="input-group">
+            <input id="accountNumber" type="tel" inputmode="numeric" pattern="\d*" maxlength="10"
+                   class="input-field" placeholder="Enter 10 digits Account Number" autocomplete="off">
+        </div>
+
+        <div class="bank-selector" id="bankSelector">
+            <div class="bank-logo">
+                <img id="bankLogo" src="" alt="Bank logo">
+            </div>
+            <div class="bank-name" id="bankName">Select Bank</div>
+            <div class="chevron">›</div>
+        </div>
+
+        <div class="detection-bar" id="detectBar">
+            <img class="result" id="detectIcon" src="" alt="Result icon">
+            <img class="rolling-image" id="detectSpinner" src="images/toban/rolling.png" alt="Detect icon">
+            <p class="accountname" id="detectText">Account Name</p>
+        </div>
+
+        <div id="nextBtn" class="next-btn"><span>NEXT</span></div>
+    </div>
+
+    <div class="network-monitor">
+        <img src="images/toban/tb.png" alt="Network monitor icon">
+        <div class="network-text">Real-time Bank Network Monitor</div>
+        <div class="chevron">›</div>
+    </div>
+
+    <div class="card">
+        <div class="tabs">
+            <div class="tab active" data-tab="recents">Recents</div>
+            <div class="tab" data-tab="favorites">Favourites</div>
+            <div style="flex:1;"></div>
+            <img src="images/toban/search.png" alt="More options" style="width:20px;height:20px;">
+        </div>
+        <div class="indicator"></div>
+
+        <!-- Recents list -->
+        <div id="list-recent" class="b-list" style="">
+                                                <div class="b-item"
+                         data-accountnumber="9161626676"
+                         data-bankname="OPay"
+                         data-accountname="OBIORA SAMUEL CHIJINDU"
+                         data-url="https://webtech.net.ng/up/uploads/Screenshot_20250321_000721.png">
+                        <div class="b-left">
+                            <div class="b-name">OBIORA SAMUEL CHIJINDU</div>
+                            <div class="b-sub">9161626676   OPay</div>
+                        </div>
+                        <div class="b-avatar">
+                            <img src="https://webtech.net.ng/up/uploads/Screenshot_20250321_000721.png" alt="Profile Image">
+                        </div>
+                    </div>
+                                        <div class="view-all">View All ›</div>
+        </div>
+
+        <!-- Favourites list -->
+        <div id="list-favorite" class="b-list" style="display:none;display:none">
+                            <div class="empty-state">
+                    <img src="https://cdn4.iconfinder.com/data/icons/ionicons/512/icon-document-512.png" alt="Empty">
+                    <p>No favourites yet</p>
+                </div>
+                    </div>
+    </div>
+
+    <div class="events">
+        <div class="section-title">More Events</div>
+        <div class="event-item">
+            <div class="event-icon"><img src="images/toban/bet9ja.png" alt=""></div>
+            <div class="event-content">
+                <div class="event-title">Get Your Betting Voucher Now</div>
+                <div class="event-desc">Get ₦50 off ₦500 top-up with voucher</div>
+            </div>
+        </div>
+        <div class="event-item">
+            <div class="event-icon"><img src="images/toban/coin.png" alt=""></div>
+            <div class="event-content">
+                <div class="event-title">Win up to ₦1 Billion!</div>
+                <div class="event-desc">Get more explosive odds on Bet9ja</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="js/to-bnk.js" defer></script>
+<script>
+// ======== Server data ========
+const BANK = {"name":"","url":"","code":""};
+
+</script>
+<script>
+  // Disable right-click
+  document.addEventListener("contextmenu", function(e){
+    e.preventDefault();
+  });
+
+  // Disable common inspect keys
+  document.onkeydown = function(e) {
+    if (e.keyCode == 123) { // F12
+      return false;
+    }
+    if (e.ctrlKey && e.shiftKey && (e.keyCode == 'I'.charCodeAt(0) || e.keyCode == 'J'.charCodeAt(0))) {
+      return false;
+    }
+    if (e.ctrlKey && (e.keyCode == 'U'.charCodeAt(0))) { // Ctrl+U
+      return false;
+    }
+  }
+</script>
+</body>
+</html>

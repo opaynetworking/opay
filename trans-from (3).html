@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Transaction Details</title>
+    <style>
+        :root {
+            --primary-green: #00C087;
+            --bg-color: #F5F7FA;
+            --card-bg: #FFFFFF;
+            --text-main: #1F2937;
+            --text-secondary: #6B7280;
+            --text-light: #9CA3AF;
+            --border-color: #E5E7EB;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 480px;
+            background-color: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            position: relative;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 16px;
+            background-color: var(--card-bg);
+            flex-shrink: 0;
+        }
+
+        .header-left, .header-right {
+            width: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .header-title {
+            display: flex;
+            font-size: 14px;
+            padding-right: 150px;
+            font-weight: 400;
+            color: var(--text-main);
+        }
+
+        .scroll-area {
+            flex: 1;
+            overflow-y: auto;
+            padding-bottom: 8px;
+            margin-top: 20px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            margin: 12px 16px;
+            padding: 16px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .receipt-header {
+            text-align: center;
+            margin-bottom: 0;
+        }
+
+        .bank-logo-container {
+            width: 40px;
+            height: 40px;
+            margin: -30px auto 16px;
+            border-radius: 50%;
+            overflow: hidden;
+            background: #FFFFFF;
+            border: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+        }
+
+        .bank-logo {
+            width: 40px;
+            height: auto;
+            object-fit: contain;
+        }
+
+        .recipient-label {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-main);
+            margin-bottom: 4px;
+        }
+
+        .amount {
+            font-size: 30px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 4px;
+            letter-spacing: -0.5px;
+        }
+
+        .status-success {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            color: var(--primary-green);
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 0;
+        }
+
+        .status-success img {
+            width: 14px;
+            height: 14px;
+            object-fit: contain;
+        }
+
+        .details-header {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 14px;
+            color: var(--text-main);
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 14px;
+            font-size: 12px;
+        }
+
+        .detail-label {
+            color: var(--text-secondary);
+            width: 35%;
+            padding-right: 8px;
+        }
+
+        .detail-value-container {
+            width: 65%;
+            text-align: right;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+        
+        .detail-value-main {
+            color: var(--text-main);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px;
+            word-break: break-word;
+            text-align: right;
+            line-height: 1.4;
+        }
+
+        .detail-sub {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+            text-align: right;
+        }
+
+        .copy-icon {
+            color: var(--text-light);
+            cursor: pointer;
+            width: 13px;
+            height: 13px;
+            flex-shrink: 0;
+        }
+
+        .chevron-right {
+            width: 13px;
+            height: 13px;
+            color: var(--text-light);
+            flex-shrink: 0;
+        }
+
+        .more-actions-card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            margin: 12px 16px;
+            padding: 16px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .actions-title {
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--text-main);
+        }
+
+        .category-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 12px;
+        }
+
+        .category-label {
+            color: var(--text-secondary);
+            width: 35%;
+        }
+
+        .category-value {
+            width: 65%;
+            text-align: right;
+            font-weight: 500;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 4px;
+        }
+
+        .copy-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 150px;
+            height: 100px;
+            background-color: #1e1e1e;
+            border-radius: 16px;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .copy-popup svg {
+            width: 30px;
+            height: 30px;
+            stroke: white;
+            fill: none;
+            margin-bottom: 8px;
+        }
+
+        .copy-popup span {
+            color: white;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .remarks-text {
+            text-align: right;
+            font-weight: 400;
+            color: var(--text-main);
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <div class="header-left" onclick="history.back()">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1F2937" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 12H5M12 19l-7-7 7-7" />
+                </svg>
+            </div>
+            <div class="header-title">Transaction Details</div>
+            <div class="header-right">
+                <img src="images/history/supp.png" alt="support" width="60" height="50" style="display:block;">
+            </div>
+        </header>
+
+        <div class="scroll-area">
+            <div class="card">
+                <div class="receipt-header">
+                    <!-- Fixed bank logo - never changes -->
+                    <div class="bank-logo-container">
+                        <img class="bank-logo" src="images/banks/Screenshot_20250319_161955.png" alt="bank">
+                    </div>
+                    
+                    <div class="recipient-label" id="recipientLabel">Transfer from Paystack</div>
+                    <div class="amount" id="amountDisplay">₦76,000.00</div>
+                    <div class="status-success">
+                        <img src="images/trans/pay_result_successful.png" alt="success">
+                        Successful
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="details-header">Transaction Details</div>
+                
+                <div class="detail-row">
+                    <span class="detail-label">Credited to</span>
+                    <div class="detail-value-main">Available Balance</div>
+                </div>
+
+                <div class="detail-row">
+                    <span class="detail-label">Sender Details</span>
+                    <div class="detail-value-container" id="senderDetails">
+                        <span style="color: var(--text-main); font-weight:500; font-size:12px;">Paystack</span>
+                        <span class="detail-sub">| 101****813</span>
+                    </div>
+                </div>
+
+                <div class="detail-row">
+                    <span class="detail-label">Remark</span>
+                    <div class="detail-value-container">
+                        <div class="remarks-text" id="remarkText">
+                            Savings WithdrawalBAOBAB MICROFINANCE BANK NIGERIA LIMITED
+                        </div>
+                    </div>
+                </div>
+
+                <div class="detail-row">
+                    <span class="detail-label">Transaction Type</span>
+                    <div class="detail-value-main">Bank Deposit</div>
+                </div>
+
+                <div class="detail-row">
+                    <span class="detail-label">Transaction No.</span>
+                    <div class="detail-value-main" id="transactionNumber">
+                        260310060100995435321340
+                        <svg class="copy-icon" data-copy="transaction" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                    </div>
+                </div>
+
+                <div class="detail-row">
+                    <span class="detail-label">Transaction Date</span>
+                    <div class="detail-value-main" id="transactionDate">Mar 11th, 2026 00:50:09</div>
+                </div>
+
+                <div class="detail-row">
+                    <span class="detail-label">Session ID</span>
+                    <div class="detail-value-main" id="sessionId">
+                        110006260310235009096657943601
+                        <svg class="copy-icon" data-copy="session" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                    </div>
+                </div>
+            </div>
+
+            <div class="more-actions-card">
+                <div class="actions-title">More Actions</div>
+                <div class="category-row">
+                    <span class="category-label">Category</span>
+                    <span class="category-value">
+                        Deposit
+                        <svg class="chevron-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="copy-popup" id="copyPopup">
+        <svg viewBox="0 0 30 30">
+            <circle cx="15" cy="15" r="12" stroke="white" stroke-width="2" fill="none" />
+            <polyline points="8,15 13,20 22,10" stroke="white" stroke-width="2" fill="none" />
+        </svg>
+        <span>Copied successfully</span>
+    </div>
+
+    <script>
+        (function() {
+            const popup = document.getElementById('copyPopup');
+
+            function showPopup() {
+                popup.style.display = 'flex';
+                setTimeout(() => {
+                    popup.style.display = 'none';
+                }, 1500);
+            }
+
+            function copyText(text) {
+                navigator.clipboard.writeText(text).then(() => {
+                    showPopup();
+                }).catch(err => {
+                    console.error('Copy failed', err);
+                });
+            }
+
+            function getTextFromDetailValueMain(element) {
+                const clone = element.cloneNode(true);
+                const svgs = clone.querySelectorAll('svg');
+                svgs.forEach(svg => svg.remove());
+                return clone.textContent.trim();
+            }
+
+            function attachCopyIcons() {
+                document.querySelectorAll('.copy-icon').forEach(icon => {
+                    icon.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const parent = icon.closest('.detail-value-main');
+                        if (parent) {
+                            const textToCopy = getTextFromDetailValueMain(parent);
+                            copyText(textToCopy);
+                        }
+                    });
+                });
+            }
+
+            // Generate a transaction ID (similar to previous patterns)
+            function generateTransactionId() {
+                const now = new Date();
+                const yy = now.getFullYear().toString().slice(-2);
+                const mm = String(now.getMonth() + 1).padStart(2, '0');
+                const dd = String(now.getDate()).padStart(2, '0');
+                const hh = String(now.getHours()).padStart(2, '0');
+                const min = String(now.getMinutes()).padStart(2, '0');
+                const ss = String(now.getSeconds()).padStart(2, '0');
+                const random = Math.floor(Math.random() * 1000000).toString().padStart(6, '0');
+                return `${yy}${mm}${dd}${hh}${min}${ss}${random}`;
+            }
+
+            // Generate a session ID (similar to previous patterns)
+            function generateSessionId() {
+                const now = new Date();
+                const yy = now.getFullYear().toString().slice(-2);
+                const mm = String(now.getMonth() + 1).padStart(2, '0');
+                const dd = String(now.getDate()).padStart(2, '0');
+                const hh = String(now.getHours()).padStart(2, '0');
+                const min = String(now.getMinutes()).padStart(2, '0');
+                const ss = String(now.getSeconds()).padStart(2, '0');
+                const random = Math.floor(Math.random() * 10000000).toString().padStart(7, '0');
+                return `110006${yy}${mm}${dd}${hh}${min}${ss}${random}`;
+            }
+
+            // Load transaction data
+            function loadTransaction() {
+                const viewData = localStorage.getItem('viewTransaction');
+                if (viewData) {
+                    try {
+                        return JSON.parse(viewData);
+                    } catch (e) {
+                        console.error('Failed to parse viewTransaction', e);
+                    }
+                }
+                // Fallback to demo data (already static)
+                return null;
+            }
+
+            const tx = loadTransaction();
+            if (tx) {
+                // Bank logo remains fixed – do not change it.
+
+                // Recipient label: "Transfer from [sender name]"
+                document.getElementById('recipientLabel').textContent = `Transfer from ${tx.accountname || 'Sender'}`;
+
+                // Amount
+                const amountFormatted = new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN' }).format(tx.amount || 0);
+                document.getElementById('amountDisplay').textContent = amountFormatted;
+
+                // Sender details: name and masked account
+                const senderDetailsDiv = document.getElementById('senderDetails');
+                const accountNum = tx.accountnumber || '';
+                const maskedAccount = accountNum.length >= 6 ? accountNum.slice(0,3) + '****' + accountNum.slice(-3) : accountNum;
+                senderDetailsDiv.innerHTML = `
+                    <span style="color: var(--text-main); font-weight:500; font-size:12px;">${tx.accountname || 'Sender'}</span>
+                    <span class="detail-sub">| ${maskedAccount}</span>
+                `;
+
+                // Remark
+                document.getElementById('remarkText').textContent = tx.remark || 'No remark';
+
+                // Transaction number – generate if not present
+                const txId = tx.transactionId || generateTransactionId();
+                document.getElementById('transactionNumber').innerHTML = `
+                    ${txId}
+                    <svg class="copy-icon" data-copy="transaction" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                `;
+
+                // Session ID – generate if not present
+                const sessId = tx.sessionId || generateSessionId();
+                document.getElementById('sessionId').innerHTML = `
+                    ${sessId}
+                    <svg class="copy-icon" data-copy="session" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                `;
+
+                // Transaction date
+                const txDate = tx.date1 || (tx.created_at ? new Date(tx.created_at).toLocaleString('en-NG', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '');
+                document.getElementById('transactionDate').textContent = txDate;
+
+                attachCopyIcons();
+            } else {
+                // No transaction data – keep static demo
+                attachCopyIcons();
+            }
+
+            // Back button already handled by header onclick
+        })();
+    </script>
+    <script src="/pwa-check.js"></script>
+</body>
+</html>

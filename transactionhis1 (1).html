@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transactions History</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F2F4F8;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* Hide scrollbar for Chrome, Safari and Opera */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* Hide scrollbar for IE, Edge and Firefox */
+        .no-scrollbar {
+            -ms-overflow-style: none;  /* IE and Edge */
+            scrollbar-width: none;  /* Firefox */
+        }
+
+        .transaction-item {
+            transition: background-color 0.2s;
+        }
+        
+        .transaction-item:active {
+            background-color: #f0f0f0;
+        }
+
+        /* Modal Animation */
+        .modal-enter {
+            transform: translateY(100%);
+            opacity: 0;
+        }
+        .modal-enter-active {
+            transform: translateY(0);
+            opacity: 1;
+            transition: all 0.3s ease-out;
+        }
+        .modal-exit {
+            transform: translateY(0);
+            opacity: 1;
+        }
+        .modal-exit-active {
+            transform: translateY(100%);
+            opacity: 0;
+            transition: all 0.3s ease-in;
+        }
+
+        .picker-wheel {
+            height: 160px;
+            overflow-y: scroll;
+            scroll-snap-type: y mandatory;
+            position: relative;
+        }
+
+        .picker-item {
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            scroll-snap-align: center;
+            font-size: 1.25rem;
+            color: #9CA3AF;
+        }
+        
+        .picker-item.active {
+            color: #1F2937;
+            font-weight: 600;
+        }
+
+        /* Gradient overlay for picker to show it's scrollable */
+        .picker-container {
+            position: relative;
+            height: 160px;
+            overflow: hidden;
+        }
+        .picker-container::before, .picker-container::after {
+            content: '';
+            position: absolute;
+            left: 0;
+            right: 0;
+            height: 40px;
+            z-index: 10;
+            pointer-events: none;
+        }
+        .picker-container::before {
+            top: 0;
+            background: linear-gradient(to bottom, white, transparent);
+        }
+        .picker-container::after {
+            bottom: 0;
+            background: linear-gradient(to top, white, transparent);
+        }
+    </style>
+</head>
+<body class="max-w-md mx-auto bg-gray-50 min-h-screen shadow-2xl relative overflow-hidden">
+
+    <!-- Header -->
+    <header class="sticky top-0 z-20 bg-gray-50 px-4 py-3 flex items-center justify-between border-b border-gray-100">
+        <div class="flex items-center gap-3">
+            <button class="text-gray-500 hover:text-gray-800">
+                <i class="fa-solid fa-chevron-left text-lg"></i>
+            </button>
+            <h1 class="text-lg font-semibold text-gray-800">Transactions</h1>
+        </div>
+        <button class="text-[#00C896] font-medium text-sm">Download</button>
+    </header>
+
+    <!-- Main Content Scrollable Area -->
+    <main class="pb-20">
+        
+        <!-- Filters -->
+        <div class="px-4 pt-4 flex gap-3">
+            <button class="flex-1 bg-white border border-gray-200 text-gray-600 py-2.5 rounded-lg text-sm font-medium flex items-center justify-between px-4 shadow-sm">
+                All Categories <i class="fa-solid fa-chevron-down text-xs ml-2"></i>
+            </button>
+            <button class="flex-1 bg-white border border-gray-200 text-gray-600 py-2.5 rounded-lg text-sm font-medium flex items-center justify-between px-4 shadow-sm">
+                All Status <i class="fa-solid fa-chevron-down text-xs ml-2"></i>
+            </button>
+        </div>
+
+        <!-- Promo Banner -->
+        <div class="px-4 mt-4">
+            <div class="bg-[#FFF9E5] rounded-xl p-4 flex items-center justify-between relative overflow-hidden">
+                <div class="z-10 w-2/3">
+                    <h3 class="font-bold text-gray-800 text-sm mb-1">No transaction alerts?</h3>
+                    <p class="text-xs text-gray-600 mb-3 leading-relaxed">Activate SMS alerts to get instant notifications for every transaction – incoming or outgoing</p>
+                    <button class="bg-gray-900 text-white text-xs font-semibold py-2 px-4 rounded-full flex items-center gap-2">
+                        Activate Now <i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </div>
+                <div class="w-1/3 flex justify-end z-10">
+                    <img src="https://i.imgur.com/8XyZ9zL.png" alt="Alerts Promo" class="h-24 object-contain drop-shadow-md" onerror="this.src='https://placehold.co/100x100/FFD700/white?text=Bell';">
+                </div>
+                <!-- Decorative circle -->
+                <div class="absolute -right-4 -bottom-4 w-24 h-24 bg-yellow-200 rounded-full opacity-50 blur-xl"></div>
+            </div>
+        </div>
+
+        <!-- Summary Section -->
+        <div class="px-4 mt-6 mb-4">
+            <div class="flex items-center justify-between mb-2">
+                <button id="datePickerBtn" class="flex items-center gap-1 text-xl font-bold text-gray-900 hover:bg-gray-200 px-2 py-1 rounded transition">
+                    Mar 2026 <i class="fa-solid fa-chevron-down text-sm text-gray-400"></i>
+                </button>
+                <button class="bg-[#00C896] text-white text-xs font-medium px-4 py-1.5 rounded-full shadow-sm shadow-green-200">
+                    Analysis
+                </button>
+            </div>
+            <div class="flex gap-4 text-xs text-gray-500 font-medium">
+                <span>In: <span class="text-gray-900 font-semibold">₦571,305.83</span></span>
+                <span>Out: <span class="text-gray-900 font-semibold">₦574,310.00</span></span>
+            </div>
+        </div>
+
+        <!-- Transaction List -->
+        <div class="px-4 space-y-0" id="transactionList">
+            <!-- Transactions will be injected here via JS -->
+        </div>
+        
+        <!-- Loading Indicator -->
+        <div class="py-6 flex justify-center items-center gap-2 text-gray-400 text-sm">
+            <i class="fa-solid fa-circle-notch fa-spin"></i> loading...
+        </div>
+    </main>
+
+    <!-- Date Picker Modal Overlay -->
+    <div id="modalOverlay" class="fixed inset-0 bg-black/50 z-40 hidden transition-opacity opacity-0" onclick="closeModal()"></div>
+
+    <!-- Date Picker Modal -->
+    <div id="datePickerModal" class="fixed bottom-0 left-0 right-0 bg-white rounded-t-2xl z-50 transform translate-y-full transition-transform duration-300 ease-out max-w-md mx-auto">
+        <div class="p-4 border-b border-gray-100 flex justify-between items-center">
+            <div class="flex gap-6">
+                <div class="text-gray-900 font-semibold border-b-2 border-[#00C896] pb-1">Month</div>
+                <div class="text-gray-400 font-medium">Time Frame</div>
+            </div>
+            <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600">
+                <i class="fa-solid fa-xmark text-xl"></i>
+            </button>
+        </div>
+        
+        <div class="flex h-48">
+            <!-- Month Column -->
+            <div class="w-1/2 border-r border-gray-100 picker-container">
+                <div class="picker-wheel pt-[55px] pb-[55px]" id="monthWheel">
+                    <!-- JS will populate -->
+                </div>
+            </div>
+            <!-- Year Column -->
+            <div class="w-1/2 picker-container">
+                <div class="picker-wheel pt-[55px] pb-[55px]" id="yearWheel">
+                    <!-- JS will populate -->
+                </div>
+            </div>
+        </div>
+
+        <div class="p-4 border-t border-gray-100">
+            <button onclick="confirmDate()" class="w-full bg-[#00C896] text-white font-semibold py-3 rounded-full shadow-md hover:bg-[#00b083] transition">
+                Confirm
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Data from video
+        const transactions = [
+            { type: 'transfer-out', title: 'Transfer to CHIOMA ESTHER NWOSU', date: 'Mar 10th, 11:06:14', amount: -5000.00, status: 'Successful', icon: 'fa-building-columns', color: 'bg-green-50 text-green-600' },
+            { type: 'deposit', title: 'OWealth Deposit(from Spend & Save)', date: 'Mar 10th, 11:04:21', amount: 3798.00, status: 'Successful', icon: 'fa-wallet', color: 'bg-purple-50 text-purple-600' },
+            { type: 'withdrawal', title: 'Spend & Save Withdrawal', date: 'Mar 10th, 11:04:20', amount: -3798.00, status: 'Successful', icon: 'fa-money-bill-transfer', color: 'bg-orange-50 text-orange-600' },
+            { type: 'interest', title: 'Spend & Save Interest', date: 'Mar 10th, 02:17:32', amount: 0.90, status: 'Successful', icon: 'fa-percent', color: 'bg-purple-50 text-purple-600' },
+            { type: 'interest', title: 'OWealth Interest Earned', date: 'Mar 10th, 01:20:24', amount: 0.47, status: 'Successful', icon: 'fa-percent', color: 'bg-purple-50 text-purple-600' },
+            { type: 'deposit', title: 'Spend & Save Deposit', date: 'Mar 9th, 23:54:43', amount: 20.00, status: 'Successful', icon: 'fa-money-bill-transfer', color: 'bg-orange-50 text-orange-600' },
+            { type: 'transfer-out', title: 'Transfer to DANIEL NKEM CHUKWUEME...', date: 'Mar 9th, 23:54:35', amount: -200.00, status: 'Successful', icon: 'fa-arrow-up', color: 'bg-green-50 text-green-600' },
+            { type: 'deposit', title: 'Spend & Save Deposit', date: 'Mar 9th, 23:53:22', amount: 540.00, status: 'Successful', icon: 'fa-money-bill-transfer', color: 'bg-orange-50 text-orange-600' },
+            { type: 'transfer-out', title: 'Transfer to ABDULRASAK BAGOIARI', date: 'Mar 9th, 23:53:14', amount: -5400.00, status: 'Successful', icon: 'fa-arrow-up', color: 'bg-green-50 text-green-600' },
+            { type: 'deposit', title: 'OWealth Deposit(from Spend & Save)', date: 'Mar 9th, 23:52:37', amount: 3000.00, status: 'Successful', icon: 'fa-wallet', color: 'bg-purple-50 text-purple-600' },
+            { type: 'withdrawal', title: 'Spend & Save Withdrawal', date: 'Mar 9th, 23:52:36', amount: -3000.00, status: 'Successful', icon: 'fa-money-bill-transfer', color: 'bg-orange-50 text-orange-600' },
+            { type: 'tax', title: 'Stamp Duty', date: 'Mar 9th, 17:40:05', amount: -50.00, status: 'Successful', icon: 'fa-arrow-up', color: 'bg-green-50 text-green-600' },
+            { type: 'transfer-out', title: 'Transfer to DANIEL NKEM CHUKWUE...', date: 'Mar 9th, 17:39:47', amount: -50000.00, status: 'Successful', icon: 'fa-arrow-up', color: 'bg-green-50 text-green-600' },
+            { type: 'transfer-in', title: 'Transfer from Paystack', date: 'Mar 9th, 17:29:20', amount: 52000.00, status: 'Successful', icon: 'fa-arrow-down', color: 'bg-green-50 text-green-600' },
+            { type: 'deposit', title: 'Spend & Save Deposit', date: 'Mar 9th, 16:50:05', amount: 50.00, status: 'Successful', icon: 'fa-money-bill-transfer', color: 'bg-orange-50 text-orange-600' },
+            { type: 'transfer-out', title: 'Transfer to IFEOMA CHRISTIANA OLIKA...', date: 'Mar 9th, 16:49:58', amount: -500.00, status: 'Successful', icon: 'fa-arrow-up', color: 'bg-green-50 text-green-600' },
+            { type: 'deposit', title: 'Spend & Save Deposit', date: 'Mar 9th, 16:48:55', amount: 250.00, status: 'Successful', icon: 'fa-money-bill-transfer', color: 'bg-orange-50 text-orange-600' },
+            { type: 'transfer-out', title: 'Transfer to IFEOMA CHRISTIANA OLIK...', date: 'Mar 9th, 16:48:50', amount: -2500.00, status: 'Successful', icon: 'fa-arrow-up', color: 'bg-green-50 text-green-600' },
+            { type: 'deposit', title: 'Spend & Save Deposit', date: 'Mar 9th, 16:38:58', amount: 550.00, status: 'Successful', icon: 'fa-money-bill-transfer', color: 'bg-orange-50 text-orange-600' },
+            { type: 'transfer-out', title: 'Transfer to RILIWAN ISIAKA AREMU', date: 'Mar 9th, 16:38:51', amount: -5500.00, status: 'Successful', icon: 'fa-arrow-up', color: 'bg-green-50 text-green-600' },
+        ];
+
+        const listContainer = document.getElementById('transactionList');
+
+        function renderTransactions() {
+            listContainer.innerHTML = transactions.map(tx => {
+                let amountClass = tx.amount > 0 ? 'text-[#00C896]' : 'text-gray-900';
+                let amountSign = tx.amount > 0 ? '+' : '';
+                
+                return `
+                <div class="transaction-item flex items-center justify-between py-3 border-b border-gray-50 last:border-0">
+                    <div class="flex items-center gap-3 flex-1">
+                        <div class="w-10 h-10 rounded-full ${tx.color} flex items-center justify-center flex-shrink-0">
+                            <i class="fa-solid ${tx.icon} text-sm"></i>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <h4 class="text-sm font-medium text-gray-900 truncate">${tx.title}</h4>
+                            <p class="text-xs text-gray-400 mt-0.5">${tx.date}</p>
+                        </div>
+                    </div>
+                    <div class="text-right flex flex-col items-end gap-1">
+                        <span class="text-sm font-bold ${amountClass}">${amountSign}₦${Math.abs(tx.amount).toLocaleString('en-US', {minimumFractionDigits: 2})}</span>
+                        <span class="text-[10px] text-[#00C896] bg-green-50 px-1.5 py-0.5 rounded">${tx.status}</span>
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+
+        // Modal Logic
+        const modalOverlay = document.getElementById('modalOverlay');
+        const datePickerModal = document.getElementById('datePickerModal');
+        const datePickerBtn = document.getElementById('datePickerBtn');
+
+        function openModal() {
+            modalOverlay.classList.remove('hidden');
+            // Small delay to allow display:block to apply before opacity transition
+            setTimeout(() => {
+                modalOverlay.classList.remove('opacity-0');
+                datePickerModal.classList.remove('translate-y-full');
+            }, 10);
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeModal() {
+            modalOverlay.classList.add('opacity-0');
+            datePickerModal.classList.add('translate-y-full');
+            setTimeout(() => {
+                modalOverlay.classList.add('hidden');
+            }, 300);
+            document.body.style.overflow = 'auto';
+        }
+
+        datePickerBtn.addEventListener('click', openModal);
+
+        // Populate Picker Wheels
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const years = [2024, 2025, 2026, 2027, 2028];
+
+        function createWheelItems(containerId, items, selectedIndex) {
+            const container = document.getElementById(containerId);
+            // Add padding items for scroll effect
+            let html = '<div class="h-[55px]"></div>'; 
+            items.forEach((item, index) => {
+                const activeClass = index === selectedIndex ? 'active' : '';
+                html += `<div class="picker-item ${activeClass}">${item}</div>`;
+            });
+            html += '<div class="h-[55px]"></div>';
+            container.innerHTML = html;
+            
+            // Scroll to selected
+            setTimeout(() => {
+                container.scrollTop = (selectedIndex * 50);
+            }, 100);
+        }
+
+        createWheelItems('monthWheel', months, 2); // Mar is index 2
+        createWheelItems('yearWheel', years, 2); // 2026 is index 2
+
+        function confirmDate() {
+            // In a real app, we'd get the selected values from the scroll position
+            // For this demo, we just close the modal
+            closeModal();
+        }
+
+        // Initialize
+        renderTransactions();
+
+    </script>
+</body>
+</html>
+

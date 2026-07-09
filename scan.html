@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scan QR Code</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: #000000;
+            color: #ffffff;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            height: 100vh;
+            width: 100vw;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Back Button */
+        .back-button {
+            position: absolute;
+            top: 40px;
+            left: 20px;
+            background: none;
+            border: none;
+            color: #ffffff;
+            cursor: pointer;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+
+        .back-button:hover {
+            opacity: 0.8;
+        }
+
+        /* Center Text */
+        .scan-text {
+            position: absolute;
+            top: 52%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 17px;
+            font-weight: 400;
+            color: #ffffff;
+            text-align: center;
+            letter-spacing: 0.3px;
+        }
+
+        /* Bottom Controls */
+        .bottom-controls {
+            position: absolute;
+            bottom: 70px;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 55px;
+            align-items: flex-start;
+        }
+
+        /* Album Button */
+        .album-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .album-button {
+            background: rgba(120, 120, 120, 0.85);
+            border: none;
+            border-radius: 50%;
+            width: 62px;
+            height: 62px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .album-button:hover {
+            background: rgba(140, 140, 140, 0.9);
+        }
+
+        .album-button svg {
+            width: 30px;
+            height: 30px;
+        }
+
+        .album-label {
+            font-size: 15px;
+            color: #ffffff;
+            font-weight: 400;
+        }
+
+        /* Flashlight Button */
+        .flashlight-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .flashlight-button {
+            background: none;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            width: 62px;
+            height: 62px;
+        }
+
+        .flashlight-button svg {
+            width: 26px;
+            height: 32px;
+        }
+
+        .flashlight-label {
+            font-size: 15px;
+            color: #ffffff;
+            font-weight: 400;
+        }
+
+        .flashlight-button.active svg .torch-body {
+            fill: #ffffff;
+            stroke: #ffffff;
+        }
+
+        /* Hidden file input */
+        #fileInput {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Back Button -->
+    <button class="back-button" onclick="goBack()">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+    </button>
+
+    <!-- Center Text -->
+    <div class="scan-text">Scan QR Code</div>
+
+    <!-- Bottom Controls -->
+    <div class="bottom-controls">
+        <!-- Album Button -->
+        <div class="album-wrapper">
+            <button class="album-button" onclick="openAlbum()">
+                <!-- Exact Album/Image icon matching the screenshot -->
+                <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Outer rounded rectangle frame -->
+                    <rect x="3" y="5" width="18" height="14" rx="2" ry="2" stroke="#ffffff" stroke-width="1.8" fill="none"/>
+                    <!-- Mountain/landscape shape -->
+                    <path d="M3 16 L8 11 L12 15 L15 12 L21 18 L21 19 C21 20.1 20.1 21 19 21 L5 21 C3.9 21 3 20.1 3 19 Z" fill="#ffffff" opacity="0.95"/>
+                    <!-- Sun/moon circle -->
+                    <circle cx="8" cy="9" r="1.8" fill="#ffffff"/>
+                </svg>
+            </button>
+            <span class="album-label">Album</span>
+        </div>
+
+        <!-- Flashlight Button -->
+        <div class="flashlight-wrapper">
+            <button class="flashlight-button" id="flashlightBtn" onclick="toggleFlashlight()">
+                <!-- Exact Flashlight/Torch icon matching the screenshot -->
+                <svg viewBox="0 0 24 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Flashlight head (wider top) -->
+                    <path class="torch-body" d="M7 2 L17 2 L15 8 L9 8 Z" stroke="#ffffff" stroke-width="1.5" fill="none" stroke-linejoin="round"/>
+                    <!-- Flashlight neck -->
+                    <path class="torch-body" d="M9 8 L15 8 L14 12 L10 12 Z" stroke="#ffffff" stroke-width="1.5" fill="none" stroke-linejoin="round"/>
+                    <!-- Flashlight handle -->
+                    <path class="torch-body" d="M10 12 L14 12 L13 22 L11 22 Z" stroke="#ffffff" stroke-width="1.5" fill="none" stroke-linejoin="round"/>
+                    <!-- Small dot in the center of the head -->
+                    <circle cx="12" cy="5" r="1.2" fill="#ffffff"/>
+                </svg>
+            </button>
+            <span class="flashlight-label">Flashlight</span>
+        </div>
+    </div>
+
+    <!-- Hidden File Input -->
+    <input type="file" id="fileInput" accept="image/*" onchange="handleFileSelect(event)">
+
+    <script>
+        // Go Back Function
+        function goBack() {
+            if (window.history.length > 1) {
+                window.history.back();
+            } else {
+                console.log('Back clicked');
+            }
+        }
+
+        // Open Album/Gallery
+        function openAlbum() {
+            document.getElementById('fileInput').click();
+        }
+
+        // Handle File Selection
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                console.log('Selected file:', file.name);
+                alert('Selected: ' + file.name);
+            }
+        }
+
+        // Toggle Flashlight
+        let flashlightOn = false;
+        async function toggleFlashlight() {
+            const btn = document.getElementById('flashlightBtn');
+            flashlightOn = !flashlightOn;
+            btn.classList.toggle('active');
+            console.log('Flashlight:', flashlightOn ? 'ON' : 'OFF');
+        }
+
+        // Initialize
+        window.onload = function() {
+            console.log('QR Scanner interface loaded');
+        };
+    </script>
+</body>
+</html>

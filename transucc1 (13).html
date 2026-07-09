@@ -1,0 +1,1235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Transaction Details</title>
+    <style>
+        :root {
+            --primary-green: #00C087;
+            --bg-color: #F5F7FA;
+            --card-bg: #FFFFFF;
+            --text-main: #1F2937;
+            --text-secondary: #6B7280;
+            --text-light: #9CA3AF;
+            --border-color: #E5E7EB;
+            --failed-color: #EF4444;
+            --pending-color: #F59E0B;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Mobile Container */
+        .app-container {
+            width: 100%;
+            max-width: 480px;
+            background-color: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            position: relative;
+        }
+
+        /* Header */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 16px;
+            background-color: var(--card-bg);
+            flex-shrink: 0;
+        }
+
+        .header-left, .header-right {
+            width: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .header-title {
+            display: flex;
+            font-size: 16px;
+            padding-right: 150px;
+            font-weight: 400;
+            color: var(--text-main);
+        }
+
+        /* Scrollable Content Area */
+        .scroll-area {
+            flex: 1;
+            overflow-y: auto;
+            padding-bottom: 8px;
+            margin-top: 20px;
+        }
+
+        /* Cards */
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            margin: 12px 16px;
+            padding: 16px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        /* Receipt Top Section with round logo */
+        .receipt-header {
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        /* circular frame for OPay logo */
+        .bank-logo-container {
+            width: 40px;
+            height: 40px;
+            margin: -30px auto 16px;
+            border-radius: 50%;
+            overflow: hidden;
+            background: #FFFFFF;
+            border: 1px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+        }
+
+        .bank-logo {
+            width: 40px;
+            height: auto;
+            object-fit: contain;
+        }
+
+        .recipient-label {
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-main);
+            margin-bottom: 4px;
+        }
+
+        .amount {
+            font-size: 30px;
+            font-weight: 700;
+            color: var(--text-main);
+            margin-bottom: 4px;
+            letter-spacing: -0.5px;
+        }
+
+        .status-success {
+            color: var(--primary-green);
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .status-failed {
+            color: var(--failed-color);
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .status-pending {
+            color: var(--pending-color);
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        /* --- TIMELINE: longer solid lines with 5px gap and single-line step-time --- */
+        .timeline-container {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            padding: 0;
+            padding-left: 30px;
+            padding-right: 30px;
+        }
+
+        .timeline-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 30px;
+            flex-shrink: 0;
+            z-index: 2;
+            margin: 0 2px;
+        }
+
+        .timeline-step:first-child {
+            margin-left: 0;
+        }
+        .timeline-step:last-child {
+            margin-right: 0;
+        }
+
+        .step-dot {
+            width: 15px;
+            height: 15px;
+            background-color: transparent;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 6px;
+            color: white;
+        }
+
+        .step-dot img {
+            width: 15px;
+            height: 15px;
+            object-fit: contain;
+        }
+
+        .step-text {
+            text-align: center;
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.3;
+            margin-bottom: 2px;
+            white-space: normal;
+        }
+
+        .step-time {
+            font-size: 12px;
+            color: var(--text-light);
+            white-space: nowrap;
+        }
+
+        .timeline-line {
+            flex: 1;
+            height: 2px;
+            background-color: var(--primary-green);
+            margin: 7px 0 0 0;
+            border-radius: 1px;
+            min-width: 20px;
+        }
+
+        /* Info Box */
+        .info-box {
+            background-color: #F3F4F6;
+            border-radius: 8px;
+            padding: 10px 12px;
+            font-size: 11px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin-bottom: 16px;
+            text-align: left;
+        }
+        .info-link {
+            color: var(--primary-green);
+            text-decoration: none;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        .info-link svg {
+            width: 12px;
+            height: 12px;
+            fill: var(--primary-green);
+            margin-left: 4px;
+        }
+
+        /* Summary List */
+        .summary-list {
+            border-top: 1px solid var(--border-color);
+            padding-top: 12px;
+            text-align: left;
+        }
+
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 13px;
+        }
+
+        .summary-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .summary-label {
+            color: var(--text-secondary);
+        }
+
+        .summary-value {
+            font-weight: 600;
+            color: var(--text-main);
+        }
+
+        .strikethrough {
+            text-decoration: line-through;
+            color: var(--text-light);
+            font-size: 12px;
+            margin-right: 4px;
+            font-weight: 400;
+        }
+
+        /* Transaction Details Section */
+        .details-header {
+            font-size: 15px;
+            font-weight: 500;
+            margin-bottom: 14px;
+            color: var(--text-main);
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 14px;
+            font-size: 12px;
+        }
+
+        .detail-label {
+            color: var(--text-secondary);
+            width: 40%;
+        }
+
+        .detail-value-container {
+            width: 60%;
+            text-align: right;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+        
+        .detail-value-main {
+            color: var(--text-main);
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 12px;
+            word-break: break-word;
+            text-align: right;
+        }
+
+        .detail-sub {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 2px;
+            text-align: right;
+        }
+
+        .copy-icon {
+            color: var(--text-light);
+            cursor: pointer;
+            width: 13px;
+            height: 13px;
+            flex-shrink: 0;
+        }
+
+        .chevron-right {
+            width: 13px;
+            height: 13px;
+            color: var(--text-light);
+            flex-shrink: 0;
+        }
+
+        /* More Actions card */
+        .more-actions-card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            margin: 12px 16px;
+            padding: 16px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .actions-title {
+            font-size: 15px;
+            font-weight: 500;
+            margin-bottom: 12px;
+            color: var(--text-main);
+        }
+
+        .transfer-again-text {
+            font-size: 13px;
+            color: var(--primary-green);
+            padding-left: 0px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .transfer-again-text svg {
+            width: 16px;
+            height: 16px;
+            stroke: var(--primary-green);
+            fill: none;
+        }
+
+        /* Bottom Buttons Container */
+        .bottom-buttons {
+            display: flex;
+            gap: 10px;
+            padding: 16px;
+            background-color: var(--bg-color);
+            flex-shrink: 0;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 24px;
+            font-size: 14px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            text-align: center;
+            transition: opacity 0.2s;
+        }
+
+        .btn:active {
+            opacity: 0.8;
+        }
+
+        .btn-outline {
+            background-color: rgba(0, 192, 135, 0.1);
+            color: var(--primary-green);
+        }
+
+        .btn-primary {
+            background-color: var(--primary-green);
+            color: white;
+        }
+
+        /* Custom copy notification popup */
+        .copy-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 150px;
+            height: 100px;
+            background-color: #1e1e1e;
+            border-radius: 16px;
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .copy-popup svg {
+            width: 30px;
+            height: 30px;
+            stroke: white;
+            fill: none;
+            margin-bottom: 8px;
+        }
+
+        .copy-popup .circle-bg {
+            stroke: white;
+            stroke-width: 2;
+            fill: none;
+        }
+
+        .copy-popup .checkmark {
+            stroke: white;
+            stroke-width: 2;
+            fill: none;
+        }
+
+        .copy-popup span {
+            color: white;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        /* ---------- Upgrade Modal Styles ---------- */
+        .upgrade-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        }
+        .upgrade-modal {
+            max-width: 340px;
+            width: 90%;
+            background: #FFFFFF;
+            border-radius: 28px;
+            padding: 32px 24px 28px;
+            text-align: center;
+            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.25);
+            animation: popIn 0.4s cubic-bezier(0.21, 1.11, 0.38, 1);
+            transform-origin: center;
+        }
+        @keyframes popIn {
+            0% { opacity: 0; transform: scale(0.9) translateY(10px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .upgrade-modal-exit {
+            animation: popOut 0.25s forwards;
+        }
+        @keyframes popOut {
+            0% { opacity: 1; transform: scale(1) translateY(0); }
+            100% { opacity: 0; transform: scale(0.9) translateY(10px); visibility: hidden; }
+        }
+        .upgrade-icon-wrapper {
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .lock-svg {
+            filter: drop-shadow(0 2px 6px rgba(0,184,118,0.2));
+            animation: lockPulse 1.2s ease-in-out infinite;
+            transform-origin: center;
+        }
+        @keyframes lockPulse {
+            0% { transform: scale(1); opacity: 0.9; }
+            50% { transform: scale(1.08); opacity: 1; filter: drop-shadow(0 4px 12px rgba(0,184,118,0.35)); }
+            100% { transform: scale(1); opacity: 0.9; }
+        }
+        .upgrade-message {
+            font-size: 16px;
+            line-height: 1.4;
+            color: #1F2937;
+            margin-bottom: 28px;
+            font-weight: 500;
+            letter-spacing: -0.2px;
+        }
+        .upgrade-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+        .upgrade-btn {
+            flex: 1;
+            padding: 12px 0;
+            border-radius: 40px;
+            font-size: 15px;
+            font-weight: 600;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+            background: none;
+        }
+        .upgrade-btn-dismiss {
+            background: #F3F4F6;
+            color: #1F2937;
+        }
+        .upgrade-btn-upgrade {
+            background: #00B876;
+            color: white;
+            box-shadow: 0 2px 8px rgba(0,184,118,0.3);
+        }
+        .upgrade-btn-upgrade:active {
+            background: #009e63;
+            transform: scale(0.97);
+        }
+        @media (max-width: 400px) {
+            .upgrade-modal {
+                padding: 28px 20px 24px;
+            }
+            .upgrade-message {
+                font-size: 15px;
+            }
+            .upgrade-btn {
+                padding: 10px 0;
+                font-size: 14px;
+            }
+        }
+
+        /* Loader inside upgrade modal */
+        .upgrade-loader-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(3px);
+            z-index: 10001;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        .upgrade-loader-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        .upgrade-green-ring {
+            position: relative;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: #1e9c43;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .upgrade-logo-wrapper {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 50%;
+            background: white;
+            box-shadow: 0 4px 0px rgba(0, 0, 0, 0.05);
+            animation: pulse-zoom 0.7s ease-in-out infinite;
+            z-index: 3;
+        }
+        .upgrade-logo-image {
+            width: 30px;
+            height: 30px;
+            object-fit: contain;
+            border-radius: 50%;
+        }
+        .upgrade-orbit {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            animation: rotate-dot 1.5s linear infinite;
+            transform-origin: center center;
+            z-index: 2;
+        }
+        .upgrade-dot {
+            position: absolute;
+            top: 28px;
+            left: 100%;
+            transform: translateX(-1400%);
+            width: 2px;
+            height: 2px;
+            background: white;
+            border-radius: 60%;
+            box-shadow: 0 0 8px 9px rgba(255, 255, 255, 0.6);
+        }
+        @keyframes pulse-zoom {
+            0% { transform: scale(1.03); opacity: 0.8; }
+            50% { transform: scale(1.15); opacity: 1; }
+            100% { transform: scale(1.03); opacity: 0.8; }
+        }
+        @keyframes rotate-dot {
+            from { transform: rotate(0deg); }
+            to   { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header with supp.png -->
+        <header>
+            <div class="header-left" id="backToSuccessBtn">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#1F2937" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M19 12H5M12 19l-7-7 7-7" />
+                </svg>
+            </div>
+            <div class="header-title">Transaction Details</div>
+            <div class="header-right">
+                <img src="images/history/supp.png" alt="support" width="60" height="50" style="display:block;">
+            </div>
+        </header>
+
+        <!-- Scrollable Content -->
+        <div class="scroll-area">
+            <!-- Main Receipt Card -->
+            <div class="card">
+                <div class="receipt-header">
+                    <!-- Bank logo frame - dynamically set -->
+                    <div class="bank-logo-container">
+                        <img class="bank-logo" id="bankLogo" src="images/history/opay.png" alt="Bank">
+                    </div>
+                    
+                    <div class="recipient-label" id="recipientName">Transfer to MICHEAL ODION</div>
+                    <div class="amount" id="amountDisplay">₦10,000.00</div>
+                    <div id="statusText" style="display: none;"></div>
+                </div>
+
+                <!-- Timeline with dynamic step-times -->
+                <div class="timeline-container" id="timelineContainer">
+                    <!-- Will be populated by JS -->
+                </div>
+
+                <!-- Info box -->
+                <div class="info-box">
+                    The recipient account is expected to be credited within 5 minutes, subject to notification by the bank. If you have any questions, you can also 
+                    <a href="#" class="info-link">contact the recipient bank >><svg viewBox="0 0 24 24"><path d="M6.62 10.79c1.44 2.83 3.76 5.14 6.59 6.59l2.2-2.2c.27-.27.67-.36 1.02-.24 1.12.37 2.33.57 3.57.57.55 0 1 .45 1 1V20c0 .55-.45 1-1 1-9.39 0-17-7.61-17-17 0-.55.45-1 1-1h3.5c.55 0 1 .45 1 1 0 1.25.2 2.45.57 3.57.11.35.03.74-.25 1.02l-2.2 2.2z"/></svg>
+                    </a>
+                </div>
+
+                <!-- Summary list -->
+                <div class="summary-list">
+                    <div class="summary-row">
+                        <span class="summary-label">Amount</span>
+                        <span class="summary-value" id="summaryAmount">₦10,000.00</span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="summary-label">Fee</span>
+                        <span class="summary-value" id="feeDisplay">
+                            <span class="strikethrough">₦10.00</span>₦0.00
+                        </span>
+                    </div>
+                    <div class="summary-row">
+                        <span class="summary-label">Amount Paid</span>
+                        <span class="summary-value" id="amountPaid">₦10,000.00</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Details Card -->
+            <div class="card">
+                <div class="details-header">Transaction Details</div>
+                
+                <div class="detail-row">
+                    <span class="detail-label">Recipient Details</span>
+                    <div class="detail-value-container" id="recipientDetails">
+                        <!-- filled by JS -->
+                    </div>
+                </div>
+
+                <div class="detail-row">
+                    <span class="detail-label">Transaction No.</span>
+                    <div class="detail-value-main" id="transactionNumber">
+                        <!-- filled by JS -->
+                        <svg class="copy-icon" data-copy="transaction" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                    </div>
+                </div>
+
+                <div class="detail-row">
+                    <span class="detail-label">Payment Method</span>
+                    <div class="detail-value-main">
+                        Wallet
+                        <svg class="chevron-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"></polyline></svg>
+                    </div>
+                </div>
+
+                <div class="detail-row">
+                    <span class="detail-label">Transaction Date</span>
+                    <div class="detail-value-main" id="transactionDate">
+                        <!-- filled by JS -->
+                    </div>
+                </div>
+
+                <div class="detail-row">
+                    <span class="detail-label">Session ID</span>
+                    <div class="detail-value-main" id="sessionId">
+                        <!-- filled by JS -->
+                        <svg class="copy-icon" data-copy="session" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                    </div>
+                </div>
+            </div>
+
+            <!-- More Actions in a separate card with transfer icon -->
+            <div class="more-actions-card">
+                <div class="actions-title">More Actions</div>
+                <div class="transfer-again-text" onclick="window.location.href='nextfulls.html'">
+                    <!-- transfer icon (right arrow) -->
+                    <svg width="20" height="20" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <circle cx="50" cy="50" r="45" stroke="#00C087" stroke-width="8" fill="none" />
+                        <path d="M32 42H58L50 34" stroke="#00C087" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+                        <path d="M68 58H42L50 66" stroke="#00C087" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+                    </svg>
+                    Transfer Again
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Buttons -->
+        <div class="bottom-buttons">
+            <button class="btn btn-outline" id="reportIssueBtn">Report Issue</button>
+            <button class="btn btn-primary" id="shareReceiptBtn">Share Receipt</button>
+        </div>
+    </div>
+
+    <!-- Custom copy notification popup -->
+    <div class="copy-popup" id="copyPopup">
+        <svg viewBox="0 0 30 30" width="30" height="30">
+            <circle cx="15" cy="15" r="12" stroke="white" stroke-width="2" fill="none" />
+            <polyline points="8,15 13,20 22,10" stroke="white" stroke-width="2" fill="none" />
+        </svg>
+        <span>Copied successfully</span>
+    </div>
+
+    <!-- Upgrade Modal (hidden initially) -->
+    <div id="upgradeModalOverlay" class="upgrade-modal-overlay">
+        <div class="upgrade-modal" id="upgradeModal">
+            <div class="upgrade-icon-wrapper">
+                <svg class="lock-svg" width="56" height="56" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 3C9.79 3 8 4.79 8 7v2H6v10h12V9h-2V7c0-2.21-1.79-4-4-4z" fill="#00B876" stroke="none"/>
+                    <rect x="10" y="12" width="4" height="4" rx="1" fill="white"/>
+                    <path d="M16 9h-2V7c0-1.1-.9-2-2-2s-2 .9-2 2v2H8v8h8V9z" fill="#00B876" stroke="none"/>
+                    <circle cx="12" cy="14" r="1.2" fill="white"/>
+                </svg>
+            </div>
+            <div class="upgrade-message">
+                You don't have an active Subscription plan to access this feature.<br>Kindly Upgrade your account to Continue.
+            </div>
+            <div class="upgrade-buttons">
+                <button class="upgrade-btn upgrade-btn-dismiss" id="upgradeDismissBtn">Dismiss</button>
+                <button class="upgrade-btn upgrade-btn-upgrade" id="upgradeActionBtn">Upgrade Account</button>
+            </div>
+        </div>
+    </div>
+    <div id="upgradeLoaderOverlay" class="upgrade-loader-overlay">
+        <div class="upgrade-loader-container">
+            <div class="upgrade-green-ring">
+                <div class="upgrade-orbit"><div class="upgrade-dot"></div></div>
+                <div class="upgrade-logo-wrapper">
+                    <img src="https://iili.io/qT81u1e.png" class="upgrade-logo-image">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK (modular) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAjLxkisBi9pzmjlwdHnYfo25XR2Z6ToEs",
+            authDomain: "opay-plus-5802c.firebaseapp.com",
+            projectId: "opay-plus-5802c",
+            storageBucket: "opay-plus-5802c.firebasestorage.app",
+            messagingSenderId: "967061625774",
+            appId: "1:967061625774:web:236f88391ccdd9edd2863f",
+            measurementId: "G-H0QV81VYBY"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Global variable to store user tier (0-3)
+        window.userTier = 0;
+
+        // Wait for auth, then get user tier
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                try {
+                    const userRef = doc(db, 'users', user.uid);
+                    const userSnap = await getDoc(userRef);
+                    if (userSnap.exists()) {
+                        const data = userSnap.data();
+                        let tier = data.tier !== undefined ? data.tier : 0;
+                        if (tier === undefined && data.subscriptionPlan) {
+                            const plan = data.subscriptionPlan;
+                            if (plan === 'tier1') tier = 1;
+                            else if (plan === 'tier2') tier = 2;
+                            else if (plan === 'tier3') tier = 3;
+                            else tier = 0;
+                        }
+                        window.userTier = tier;
+                    }
+                    // After tier is known, call the UI update function (exposed from non-module)
+                    if (window.applyTierBehavior) {
+                        const txId = window.transactionId || 'unknown';
+                        window.applyTierBehavior(window.userTier, txId);
+                    }
+                } catch (err) {
+                    console.error('Failed to fetch tier', err);
+                    if (window.applyTierBehavior) window.applyTierBehavior(0, window.transactionId);
+                }
+            } else {
+                // Not logged in – fallback
+                if (window.applyTierBehavior) window.applyTierBehavior(0, window.transactionId);
+            }
+        });
+    </script>
+
+    <script>
+        (function() {
+            const popup = document.getElementById('copyPopup');
+
+            function showPopup() {
+                popup.style.display = 'flex';
+                setTimeout(() => {
+                    popup.style.display = 'none';
+                }, 1500);
+            }
+
+            function copyText(text) {
+                navigator.clipboard.writeText(text).then(() => {
+                    showPopup();
+                }).catch(err => {
+                    console.error('Copy failed', err);
+                });
+            }
+
+            function getTextFromDetailValueMain(element) {
+                const clone = element.cloneNode(true);
+                const svgs = clone.querySelectorAll('svg');
+                svgs.forEach(svg => svg.remove());
+                return clone.textContent.trim();
+            }
+
+            // Attach click listeners to all copy icons
+            document.querySelectorAll('.copy-icon').forEach(icon => {
+                icon.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const parent = icon.closest('.detail-value-main');
+                    if (parent) {
+                        const textToCopy = getTextFromDetailValueMain(parent);
+                        copyText(textToCopy);
+                    }
+                });
+            });
+
+            // Format date for step-time
+            function formatStepTime(timestamp) {
+                const date = new Date(timestamp);
+                const mm = String(date.getMonth() + 1).padStart(2, '0');
+                const dd = String(date.getDate()).padStart(2, '0');
+                const hh = String(date.getHours()).padStart(2, '0');
+                const min = String(date.getMinutes()).padStart(2, '0');
+                const ss = String(date.getSeconds()).padStart(2, '0');
+                return `${mm}-${dd} ${hh}:${min}:${ss}`;
+            }
+
+            // Format transaction date (Mar 8th, 2026 17:48:58)
+            function formatTransactionDate(timestamp) {
+                const date = new Date(timestamp);
+                const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                const month = months[date.getMonth()];
+                const day = date.getDate();
+                const suffix = (day % 10 === 1 && day !== 11) ? 'st' : (day % 10 === 2 && day !== 12) ? 'nd' : (day % 10 === 3 && day !== 13) ? 'rd' : 'th';
+                const year = date.getFullYear();
+                const hh = String(date.getHours()).padStart(2, '0');
+                const min = String(date.getMinutes()).padStart(2, '0');
+                const ss = String(date.getSeconds()).padStart(2, '0');
+                return `${month} ${day}${suffix}, ${year} ${hh}:${min}:${ss}`;
+            }
+
+            // Load receipt data from localStorage
+            const receiptData = localStorage.getItem('transfer.receipt');
+            let receipt = null;
+            if (!receiptData) {
+                console.warn('No receipt found, using demo data');
+                receipt = {
+                    accountname: 'MICHEAL ODION',
+                    bankname: 'Zenith Bank',
+                    accountnumber: '2042021977',
+                    amount: 10000,
+                    transactionId: '260308020100915606653781',
+                    sessionId: '1000042603081649151541508086',
+                    receivedTime: Date.now(),
+                    paymentSuccessTime: Date.now() - 15000,
+                    url: 'images/history/opay.png'
+                };
+            } else {
+                try {
+                    receipt = JSON.parse(receiptData);
+                } catch (e) {
+                    console.error('Failed to parse receipt', e);
+                }
+            }
+
+            if (!receipt) {
+                receipt = {
+                    accountname: 'MICHEAL ODION',
+                    bankname: 'Zenith Bank',
+                    accountnumber: '2042021977',
+                    amount: 10000,
+                    transactionId: '260308020100915606653781',
+                    sessionId: '1000042603081649151541508086',
+                    receivedTime: Date.now(),
+                    paymentSuccessTime: Date.now() - 15000,
+                    url: 'images/history/opay.png'
+                };
+            }
+
+            const formatCurrency = (amount) => {
+                return new Intl.NumberFormat('en-NG', {
+                    style: 'currency',
+                    currency: 'NGN',
+                    minimumFractionDigits: 2
+                }).format(amount);
+            };
+
+            document.getElementById('bankLogo').src = receipt.url || 'images/history/opay.png';
+            document.getElementById('recipientName').textContent = `Transfer to ${receipt.accountname || 'MICHEAL ODION'}`;
+            const amountFormatted = formatCurrency(receipt.amount || 10000);
+            document.getElementById('amountDisplay').textContent = amountFormatted;
+            document.getElementById('summaryAmount').textContent = amountFormatted;
+            document.getElementById('amountPaid').textContent = amountFormatted;
+            document.getElementById('feeDisplay').innerHTML = `<span class="strikethrough">₦10.00</span>₦0.00`;
+
+            const recipientDetailsDiv = document.getElementById('recipientDetails');
+            recipientDetailsDiv.innerHTML = `
+                <span style="color: var(--text-main); font-weight:500; font-size:12px;">${receipt.accountname || 'MICHEAL ODION'}</span>
+                <span class="detail-sub">${receipt.bankname || 'Zenith Bank'} | ${receipt.accountnumber || '2042021977'}</span>
+            `;
+
+            const txId = receipt.transactionId || '260308020100915606653781';
+            const sessId = receipt.sessionId || '1000042603081649151541508086';
+            document.getElementById('transactionNumber').innerHTML = `
+                ${txId}
+                <svg class="copy-icon" data-copy="transaction" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            `;
+            document.getElementById('sessionId').innerHTML = `
+                ${sessId}
+                <svg class="copy-icon" data-copy="session" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+            `;
+
+            const receivedTime = receipt.receivedTime || Date.now();
+            document.getElementById('transactionDate').textContent = formatTransactionDate(receivedTime);
+
+            const paymentTime = receipt.paymentSuccessTime || receivedTime - 15000;
+            const processingTime = receipt.processingTime || paymentTime;
+            const receivedTimeForTimeline = receipt.receivedTime || receivedTime;
+
+            const timelineContainer = document.getElementById('timelineContainer');
+            timelineContainer.innerHTML = `
+                <div class="timeline-step">
+                    <div class="step-dot"><img src="images/trans/pay_result_successful.png" alt="success" width="15" height="15"></div>
+                    <div class="step-text">Payment<br>successful</div>
+                    <div class="step-time">${formatStepTime(paymentTime)}</div>
+                </div>
+                <div class="timeline-line"></div>
+                <div class="timeline-step">
+                    <div class="step-dot"><img src="images/trans/pay_result_successful.png" alt="processing" width="15" height="15"></div>
+                    <div class="step-text">Processing<br>by bank</div>
+                    <div class="step-time">${formatStepTime(processingTime)}</div>
+                </div>
+                <div class="timeline-line"></div>
+                <div class="timeline-step">
+                    <div class="step-dot"><img src="images/trans/pay_result_successful.png" alt="received" width="15" height="15"></div>
+                    <div class="step-text">Received<br>by bank</div>
+                    <div class="step-time">${formatStepTime(receivedTimeForTimeline)}</div>
+                </div>
+            `;
+
+            // Re-attach copy icons after dynamic injection
+            document.querySelectorAll('.copy-icon').forEach(icon => {
+                icon.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const parent = icon.closest('.detail-value-main');
+                    if (parent) {
+                        const textToCopy = getTextFromDetailValueMain(parent);
+                        copyText(textToCopy);
+                    }
+                });
+            });
+
+            window.currentReceipt = receipt;
+            window.transactionId = txId;  // expose for Firebase module
+
+            // ----- Tier-dependent UI behavior -----
+            let pendingTimer = null;
+
+            window.applyTierBehavior = function(tier, txId) {
+                const timelineContainer = document.getElementById('timelineContainer');
+                const statusDiv = document.getElementById('statusText');
+                if (!timelineContainer) return;
+
+                const steps = timelineContainer.querySelectorAll('.timeline-step');
+                if (steps.length !== 3) return;
+
+                const finalStep = steps[2];
+                const stepTextSpan = finalStep.querySelector('.step-text');
+                const stepDotImg = finalStep.querySelector('.step-dot img');
+
+                // Show status div (use block to respect text-align:center)
+                statusDiv.style.display = 'block';
+
+                if (tier !== 0) {
+                    // Normal (tier 1-3) - show successful
+                    if (pendingTimer) clearTimeout(pendingTimer);
+                    statusDiv.textContent = 'Successful';
+                    statusDiv.className = 'status-success';
+                    if (stepTextSpan) stepTextSpan.textContent = 'Received by bank';
+                    if (stepDotImg) stepDotImg.src = 'images/trans/pay_result_successful.png';
+                    // Clean up any pending state
+                    if (txId) localStorage.removeItem(`opay_tx_status_${txId}`);
+                    return;
+                }
+
+                // --- Tier 0 logic ---
+                const storageKey = `opay_tx_status_${txId}`;
+                const stored = localStorage.getItem(storageKey);
+                const now = Date.now();
+
+                if (stored) {
+                    try {
+                        const data = JSON.parse(stored);
+                        if (data.status === 'failed') {
+                            // Already failed
+                            statusDiv.textContent = 'Transfer Failed';
+                            statusDiv.className = 'status-failed';
+                            if (stepTextSpan) stepTextSpan.textContent = 'Failed transaction';
+                            if (stepDotImg) stepDotImg.src = 'images/history/progressfailed.png';
+                            return;
+                        } else if (data.status === 'pending' && data.timestamp) {
+                            const elapsed = now - data.timestamp;
+                            if (elapsed >= 20000) {
+                                // Mark as failed
+                                localStorage.setItem(storageKey, JSON.stringify({ status: 'failed', timestamp: now }));
+                                statusDiv.textContent = 'Transfer Failed';
+                                statusDiv.className = 'status-failed';
+                                if (stepTextSpan) stepTextSpan.textContent = 'Failed transaction';
+                                if (stepDotImg) stepDotImg.src = 'images/history/progressfailed.png';
+                                return;
+                            } else {
+                                // Still pending, set remaining timer
+                                statusDiv.textContent = 'Pending';
+                                statusDiv.className = 'status-pending';
+                                if (stepTextSpan) stepTextSpan.textContent = 'Pending transfer';
+                                if (stepDotImg) stepDotImg.src = 'images/history/progresspending.png';
+                                const remaining = 20000 - elapsed;
+                                if (pendingTimer) clearTimeout(pendingTimer);
+                                pendingTimer = setTimeout(() => {
+                                    localStorage.setItem(storageKey, JSON.stringify({ status: 'failed', timestamp: Date.now() }));
+                                    statusDiv.textContent = 'Transfer Failed';
+                                    statusDiv.className = 'status-failed';
+                                    if (stepTextSpan) stepTextSpan.textContent = 'Failed transaction';
+                                    if (stepDotImg) stepDotImg.src = 'images/history/progressfailed.png';
+                                }, remaining);
+                                return;
+                            }
+                        }
+                    } catch(e) {}
+                }
+
+                // No stored state: set pending and start 20s timer
+                const nowTime = Date.now();
+                localStorage.setItem(storageKey, JSON.stringify({ status: 'pending', timestamp: nowTime }));
+                statusDiv.textContent = 'Pending';
+                statusDiv.className = 'status-pending';
+                if (stepTextSpan) stepTextSpan.textContent = 'Pending transfer';
+                if (stepDotImg) stepDotImg.src = 'images/history/progresspending.png';
+                if (pendingTimer) clearTimeout(pendingTimer);
+                pendingTimer = setTimeout(() => {
+                    localStorage.setItem(storageKey, JSON.stringify({ status: 'failed', timestamp: Date.now() }));
+                    statusDiv.textContent = 'Transfer Failed';
+                    statusDiv.className = 'status-failed';
+                    if (stepTextSpan) stepTextSpan.textContent = 'Failed transaction';
+                    if (stepDotImg) stepDotImg.src = 'images/history/progressfailed.png';
+                }, 20000);
+            };
+        })();
+
+        // ----- Navigation: Back button to transaction-successful.html -----
+        const backButton = document.getElementById('backToSuccessBtn');
+        if (backButton) {
+            backButton.addEventListener('click', () => {
+                window.location.href = 'transaction-successful.html';
+            });
+        }
+
+        // ----- WhatsApp for Report Issue (unchanged) -----
+        const WHATSAPP_URL = 'https://wa.me/2349116125762';
+        document.getElementById('reportIssueBtn').addEventListener('click', () => {
+            window.open(WHATSAPP_URL, '_blank');
+        });
+
+        // ----- Upgrade Modal logic -----
+        const upgradeOverlay = document.getElementById('upgradeModalOverlay');
+        const upgradeModal = document.getElementById('upgradeModal');
+        const upgradeDismiss = document.getElementById('upgradeDismissBtn');
+        const upgradeAction = document.getElementById('upgradeActionBtn');
+        const upgradeLoader = document.getElementById('upgradeLoaderOverlay');
+
+        function showUpgradeModal() {
+            if (!upgradeOverlay) return;
+            upgradeOverlay.style.display = 'flex';
+            if (upgradeModal) upgradeModal.classList.remove('upgrade-modal-exit');
+        }
+
+        function hideUpgradeModal() {
+            if (!upgradeModal) return;
+            upgradeModal.classList.add('upgrade-modal-exit');
+            upgradeModal.addEventListener('animationend', function handler() {
+                upgradeModal.removeEventListener('animationend', handler);
+                if (upgradeOverlay) upgradeOverlay.style.display = 'none';
+                upgradeModal.classList.remove('upgrade-modal-exit');
+            });
+        }
+
+        function showLoader() {
+            if (upgradeLoader) upgradeLoader.style.display = 'flex';
+        }
+
+        function hideLoader() {
+            if (upgradeLoader) upgradeLoader.style.display = 'none';
+        }
+
+        if (upgradeDismiss) {
+            upgradeDismiss.addEventListener('click', () => hideUpgradeModal());
+        }
+
+        if (upgradeAction) {
+            upgradeAction.addEventListener('click', () => {
+                showLoader();
+                setTimeout(() => {
+                    window.open('/upgrade-subscribe.html', '_blank');
+                    hideLoader();
+                    hideUpgradeModal();
+                }, 800);
+            });
+        }
+
+        if (upgradeOverlay) {
+            upgradeOverlay.addEventListener('click', (e) => {
+                if (e.target === upgradeOverlay) hideUpgradeModal();
+            });
+        }
+
+        // ----- Share Receipt: restricted for tier 0 -----
+        function shareReceipt() {
+            if (!window.currentReceipt) {
+                alert('No transaction data available');
+                return;
+            }
+            // Check user tier (global variable set by Firebase)
+            if (window.userTier === 0) {
+                showUpgradeModal();
+                return;
+            }
+            const r = window.currentReceipt;
+            const shareData = {
+                amount: r.amount,
+                accountname: r.accountname,
+                bankname: r.bankname,
+                accountnumber: r.accountnumber,
+                transactionId: r.transactionId,
+                sessionId: r.sessionId,
+                receivedTime: r.receivedTime,
+                paymentSuccessTime: r.paymentSuccessTime,
+                senderName: "DANIEL NKEM CHUKWUEMEKA",
+                senderBank: "OPay",
+                senderAccountMask: "813****885"
+            };
+            localStorage.setItem('shareReceiptData', JSON.stringify(shareData));
+            window.location.href = 'sign-receipt.html';
+        }
+
+        document.getElementById('shareReceiptBtn').addEventListener('click', shareReceipt);
+    </script>
+    <script src="/pwa-check.js"></script>
+</body>
+</html>

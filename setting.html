@@ -1,0 +1,298 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>Settings</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <link rel="stylesheet" href="css/setting.css?v=1.0">
+  <style>
+    /* Modal styles for PIN reset */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .modal-content {
+      background-color: #fff;
+      margin: 15% auto;
+      padding: 20px;
+      border-radius: 10px;
+      width: 80%;
+      max-width: 400px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+    
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    
+    .modal-title {
+      font-size: 18px;
+      font-weight: bold;
+    }
+    
+    .close-btn {
+      background: none;
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+    }
+    
+    .pin-input {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      font-size: 16px;
+      text-align: center;
+      letter-spacing: 5px;
+    }
+    
+    .reset-btn {
+      width: 100%;
+      padding: 12px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    
+    .reset-btn:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+    
+    .error-msg {
+      color: red;
+      font-size: 14px;
+      margin-top: 5px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <i class="fas fa-arrow-left" onclick="history.back()"></i>
+    <h1>Settings</h1>
+  </div>
+  
+  <div class="container">
+    <div class="settings-group">
+      <div class="settings-item" data-action="login-settings">
+        <div class="item-icon"><img src="images/setting/i1.png" alt=""></div>
+        <div class="item-text">Login Settings</div>
+        <div class="item-arrow"><i class="fas fa-chevron-right"></i></div>
+      </div>
+      <div class="settings-item" data-action="payment-settings">
+        <div class="item-icon"><img src="images/setting/i2.png" alt=""></div>
+        <div class="item-text">Payment Settings</div>
+        <div class="item-arrow"><i class="fas fa-chevron-right"></i></div>
+      </div>
+      <div class="settings-item" data-action="reset-pin">
+        <div class="item-icon"><img src="images/setting/i8.png" alt=""></div>
+        <div class="item-text">Reset Transaction PIN</div>
+        <div class="item-arrow"><i class="fas fa-chevron-right"></i></div>
+      </div>
+      <div class="settings-item" data-action="change-account">
+        <div class="item-icon"><img src="images/setting/i3.png" alt=""></div>
+        <div class="item-text">Change Account Name And Number</div>
+        <div class="item-arrow"><i class="fas fa-chevron-right"></i></div>
+      </div>
+    </div>
+
+    <div class="settings-group">
+      <div class="settings-item" data-action="homepage-settings">
+        <div class="item-icon"><img src="images/setting/i4.png" alt=""></div>
+        <div class="item-text">Homepage Settings</div>
+        <div class="item-arrow"><i class="fas fa-chevron-right"></i></div>
+      </div>
+      <div class="settings-item" data-action="reset-history">
+        <div class="item-icon"><img src="images/setting/i5.png" alt=""></div>
+        <div class="item-text">Reset Transaction History</div>
+        <div class="item-arrow"><i class="fas fa-chevron-right"></i></div>
+      </div>
+      <div class="settings-item" data-action="clipboard">
+        <div class="item-icon"><img src="images/setting/i6.png" alt=""></div>
+        <div class="item-text">Access to Clipboard</div>
+        <div class="item-arrow"><i class="fas fa-chevron-right"></i></div>
+      </div>
+    </div>
+
+    <div class="settings-group">
+      <div class="settings-item" data-action="join-channel">
+        <div class="item-icon"><i class="fas fa-users"></i></div>
+        <div class="item-text">Join Channel</div>
+        <div class="item-arrow"><i class="fas fa-chevron-right"></i></div>
+      </div>
+    </div>
+
+    <div class="settings-group">
+      <div class="settings-item" data-action="upgrade-account">
+        <div class="item-icon"><img src="images/setting/i7.png" alt=""></div>
+        <div class="item-text">Upgrade Account</div>
+        <div class="item-arrow"><i class="fas fa-chevron-right"></i></div>
+      </div>
+    </div>
+
+    <div class="sign-out" data-action="logout">
+      <div class="sign-out-text">Sign Out</div>
+    </div>
+  </div>
+
+  <!-- Reset PIN Modal -->
+  <div id="resetPinModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <div class="modal-title">Reset Transaction PIN</div>
+        <button class="close-btn">&times;</button>
+      </div>
+      <p>Please enter your new 4-digit PIN:</p>
+      <input type="number" id="newPin" class="pin-input" placeholder="Enter new PIN" maxlength="4" min="0" max="9999">
+      <div id="pinError" class="error-msg">PIN must be exactly 4 digits</div>
+      <button id="resetPinBtn" class="reset-btn" disabled>Reset PIN</button>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+
+  <script>
+    // Show modal when reset pin is clicked
+    document.querySelector('[data-action="reset-pin"]').addEventListener('click', function() {
+      document.getElementById('resetPinModal').style.display = 'flex';
+    });
+
+    // Close modal
+    document.querySelector('.close-btn').addEventListener('click', function() {
+      document.getElementById('resetPinModal').style.display = 'none';
+    });
+
+    // Close modal if clicked outside
+    window.addEventListener('click', function(event) {
+      if (event.target === document.getElementById('resetPinModal')) {
+        document.getElementById('resetPinModal').style.display = 'none';
+      }
+    });
+
+    // Validate PIN input
+    const pinInput = document.getElementById('newPin');
+    const pinError = document.getElementById('pinError');
+    const resetBtn = document.getElementById('resetPinBtn');
+
+    pinInput.addEventListener('input', function() {
+      // Remove any non-digit characters
+      this.value = this.value.replace(/\D/g, '');
+      
+      // Limit to 4 digits
+      if (this.value.length > 4) {
+        this.value = this.value.slice(0, 4);
+      }
+      
+      // Validate and enable/disable button
+      if (this.value.length === 4) {
+        pinError.style.display = 'none';
+        resetBtn.disabled = false;
+      } else {
+        resetBtn.disabled = true;
+      }
+    });
+
+    pinInput.addEventListener('blur', function() {
+      if (this.value.length > 0 && this.value.length !== 4) {
+        pinError.style.display = 'block';
+      } else {
+        pinError.style.display = 'none';
+      }
+    });
+
+    // Handle PIN reset
+    resetBtn.addEventListener('click', function() {
+      const newPin = pinInput.value;
+      
+      if (newPin.length !== 4) {
+        pinError.style.display = 'block';
+        return;
+      }
+      
+      // Disable button during request
+      resetBtn.disabled = true;
+      resetBtn.textContent = 'Resetting...';
+      
+      // Send AJAX request to update PIN
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', 'reset_pin.php', true);
+      xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+      
+      xhr.onload = function() {
+        if (this.status === 200) {
+          try {
+            const response = JSON.parse(this.responseText);
+            
+            if (response.success) {
+              // Show success message
+              showToast('PIN reset successfully!', 'success');
+              
+              // Close modal after a short delay
+              setTimeout(function() {
+                document.getElementById('resetPinModal').style.display = 'none';
+                resetBtn.textContent = 'Reset PIN';
+                pinInput.value = '';
+              }, 1500);
+            } else {
+              showToast(response.message || 'Error resetting PIN', 'error');
+              resetBtn.disabled = false;
+              resetBtn.textContent = 'Reset PIN';
+            }
+          } catch (e) {
+            showToast('Error processing response', 'error');
+            resetBtn.disabled = false;
+            resetBtn.textContent = 'Reset PIN';
+          }
+        } else {
+          showToast('Server error: ' + this.status, 'error');
+          resetBtn.disabled = false;
+          resetBtn.textContent = 'Reset PIN';
+        }
+      };
+      
+      xhr.onerror = function() {
+        showToast('Network error', 'error');
+        resetBtn.disabled = false;
+        resetBtn.textContent = 'Reset PIN';
+      };
+      
+      xhr.send('new_pin=' + encodeURIComponent(newPin));
+    });
+
+    // Toast notification function
+    function showToast(message, type) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.className = type === 'success' ? 'toast success' : 'toast error';
+      toast.style.display = 'block';
+      
+      setTimeout(function() {
+        toast.style.display = 'none';
+      }, 3000);
+    }
+  </script>
+  <script src="js/setting.js" defer></script>
+</body>
+</html>

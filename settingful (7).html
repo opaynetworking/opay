@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  
+  <!-- OPay theme colors -->
+  <meta name="theme-color" content="#E0F7EE" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#1B3B2A" media="(prefers-color-scheme: dark)">
+
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="OPay">
+
+  <!-- Font Awesome 6 -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  
+  <style>
+    /* ----- ROOT VARIABLES (OPay inspired) ----- */
+    :root {
+      --bg-gray: #F5F7FA;           /* light background like image */
+      --card-white: #FFFFFF;
+      --text-dark: #1A1A1A;
+      --text-light: #666666;
+      --opay-green: #00B876;         /* exact OPay green */
+      --accent-yellow: #FFB800;       /* "Not Set" color */
+      --accent-red: #FF4D4F;          /* "New" badge */
+      --border-radius: 14px;
+      --separator: #F0F0F0;
+      --chevron-gray: #B0B0B0;
+    }
+
+    /* dark mode support (optional) */
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg-gray: #121212;
+        --card-white: #1E1E1E;
+        --text-dark: #FFFFFF;
+        --text-light: #AAAAAA;
+        --separator: #333333;
+        --chevron-gray: #666666;
+      }
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-gray);
+      color: var(--text-dark);
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    /* mobile container */
+    .app-container {
+      width: 100%;
+      max-width: 480px;
+      background-color: var(--bg-gray);
+      position: relative;
+    }
+
+    /* ----- HEADER (white card style) ----- */
+    .settings-header {
+      background-color: var(--card-white);
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      margin-bottom: 8px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.02);
+    }
+
+    .back-btn {
+      font-size: 20px;
+      color: var(--text-dark);
+      margin-right: 18px;
+      cursor: pointer;
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .settings-header h1 {
+      font-size: 18px;
+      font-weight: 500;
+      color: var(--text-dark);
+    }
+
+    /* ----- SETTINGS CARDS (matching OPay) ----- */
+    .settings-group {
+      background-color: var(--card-white);
+      margin: 12px 16px;
+      border-radius: var(--border-radius);
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.02), 0 1px 2px rgba(0,0,0,0.05);
+    }
+
+    .settings-item {
+      display: flex;
+      align-items: center;
+      padding: 14px 16px;
+      cursor: pointer;
+      transition: background-color 0.2s;
+      text-decoration: none;
+      color: inherit;
+      border-bottom: 1px solid var(--separator);
+    }
+
+    .settings-item:last-child {
+      border-bottom: none;
+    }
+
+    .settings-item:active {
+      background-color: rgba(0,184,118,0.08); /* subtle green tap */
+    }
+
+    /* icon box – OPay green */
+    .icon-box {
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 14px;
+      color: var(--opay-green);
+      font-size: 18px;
+    }
+
+    /* main text – reduced font size */
+    .item-content {
+      flex: 1;
+      font-size: 14px;
+      font-weight: 400;
+      color: var(--text-dark);
+    }
+
+    /* right side container */
+    .item-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--chevron-gray);
+    }
+
+    /* "Not Set" badge – yellow */
+    .status-warning {
+      color: var(--accent-yellow);
+      font-size: 12px;
+      font-weight: 450;
+      letter-spacing: 0.2px;
+    }
+
+    /* "New" badge – red */
+    .new-badge {
+      background-color: var(--accent-red);
+      color: white;
+      font-size: 10px;
+      font-weight: 600;
+      padding: 3px 6px;
+      border-radius: 4px;
+      line-height: 1;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    /* version number */
+    .version-number {
+      color: var(--text-light);
+      font-size: 12px;
+      font-weight: 400;
+    }
+
+    /* chevron */
+    .chevron {
+      font-size: 12px;
+      color: var(--chevron-gray);
+    }
+
+    /* inline version + new */
+    .version-group {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* small spacer at bottom */
+    .bottom-spacer {
+      height: 24px;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <div class="settings-header">
+      <div class="back-btn" onclick="history.back()">
+        <i class="fa-solid fa-chevron-left"></i>
+      </div>
+      <h1>Settings</h1>
+    </div>
+
+    <!-- ========== GROUP 1 ========== -->
+    <div class="settings-group">
+      <div class="settings-item" id="myProfileItem">
+        <div class="icon-box"><i class="fa-regular fa-user"></i></div>
+        <div class="item-content">My Profile</div>
+        <div class="item-right">
+          <span class="new-badge">New</span>
+          <i class="fa-solid fa-chevron-right chevron"></i>
+        </div>
+      </div>
+      <div class="settings-item" id="paymentSettingsItem">
+        <div class="icon-box"><i class="fa-solid fa-lock"></i></div>
+        <div class="item-content">Payment PIN Settings</div>
+        <div class="item-right">
+          <i class="fa-solid fa-chevron-right chevron"></i>
+        </div>
+      </div>
+      <div class="settings-item" id="loginSettingsItem">
+        <div class="icon-box"><i class="fa-solid fa-key"></i></div>
+        <div class="item-content">Login Settings</div>
+        <div class="item-right">
+          <i class="fa-solid fa-chevron-right chevron"></i>
+        </div>
+      </div>
+      <div class="settings-item" id="joinGroupItem">
+        <div class="icon-box"><i class="fa-solid fa-wallet"></i></div>
+        <div class="item-content">Join Group</div>
+        <div class="item-right">
+          <i class="fa-solid fa-chevron-right chevron"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== GROUP 2 ========== -->
+    <div class="settings-group">
+      <div class="settings-item">
+        <div class="icon-box"><i class="fa-solid fa-house"></i></div>
+        <div class="item-content">Homepage Settings</div>
+        <div class="item-right">
+          <i class="fa-solid fa-chevron-right chevron"></i>
+        </div>
+      </div>
+      <div class="settings-item">
+        <div class="icon-box"><i class="fa-solid fa-shield-halved"></i></div>
+        <div class="item-content">Security Questions</div>
+        <div class="item-right">
+          <i class="fa-solid fa-chevron-right chevron"></i>
+        </div>
+      </div>
+      <div class="settings-item">
+        <div class="icon-box"><i class="fa-regular fa-comment-dots"></i></div>
+        <div class="item-content">SMS Alert Settings</div>
+        <div class="item-right">
+          <i class="fa-solid fa-chevron-right chevron"></i>
+        </div>
+      </div>
+      <div class="settings-item">
+        <div class="icon-box"><i class="fa-regular fa-copy"></i></div>
+        <div class="item-content">Access to Clipboard</div>
+        <div class="item-right">
+          <i class="fa-solid fa-chevron-right chevron"></i>
+        </div>
+      </div>
+      <div class="settings-item">
+        <div class="icon-box"><i class="fa-solid fa-palette"></i></div>
+        <div class="item-content">Themes</div>
+        <div class="item-right">
+          <i class="fa-solid fa-chevron-right chevron"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== GROUP 3 ========== -->
+    <div class="settings-group">
+      <div class="settings-item">
+        <div class="icon-box"><i class="fa-solid fa-circle-check"></i></div>
+        <div class="item-content">Security Center</div>
+        <div class="item-right">
+          <i class="fa-solid fa-chevron-right chevron"></i>
+        </div>
+      </div>
+      <div class="settings-item">
+        <div class="icon-box"><i class="fa-regular fa-pen-to-square"></i></div>
+        <div class="item-content">Feedback and Suggestions</div>
+        <div class="item-right">
+          <i class="fa-solid fa-chevron-right chevron"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== GROUP 4 (Close Account – with logout) ========== -->
+    <div class="settings-group">
+      <div class="settings-item" id="closeAccountItem">
+        <div class="icon-box"><i class="fa-solid fa-power-off"></i></div>
+        <div class="item-content">Log Out</div>
+        <div class="item-right">
+          <i class="fa-solid fa-chevron-right chevron"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== GROUP 5 (About) ========== -->
+    <div class="settings-group">
+      <div class="settings-item">
+        <div class="icon-box"><i class="fa-regular fa-circle-info"></i></div>
+        <div class="item-content">About</div>
+        <div class="item-right">
+          <div class="version-group">
+            <span class="version-number">8.2.1.434</span>
+            <span class="new-badge">New</span>
+          </div>
+          <i class="fa-solid fa-chevron-right chevron" style="margin-left: 4px;"></i>
+        </div>
+      </div>
+    </div>
+
+    <!-- bottom spacer -->
+    <div class="bottom-spacer"></div>
+  </div>
+
+  <!-- Firebase SDK (modular) for logout -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
+    import { getAuth, signOut } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
+
+    // Firebase configuration (same as other pages)
+    const firebaseConfig = {
+      apiKey: "AIzaSyAjLxkisBi9pzmjlwdHnYfo25XR2Z6ToEs",
+      authDomain: "opay-plus-5802c.firebaseapp.com",
+      projectId: "opay-plus-5802c",
+      storageBucket: "opay-plus-5802c.firebasestorage.app",
+      messagingSenderId: "967061625774",
+      appId: "1:967061625774:web:236f88391ccdd9edd2863f",
+      measurementId: "G-H0QV81VYBY"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    // DOM elements
+    const myProfileItem = document.getElementById('myProfileItem');
+    const paymentSettingsItem = document.getElementById('paymentSettingsItem');
+    const joinGroupItem = document.getElementById('joinGroupItem');
+    const closeAccountItem = document.getElementById('closeAccountItem');
+
+    // Navigate to profile page
+    if (myProfileItem) {
+      myProfileItem.addEventListener('click', () => {
+        window.location.href = 'profileful.html';
+      });
+    }
+
+    // Navigate to reset PIN page (Payment Settings)
+    if (paymentSettingsItem) {
+      paymentSettingsItem.addEventListener('click', () => {
+        window.location.href = 'reset-pin.html';
+      });
+    }
+
+    // Join Group – open external link
+    if (joinGroupItem) {
+      joinGroupItem.addEventListener('click', () => {
+        window.open('https://t.me/darkwebtool_ng', '_blank');
+      });
+    }
+
+    // Logout on "Close Account"
+    if (closeAccountItem) {
+      closeAccountItem.addEventListener('click', async () => {
+        try {
+          await signOut(auth);
+          // Clear any local user data if needed (optional)
+          localStorage.removeItem('opayUserFirstName');
+          localStorage.removeItem('userBalance');
+          // Redirect to login page (adjust as needed)
+          window.location.href = 'create-email.html';
+        } catch (error) {
+          console.error('Logout error:', error);
+          alert('Failed to sign out. Please try again.');
+        }
+      });
+    }
+
+    // Optional: prevent inspect (original behavior)
+    document.addEventListener("contextmenu", function(e){ e.preventDefault(); });
+    document.onkeydown = function(e) {
+      if (e.keyCode == 123) return false;
+      if (e.ctrlKey && e.shiftKey && (e.keyCode == 'I'.charCodeAt(0) || e.keyCode == 'J'.charCodeAt(0))) return false;
+      if (e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false;
+    };
+  </script>
+ <script src="/pwa-check.js"></script>
+ <script src="/network-popup.js"></script>
+</body>
+</html>

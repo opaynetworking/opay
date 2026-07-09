@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OPay Transaction Receipt</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --opay-green: #00C896;
+            --text-dark: #1a1a1a;
+            --text-gray: #888888;
+            --bg-color: #f7f8fa;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        /* Top Navigation */
+        .navbar {
+            background: #fff;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+
+        .back-btn {
+            font-size: 10px;
+            color: #333;
+            margin-right: 15px;
+            cursor: pointer;
+        }
+
+        .nav-title {
+            font-size: 15px;
+            font-weight: 400;
+            color: #333;
+        }
+
+        /* Main Content */
+        .container {
+            margin-top: 15px;
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding:0px;
+            padding-bottom: 80px; /* Space for bottom bar */
+        }
+
+        /* Receipt Card – no shadow, only the image */
+        .receipt-card {
+            
+            width: 100%;
+            max-width: 400px;
+            background-color: transparent;
+            background-image: url('receipt/rpt.png');
+            background-size: contain;      /* Entire image visible */
+            background-position: top center;
+            background-repeat: no-repeat;
+            overflow: hidden;               /* Keeps content inside image area */
+            padding: 140px 0px;
+        }
+
+        .card-content {
+            padding: 0px 0px;
+            background-color: transparent;
+            position: flex-start;
+            z-index: 1;
+            color: var(--text-dark);
+            padding-left: 30px;
+            padding-right: 30px;
+            margin-top: -90px;
+        }
+
+        /* Header with logo and title */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .logo {
+            height: 70px;
+            margin-bottom: 10px;
+        }
+
+        .logo img {
+            height: 100%;
+            width: auto;
+        }
+
+        .receipt-title {
+            font-size: 14px;
+            color: var(--text-dark);
+            font-weight: 400;
+        }
+
+        /* Amount Section */
+        .amount-section {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+
+        .amount {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--opay-green);
+            margin-top: -25px;
+        }
+
+        .status {
+            margin-top: 8px;
+            font-size: 15px;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+        }
+
+        .date {
+            font-size: 10px;
+            color: var(--text-gray);
+        }
+
+        /* Details Section */
+        .divider {
+            height: 1px;
+            background-color: rgba(0,0,0,0.1);
+            margin: 10px 0;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 12px;
+        }
+
+        .label {
+            color: var(--text-gray);
+            width: 40%;
+        }
+
+        .value {
+            color: var(--text-dark);
+            width: 60%;
+            text-align: right;
+            font-weight: 500;
+            word-break: break-word;
+        }
+
+        .sub-value {
+            display: block;
+            font-size: 12px;
+            color: var(--text-gray);
+            font-weight: 400;
+            margin-top: 1px;
+            text-align: right;
+        }
+        
+        .sub2-value {
+            display: block;
+            font-size: 12px;
+            color: var(--text-gray);
+            font-weight: 400;
+            margin-top: 4px;
+            text-align: right;
+        }
+        .label2 {
+            display: block;
+            font-size: 12px;
+            color: var(--text-gray);
+            font-weight: 400;
+            margin-top: 4px;
+            text-align: right;
+        }
+        /* Footer Text */
+        .footer-text {
+            font-size: 11px;
+            color: var(--text-gray);
+            line-height: 1.2;
+            margin-top: 30px;
+            text-align: justify;
+        }
+
+        /* Bottom Action Bar */
+        .action-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            background: #fff;
+            display: flex;
+            border-top: 1px solid #eee;
+            z-index: 100;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 15px;
+            border: none;
+            background: none;
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--opay-green);
+            cursor: pointer;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.2s;
+        }
+
+        .action-btn:first-child {
+            border-right: 1px solid #eee;
+        }
+
+        .action-btn:active {
+            background-color: #f0fdf9;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Top Nav -->
+    <div class="navbar">
+        <i class="fas fa-chevron-left back-btn" onclick="history.back()"></i>
+        <span class="nav-title">Share Receipt</span>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container">
+        
+        <!-- Receipt Card (Target for Screenshot/PDF) -->
+        <div class="receipt-card" id="receipt-to-capture">
+            <div class="card-content">
+                <div class="header">
+                    <div class="logo">
+                        <img src="receipt/log.png" alt="OPay Logo">
+                    </div>
+                    <div class="receipt-title">Transaction Receipt</div>
+                </div>
+
+                <div class="amount-section">
+                    <div class="amount">₦500.00</div>
+                    <div class="status">Successful</div>
+                    <div class="date">Feb 20th, 2026 16:43:54</div>
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="detail-row">
+                    <div class="label">Recipient Details</div>
+                    <div class="value">
+                        BAOBABMICROFI/CHUKWUEMEKA DANIEL
+                        <span class="sub-value">PAYSTACK-TITAN | 9947550950</span>
+                    </div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="label">Sender Details</div>
+                    <div class="value">
+                        DANIEL NKEM CHUKWUEMEKA
+                        <span class="sub-value">OPay | 813****885</span>
+                    </div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="label">Transaction No.</div>
+                    <div class="sub-value">260220020100384263361612</div>
+                </div>
+
+                <div class="detail-row">
+                    <div class="label2">Session ID</div>
+                    <div class="sub2-value">100004260220154401152834380925</div>
+                </div>
+
+                <div class="footer-text">
+                    Enjoy a better life with OPay. Get free transfers, withdrawals, bill payments, instant loans, and good annual interest on your savings. OPay is licensed by the Central Bank of Nigeria and insured by the NDIC.
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Bottom Buttons -->
+    <div class="action-bar">
+        <button class="action-btn" onclick="shareAsImage()">
+            <i class="far fa-image"></i> Share as image
+        </button>
+        <button class="action-btn" onclick="shareAsPDF()">
+            <i class="far fa-file-pdf"></i> Share as PDF
+        </button>
+    </div>
+
+    <!-- Libraries for Functionality -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <script>
+        // Function to share or download a file
+        async function shareOrDownload(blob, fileName, mimeType) {
+            const file = new File([blob], fileName, { type: mimeType });
+            
+            // Check if Web Share API supports files
+            if (navigator.canShare && navigator.canShare({ files: [file] })) {
+                try {
+                    await navigator.share({
+                        files: [file],
+                        title: 'OPay Receipt',
+                        text: 'Transaction receipt from OPay'
+                    });
+                    return;
+                } catch (error) {
+                    console.log('Sharing cancelled or failed', error);
+                }
+            }
+            
+            // Fallback: download the file
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = url;
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }
+
+        // Share as Image
+        function shareAsImage() {
+            const element = document.getElementById("receipt-to-capture");
+            
+            html2canvas(element, {
+                scale: 2,
+                backgroundColor: null,
+                useCORS: true,
+                allowTaint: false,
+                logging: true
+            }).then(canvas => {
+                // Convert canvas to blob
+                canvas.toBlob(blob => {
+                    if (blob) {
+                        shareOrDownload(blob, 'OPay_Receipt.png', 'image/png');
+                    }
+                }, 'image/png');
+            }).catch(error => {
+                console.error('html2canvas error:', error);
+            });
+        }
+
+        // Share as PDF
+        function shareAsPDF() {
+            const { jsPDF } = window.jspdf;
+            const element = document.getElementById("receipt-to-capture");
+
+            html2canvas(element, {
+                scale: 2,
+                backgroundColor: null,
+                useCORS: true,
+                allowTaint: false,
+                logging: true
+            }).then(canvas => {
+                const imgData = canvas.toDataURL('image/png');
+                const imgWidth = 210; // A4 width in mm
+                const imgHeight = canvas.height * imgWidth / canvas.width;
+                
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                pdf.addImage(imgData, 'PNG', 0, 10, imgWidth, imgHeight, undefined, 'FAST');
+                
+                // Get PDF as blob
+                const pdfBlob = pdf.output('blob');
+                shareOrDownload(pdfBlob, 'OPay_Receipt.pdf', 'application/pdf');
+            }).catch(error => {
+                console.error('html2canvas error:', error);
+            });
+        }
+    </script>
+    <script src="/pwa-check.js"></script>
+</body>
+</html>

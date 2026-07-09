@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transfer Success Rate – Full Bank List</title>
+    <style>
+        :root {
+            --bg-color: #F5F6FA;
+            --card-bg: #FFFFFF;
+            --text-primary: #1A1A1A;
+            --text-secondary: #8C8C8C;
+            --opay-green: #00BA7D;
+            --opay-green-hover: #009E69;
+            --error-red: #D93025;
+            --border-color: #F0F0F0;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 480px;
+            background-color: var(--bg-color);
+            position: relative;
+            padding-bottom: 20px;
+        }
+
+        /* Header */
+        header {
+            background-color: var(--card-bg);
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            box-shadow: 0 1px 0 rgba(0,0,0,0.05);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .back-btn svg {
+            width: 24px;
+            height: 24px;
+            fill: #333;
+        }
+
+        h1 {
+            font-size: 16px;
+            font-weight: 400;
+        }
+
+        .refresh-btn {
+            background: none;
+            border: none;
+            color: var(--opay-green);
+            font-size: 15px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+        }
+
+        .refresh-btn svg {
+            width: 18px;
+            height: 18px;
+            fill: currentColor;
+        }
+
+        .refresh-btn.spinning svg {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Content */
+        .content {
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .intro-text {
+            font-size: 15px;
+            color: var(--text-primary);
+            line-height: 1.5;
+            margin-bottom: 8px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px 16px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        /* Bank List Item */
+        .bank-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .bank-item:last-child {
+            border-bottom: none;
+        }
+
+        .bank-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .bank-logo {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            overflow: hidden;
+            background-color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid #eee;
+            flex-shrink: 0;
+        }
+
+        .bank-logo img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .bank-name {
+            font-size: 15px;
+            font-weight: 400;
+            color: var(--text-primary);
+        }
+
+        .status-badge {
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .status-low {
+            color: var(--error-red);
+        }
+
+        .status-high {
+            color: var(--text-primary);
+        }
+
+        .advice-text {
+            margin-top: 16px;
+            font-size: 14px;
+            color: var(--text-primary);
+            line-height: 1.5;
+            background: #fafafa;
+            padding: 12px;
+            border-radius: 8px;
+        }
+
+        /* OPay Promo Card */
+        .opay-promo {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .promo-text h3 {
+            font-size: 15px;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .promo-text p {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .transfer-btn {
+            background-color: var(--opay-green);
+            color: white;
+            border: none;
+            padding: 10px 32px;
+            border-radius: 24px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .transfer-btn:hover {
+            background-color: var(--opay-green-hover);
+        }
+
+        .transfer-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* Toast Notification (kept but not used for transfer button) */
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%) translateY(100px);
+            background-color: #333;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 24px;
+            font-size: 14px;
+            opacity: 0;
+            transition: all 0.3s ease;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .toast.show {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+
+        .toast svg {
+            width: 16px;
+            height: 16px;
+            fill: var(--opay-green);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <div class="header-left">
+                <button class="back-btn" onclick="window.history.back()">
+                    <svg viewBox="0 0 24 24"><path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/></svg>
+                </button>
+                <h1>Transfer Success Rate</h1>
+            </div>
+            <button class="refresh-btn" id="refreshBtn">
+                <svg viewBox="0 0 24 24"><path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/></svg>
+                Refresh
+            </button>
+        </header>
+
+        <main class="content">
+            <p class="intro-text">Check the real-time transfer success rate of the recipient bank to avoid transfer failures or delays.</p>
+
+            <!-- Low success rate section (will be populated by JS) -->
+            <section class="card" id="lowSuccessSection">
+                <h2 class="card-title">Banks which may face transfer delays</h2>
+                <div id="lowBankList"></div>
+                <div class="advice-text">
+                    Transfers to the above banks may be delayed. You can try transferring to OPay or other banks.
+                </div>
+            </section>
+
+            <!-- OPay Promo Card -->
+            <section class="card opay-promo">
+                <div class="promo-text">
+                    <h3>Transfer to OPay Account</h3>
+                    <p>Instant & No charges</p>
+                </div>
+                <button class="transfer-btn" onclick="handleTransfer()">Transfer</button>
+            </section>
+
+            <!-- Stable Network section -->
+            <section class="card" id="highSuccessSection">
+                <h2 class="card-title">Banks with Stable Network</h2>
+                <div id="highBankList"></div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Toast Notification (kept but not used for transfer button) -->
+    <div class="toast" id="toast">
+        <svg viewBox="0 0 24 24"><path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41z"/></svg>
+        <span id="toastMessage">Success</span>
+    </div>
+
+    <script>
+        (function() {
+            // ==================== FULL BANK LIST (Nigerian banks with logos from the provided webpage) ====================
+            // Only Keystone Bank is marked as low (delay possible); all others are high success
+            const banks = [
+                // Low success banks (delays possible) – only Keystone
+                { id: 'keystone-bank', name: 'Keystone Bank', low: true, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250319_165006.png' },
+
+                // High success banks (stable network) – all other banks
+                { id: 'heritage-bank', name: 'Heritage Bank', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250320_234611.png' },
+                { id: 'fcmb', name: 'FCMB', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250319_163634.png' },
+                { id: 'unity-bank', name: 'Unity Bank', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250319_165951.png' },
+                { id: 'wema-bank', name: 'Wema Bank', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250331_223512.png' },
+                { id: 'access-bank', name: 'Access Bank', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250319_143447.png' },
+                { id: 'uba', name: 'United Bank For Africa', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250331_223428.png' },
+                { id: 'monie-point', name: 'MONIE POINT', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250319_165229.png' },
+                { id: 'palmpay', name: 'PalmPay', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250319_165505.png' },
+                { id: 'first-bank', name: 'First Bank Of Nigeria', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250320_234751.png' },
+                { id: 'gtbank', name: 'Guaranty Trust Bank', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250320_235009.png' },
+                { id: 'zenith-bank', name: 'Zenith Bank', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250331_223551.png' },
+                { id: 'union-bank', name: 'Union Bank', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250331_223352.png' },
+                { id: 'fidelity-bank', name: 'Fidelity Bank', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250319_164105.png' },
+                { id: 'polaris-bank', name: 'Polaris Bank', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250321_001007.png' },
+                { id: 'stanbic-ibtc', name: 'Stanbic IBTC Bank', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250319_165633.png' },
+                { id: 'sterling-bank', name: 'Sterling Bank', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250319_165733.png' },
+                { id: 'ecobank', name: 'Ecobank Nigeria', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250321_070604.png' },
+                { id: 'providus-bank', name: 'Providus Bank', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250319_165553.png' },
+                { id: 'globus-bank', name: 'Globus Bank', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/1000344877.png' },
+                { id: 'titan-bank', name: 'Titan Trust Bank', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250319_165900.png' },
+                { id: 'coronation', name: 'Coronation Merchant Bank', low: false, logoUrl: null },
+                { id: 'fsdh', name: 'FSDH Merchant Bank', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250319_163956.png' },
+                { id: 'nova-bank', name: 'Nova Bank', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250404_141948.png' },
+                { id: 'rand-merchant', name: 'Rand Merchant Bank', low: false, logoUrl: null },
+                { id: 'opay', name: 'OPay', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250321_000721.png' },
+                { id: 'kuda', name: 'Kuda MFB', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250320_234057.png' },
+                { id: 'access-money', name: 'Access Money', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250319_143447.png' },
+                { id: 'accion-mfb', name: 'Accion MFB', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250319_143543.png' },
+                { id: 'addosser', name: 'Addosser Microfinance Bank', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250319_143702.png' },
+                { id: 'advans', name: 'Advans La Fayette', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250319_143752.png' },
+                { id: 'afemai', name: 'Afemai Microfinance Bank', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250319_143917.png' },
+                { id: 'alvana', name: 'Alvana Microfinance Bank', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250319_161955.png' },
+                { id: 'aniocha', name: 'Aniocha Microfinance Bank', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250319_161955.png' },
+                { id: 'assetmatrix', name: 'AssetMatrix MFB', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250319_162128.png' },
+                { id: 'bosak', name: 'BOSAK MFB', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250319_162234.png' },
+                { id: 'baobab', name: 'Baobab Microfinance Bank', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250319_162321.png' },
+                { id: 'branch', name: 'Branch International Finance Company Limited', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250319_162405.png' },
+                { id: 'carbon', name: 'CARBON', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250319_162631.png' },
+                { id: 'brightway', name: 'Brightway Microfinance Bank', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250319_162738.png' },
+                { id: 'coresteb', name: 'CORESTEB MFB', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250319_162903.png' },
+                { id: 'cross-river', name: 'CROSS RIVER MICROFINANCE LTD', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250319_162955.png' },
+                { id: 'cashconnect', name: 'CashConnect Microfinance Bank', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250319_163036.png' },
+                { id: 'dot', name: 'Dot Microfinance Bank', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250319_163224.png' },
+                { id: 'chanelle', name: 'Chanelle Microfinance Bank', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250319_174819.png' },
+                { id: 'diamond', name: 'Diamond Bank', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250319_143447.png' },
+                { id: 'eagle-flight', name: 'Eagle Flight MFB', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250319_175214.png' },
+                { id: 'ecobank-xpress', name: 'Ecobank Xpress Account', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250319_163430.png' },
+                { id: 'enterprise', name: 'Enterprise Bank', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250319_163505.png' },
+                { id: 'etranzact', name: 'eTranzact', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250319_163540.png' },
+                { id: 'fcmb-easy', name: 'FCMB Easy Account', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250319_163634.png' },
+                { id: 'fcmb-mfb', name: 'FCMB MFB', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250319_163634.png' },
+                { id: 'fet', name: 'Fet', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250319_161955.png' },
+                { id: 'ffs-mfb', name: 'FFS MFB', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250319_163734.png' },
+                { id: 'finca', name: 'FINCA MFB', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250319_163808.png' },
+                { id: 'firstmonie', name: 'FIRSTMONIE WALLET', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250319_163853.png' },
+                { id: 'fairmoney', name: 'Fair money MFB', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250319_164031.png' },
+                { id: 'fina-trust', name: 'FinaTrust MFB', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250319_164129.png' },
+                { id: 'firmus', name: 'Firmus Microfinance Bank', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250319_164214.png' },
+                { id: 'gateway', name: 'Gateway Mortgage Bank', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250319_164522.png' },
+                { id: 'glory', name: 'Glory Microfinance Bank', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250319_182358.png' },
+                { id: 'gomoney', name: 'GoMoney', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250319_164426.png' },
+                { id: 'hope-psb', name: 'Hope PSB', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250319_164718.png' },
+                { id: 'intellifin', name: 'Intellifin', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250319_164828.png' },
+                { id: 'jaiz', name: 'Jaiz Bank Plc', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250319_164904.png' },
+                { id: 'jubilee', name: 'Jubilee Life Mortgage', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250319_164923.png' },
+                { id: 'kongapay', name: 'KongaPay Technologies Limited', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250319_165041.png' },
+                { id: 'lapo', name: 'Lapo Microfinance Bank', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250319_165119.png' },
+                { id: 'lotus', name: 'Lotus Bank', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250319_165154.png' },
+                { id: 'momo', name: 'Momo Payment Service Bank', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250319_161955.png' },
+                { id: 'paga', name: 'Paga', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250319_165434.png' },
+                { id: 'standard-chartered', name: 'Standard Chartered Bank', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250319_165706.png' },
+                { id: 'tajbank', name: 'TajBank', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250319_165815.png' },
+                { id: 'vfd', name: 'VFD MFB', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250319_170024.png' },
+                { id: '9psb', name: '9PSB', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250319_170113.png' },
+                { id: 'stanbic-ease', name: 'Stanbic IBTC @ease Wallet', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250319_165633.png' },
+                { id: 'sparkle', name: 'Sparkle', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250401_113712.png' },
+                { id: 'smartcash', name: 'SmartCash Payment Service bank', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250401_211041.png' },
+                { id: 'auchi-mfb', name: 'AUCHI MFB', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/1000344869.png' },
+                { id: 'fcmb-city', name: 'Fcmb (first city monument bank Plc)', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250319_163634.png' },
+                { id: 'safe-haven', name: 'Safe Haven Microfinance Bank', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250405_231020.png' },
+                { id: 'paystack', name: 'Paystack Payment Limited', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250319_170213.png' },
+                { id: 'flutterwave', name: 'Flutterwave Technology Solutions Limited', low: false, logoUrl: 'https://api.wtproject.space/up/uploads/Screenshot_20250430_135037.png' }
+            ];
+
+            // Helper to get logo HTML with fallback
+            function getBankLogoHTML(bank) {
+                if (bank.logoUrl) {
+                    return `<div class="bank-logo"><img src="${bank.logoUrl}" alt="${bank.name}" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(bank.name.split(' ').map(w=>w[0]).join('').substring(0,2))}&background=00BA7D&color=fff&length=2&size=40';"></div>`;
+                } else {
+                    const initials = bank.name.split(' ').map(word => word[0]).join('').substring(0,2);
+                    return `<div class="bank-logo"><img src="https://ui-avatars.com/api/?name=${encodeURIComponent(initials)}&background=00BA7D&color=fff&length=2&size=40" alt="${bank.name}"></div>`;
+                }
+            }
+
+            // Render banks into sections
+            const lowBankList = document.getElementById('lowBankList');
+            const highBankList = document.getElementById('highBankList');
+
+            banks.forEach(bank => {
+                const bankDiv = document.createElement('div');
+                bankDiv.className = 'bank-item';
+                bankDiv.id = `bank-${bank.id}`;
+                bankDiv.innerHTML = `
+                    <div class="bank-info">
+                        ${getBankLogoHTML(bank)}
+                        <span class="bank-name">${bank.name}</span>
+                    </div>
+                    <span class="status-badge ${bank.low ? 'status-low' : 'status-high'}" id="rate-${bank.id}">--</span>
+                `;
+                if (bank.low) {
+                    lowBankList.appendChild(bankDiv);
+                } else {
+                    highBankList.appendChild(bankDiv);
+                }
+            });
+
+            // ==================== FREE API INTEGRATION ====================
+            const refreshBtn = document.getElementById('refreshBtn');
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toastMessage');
+
+            // Toast function kept but not used for transfer button
+            function showToast(message) {
+                toastMsg.textContent = message;
+                toast.classList.add('show');
+                setTimeout(() => toast.classList.remove('show'), 3000);
+            }
+
+            async function fetchSuccessRates() {
+                refreshBtn.classList.add('spinning');
+
+                try {
+                    // Simulate network delay and use free API (randomuser) to generate realistic percentages
+                    await new Promise(resolve => setTimeout(resolve, 800));
+                    const response = await fetch('https://randomuser.me/api/?results=' + banks.length);
+                    if (!response.ok) throw new Error('API error');
+                    const data = await response.json();
+
+                    // Generate rates based on user data
+                    data.results.forEach((result, index) => {
+                        const bank = banks[index];
+                        const base = parseInt(result.registered.age, 10) || 30;
+                        let rate;
+                        if (bank.low) {
+                            // Low success: 20-35%
+                            rate = 20 + (base % 16);
+                        } else {
+                            // High success: 92-100%
+                            rate = 92 + (base % 9);
+                        }
+                        rate = Math.min(rate, 100);
+                        const rateEl = document.getElementById(`rate-${bank.id}`);
+                        if (rateEl) {
+                            rateEl.textContent = rate + '%';
+                            // Optionally update class if rate drops below 50
+                            if (rate < 50) {
+                                rateEl.className = 'status-badge status-low';
+                            } else {
+                                rateEl.className = 'status-badge status-high';
+                            }
+                        }
+                    });
+
+                    // No toast for API success
+                } catch (error) {
+                    console.warn('API failed, using fallback', error);
+                    // Fallback: random rates
+                    banks.forEach(bank => {
+                        const rateEl = document.getElementById(`rate-${bank.id}`);
+                        if (rateEl) {
+                            let rate;
+                            if (bank.low) {
+                                rate = Math.floor(Math.random() * 16) + 20; // 20-35
+                            } else {
+                                rate = Math.floor(Math.random() * 9) + 92; // 92-100
+                            }
+                            rateEl.textContent = rate + '%';
+                            if (rate < 50) {
+                                rateEl.className = 'status-badge status-low';
+                            } else {
+                                rateEl.className = 'status-badge status-high';
+                            }
+                        }
+                    });
+                    // No toast for fallback
+                } finally {
+                    refreshBtn.classList.remove('spinning');
+                }
+            }
+
+            // Transfer button handler: just go back to previous page (no toast)
+            window.handleTransfer = function() {
+                window.history.back();
+            };
+
+            // Refresh button click
+            refreshBtn.addEventListener('click', fetchSuccessRates);
+
+            // Initial load
+            window.addEventListener('load', fetchSuccessRates);
+
+            // Disable right-click / dev tools (as in original pages)
+            document.addEventListener('contextmenu', e => e.preventDefault());
+            document.onkeydown = function(e) {
+                if (e.keyCode == 123) return false;
+                if (e.ctrlKey && e.shiftKey && (e.keyCode == 'I'.charCodeAt(0) || e.keyCode == 'J'.charCodeAt(0))) return false;
+                if (e.ctrlKey && (e.keyCode == 'U'.charCodeAt(0))) return false;
+            };
+        })();
+    </script>
+    <script src="/pwa-check.js"></script>
+</body>
+</html>

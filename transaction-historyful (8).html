@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transactions</title>
+    <style>
+        :root {
+            --bg-color: #F4F6F8;
+            --white: #FFFFFF;
+            --text-primary: #1A1A1A;
+            --text-secondary: #8F95A3;
+            --green-success: #00C896;
+            --green-bg: #E6F9F4;
+            --orange-bg: #FFF8E6;
+            --orange-icon: #FFB400;
+            --border-color: #E0E0E0;
+            --banner-bg: #FFF9E5;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .mobile-container {
+            background-color: var(--white);
+            width: 100%;
+            max-width: 414px;
+            min-height: 100vh;
+            padding-bottom: 40px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.05);
+            position: relative;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            background: var(--white);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: pointer;
+        }
+
+        .header-title {
+            font-size: 18px;
+            font-weight: 400;
+            color: var(--text-primary);
+        }
+
+        .download-link {
+            color: var(--green-success);
+            font-size: 16px;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .filters {
+            display: flex;
+            gap: 12px;
+            padding: 0 20px 16px 20px;
+        }
+
+        .filter-btn {
+            flex: 1;
+            background-color: #F5F5F7;
+            border: none;
+            padding: 12px;
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        /* Banner – now only contains the image */
+        .banner {
+            margin: 0 20px 24px 20px;
+            border-radius: 12px;
+            overflow: hidden;
+            height: 100px;
+        }
+
+        .banner-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .summary-section {
+            padding: 0 20px;
+            margin-bottom: 20px;
+        }
+
+        .summary-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .month-selector {
+            font-size: 24px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .analysis-btn {
+            background-color: var(--green-success);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .totals {
+            display: flex;
+            gap: 20px;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .total-item span {
+            color: var(--text-primary);
+            font-weight: 600;
+            margin-left: 4px;
+        }
+
+        .transaction-list {
+            list-style: none;
+            padding: 0 20px;
+        }
+
+        .transaction-item {
+            display: flex;
+            align-items: center;
+            padding: 16px 0;
+            border-bottom: 1px solid #F0F0F0;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .transaction-item:hover {
+            background-color: #f9f9f9;
+        }
+
+        .icon-box {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            flex-shrink: 0;
+            overflow: hidden;
+            background: transparent;
+        }
+
+        .icon-box img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .tx-details {
+            flex: 1;
+        }
+
+        .tx-title {
+            font-size: 15px;
+            font-weight: 400;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 200px;
+        }
+
+        .tx-date {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .tx-amount-section {
+            text-align: right;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 4px;
+        }
+
+        .tx-amount {
+            font-size: 15px;
+            font-weight: 500;
+        }
+
+        .amount-positive { color: var(--green-success); }
+        .amount-negative { color: var(--text-primary); }
+
+        .status-badge {
+            font-size: 11px;
+            background-color: var(--green-bg);
+            color: var(--green-success);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+
+        svg {
+            width: 20px;
+            height: 20px;
+        }
+        
+        .chevron-down {
+            width: 10px;
+            height: 10px;
+        }
+
+        .empty-message {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+
+        /* ===== GREEN CIRCLE LOADER ===== */
+        .loader {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .loader-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .green-ring {
+            position: relative;
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background-color: #1e9c43;
+            border: none;
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .logo-wrapper {
+            width: 35px;
+            height: 35px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-radius: 50%;
+            background: white;
+            box-shadow: 0 4px 0px rgba(0, 0, 0, 0.05);
+            animation: pulse-zoom 0.7s ease-in-out infinite;
+            z-index: 3;
+        }
+
+        .logo-image {
+            width: 25px;
+            height: 25px;
+            object-fit: contain;
+            border-radius: 50%;
+        }
+
+        .orbit {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            animation: rotate-dot 1.5s linear infinite;
+            transform-origin: center center;
+            z-index: 2;
+        }
+
+        .dot {
+            position: absolute;
+            top: 25px;
+            left: 100%;
+            transform: translateX(-1300%);
+            width: 1px;
+            height: 1px;
+            background: white;
+            border-radius: 60%;
+            box-shadow: 0 0 8px 9px rgba(255, 255, 255, 0.5);
+        }
+
+        @keyframes pulse-zoom {
+            0% {
+                transform: scale(1.03);
+                opacity: 0.8;
+                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            }
+            50% {
+                transform: scale(1.15);
+                opacity: 1;
+                box-shadow: 0 10px 20px rgba(5, 150, 105, 0.15);
+            }
+            100% {
+                transform: scale(1.03);
+                opacity: 0.8;
+                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+            }
+        }
+
+        @keyframes rotate-dot {
+            from { transform: rotate(0deg); }
+            to   { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="mobile-container">
+        <header class="header">
+            <div class="header-left" onclick="history.back()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+                <h1 class="header-title">Transactions</h1>
+            </div>
+            <a href="#" class="download-link">Download</a>
+        </header>
+
+        <div class="filters">
+            <button class="filter-btn">
+                All Categories
+                <svg class="chevron-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+            <button class="filter-btn">
+                All Status
+                <svg class="chevron-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </button>
+        </div>
+
+        <!-- Banner – only the image -->
+        <div class="banner">
+            <img src="images/history/hist.png" alt="History" class="banner-image">
+        </div>
+
+        <div class="summary-section">
+            <div class="summary-header">
+                <div class="month-selector">
+                    <span id="currentMonthYear">Mar 2026</span>
+                    <svg class="chevron-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </div>
+                <button class="analysis-btn">Analysis</button>
+            </div>
+            <div class="totals">
+                <div class="total-item">In: <span id="totalIn">₦0.00</span></div>
+                <div class="total-item">Out: <span id="totalOut">₦0.00</span></div>
+            </div>
+        </div>
+
+        <ul class="transaction-list" id="transactionList"></ul>
+    </div>
+
+    <!-- Green Circle Loader -->
+    <div id="loadingPopup" class="loader">
+        <div class="loader-container">
+            <div class="green-ring">
+                <div class="orbit">
+                    <div class="dot"></div>
+                </div>
+                <div class="logo-wrapper">
+                    <img src="https://iili.io/qT81u1e.png" alt="Loading Logo" class="logo-image">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK (module) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAjLxkisBi9pzmjlwdHnYfo25XR2Z6ToEs",
+            authDomain: "opay-plus-5802c.firebaseapp.com",
+            projectId: "opay-plus-5802c",
+            storageBucket: "opay-plus-5802c.firebasestorage.app",
+            messagingSenderId: "967061625774",
+            appId: "1:967061625774:web:236f88391ccdd9edd2863f",
+            measurementId: "G-H0QV81VYBY"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // Helper to format date (same as before)
+        function formatDate(timestamp) {
+            const date = new Date(timestamp);
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const month = months[date.getMonth()];
+            const day = date.getDate();
+            const suffix = (day % 10 === 1 && day !== 11) ? 'st' : (day % 10 === 2 && day !== 12) ? 'nd' : (day % 10 === 3 && day !== 13) ? 'rd' : 'th';
+            const hh = String(date.getHours()).padStart(2, '0');
+            const min = String(date.getMinutes()).padStart(2, '0');
+            const ss = String(date.getSeconds()).padStart(2, '0');
+            return `${month} ${day}${suffix}, ${hh}:${min}:${ss}`;
+        }
+
+        function getIconImage(tx) {
+            const isIncoming = (tx.type === 'received' || tx.category === 'deposit' || tx.category === 'owealth' || tx.category === 'bonus');
+            return isIncoming ? 'images/history/downtrs.png' : 'images/history/uptrs.png';
+        }
+
+        // Show/hide loader
+        function showLoader(show) {
+            const loader = document.getElementById('loadingPopup');
+            if (loader) {
+                loader.style.display = show ? 'flex' : 'none';
+            }
+        }
+
+        // Render transactions from given array
+        function renderTransactions(transactions) {
+            const listEl = document.getElementById('transactionList');
+            const totalInSpan = document.getElementById('totalIn');
+            const totalOutSpan = document.getElementById('totalOut');
+            const monthYearSpan = document.getElementById('currentMonthYear');
+
+            if (!listEl) return;
+
+            let totalIn = 0, totalOut = 0;
+            transactions.forEach(tx => {
+                const amount = tx.amount || 0;
+                if (tx.type === 'received' || tx.category === 'owealth' || tx.category === 'bonus' || tx.category === 'deposit') {
+                    totalIn += amount;
+                } else {
+                    totalOut += amount;
+                }
+            });
+
+            totalInSpan.textContent = '₦' + totalIn.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+            totalOutSpan.textContent = '₦' + totalOut.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+
+            const today = new Date();
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            monthYearSpan.textContent = months[today.getMonth()] + ' ' + today.getFullYear();
+
+            if (transactions.length === 0) {
+                listEl.innerHTML = '<li class="empty-message">No transactions yet</li>';
+                showLoader(false);
+                return;
+            }
+
+            listEl.innerHTML = '';
+            transactions.forEach((tx, index) => {
+                const iconImg = getIconImage(tx);
+                const dateStr = tx.date1 || formatDate(tx.created_at || Date.now());
+                const amount = tx.amount || 0;
+                const isIncoming = (tx.type === 'received' || tx.category === 'owealth' || tx.category === 'bonus' || tx.category === 'deposit');
+                const amountClass = isIncoming ? 'amount-positive' : 'amount-negative';
+                const displayAmount = (isIncoming ? '+' : '-') + '₦' + amount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+
+                let title = '';
+                if (tx.category === 'money') {
+                    title = (isIncoming ? 'Transfer from ' : 'Transfer to ') + (tx.accountname || 'Unknown');
+                } else if (tx.category === 'airtime') {
+                    title = 'Airtime';
+                } else if (tx.category === 'data') {
+                    title = 'Mobile data';
+                } else if (tx.category === 'fee') {
+                    title = 'Stamp Duty';
+                } else if (tx.category === 'owealth') {
+                    title = 'Owealth Interest Earned';
+                } else if (tx.category === 'deposit') {
+                    title = 'Transfer from ' + (tx.accountname || 'Bank');
+                } else {
+                    title = tx.accountname || 'Transaction';
+                }
+
+                const li = document.createElement('li');
+                li.className = 'transaction-item';
+                li.setAttribute('data-id', tx.id || index);
+                li.innerHTML = `
+                    <div class="icon-box">
+                        <img src="${iconImg}" alt="icon" onerror="this.style.display='none'">
+                    </div>
+                    <div class="tx-details">
+                        <div class="tx-title">${title}</div>
+                        <div class="tx-date">${dateStr}</div>
+                    </div>
+                    <div class="tx-amount-section">
+                        <div class="tx-amount ${amountClass}">${displayAmount}</div>
+                        <div class="status-badge">Successful</div>
+                    </div>
+                `;
+
+                li.addEventListener('click', function(e) {
+                    const txId = this.getAttribute('data-id');
+                    if (!txId) return;
+                    // Find transaction by id or by index if no id
+                    let foundTx = transactions.find(t => t.id === txId);
+                    if (!foundTx) {
+                        // fallback to index
+                        const idx = parseInt(txId);
+                        foundTx = transactions[idx];
+                    }
+                    if (!foundTx) return;
+                    localStorage.setItem('viewTransaction', JSON.stringify(foundTx));
+                    const bankName = (foundTx.bankname || '').toLowerCase();
+                    const category = foundTx.category || '';
+                    if (category === 'fee') {
+                        window.location.href = 'stamp-dutysucc.html';
+                    } else if (category === 'deposit' || category === 'received' || foundTx.type === 'received') {
+                        window.location.href = 'trans-from.html';
+                    } else if (bankName === 'opay') {
+                        window.location.href = 'opayreceipt-view.html';
+                    } else {
+                        window.location.href = 'receipt-view.html';
+                    }
+                });
+
+                listEl.appendChild(li);
+            });
+            showLoader(false);
+        }
+
+        // Clear transactions and update lastActivity
+        async function clearTransactionsAndUpdateActivity(user) {
+            const userRef = doc(db, 'users', user.uid);
+            await updateDoc(userRef, {
+                transactions: [],
+                lastActivity: Date.now()
+            });
+            localStorage.setItem('transactions', JSON.stringify([]));
+        }
+
+        // Load transactions from Firestore and apply inactivity cleanup
+        async function loadAndRender(user) {
+            try {
+                const userRef = doc(db, 'users', user.uid);
+                const userSnap = await getDoc(userRef);
+                if (!userSnap.exists()) {
+                    // New user – create document with lastActivity and empty transactions
+                    await updateDoc(userRef, {
+                        lastActivity: Date.now(),
+                        transactions: []
+                    });
+                    renderTransactions([]);
+                    return;
+                }
+
+                const data = userSnap.data();
+                const lastActivity = data.lastActivity || Date.now();
+                const now = Date.now();
+                const twoWeeks = 14 * 24 * 60 * 60 * 1000; // 14 days in milliseconds
+
+                // If inactive for more than 14 days, clear history
+                if (now - lastActivity > twoWeeks) {
+                    console.log('User inactive for >14 days, clearing transaction history.');
+                    await clearTransactionsAndUpdateActivity(user);
+                    renderTransactions([]);
+                } else {
+                    // Update lastActivity to now (viewing history counts as activity)
+                    await updateDoc(userRef, { lastActivity: now });
+                    // Get transactions from Firestore
+                    const firestoreTxs = data.transactions || [];
+                    // Update localStorage cache
+                    localStorage.setItem('transactions', JSON.stringify(firestoreTxs));
+                    renderTransactions(firestoreTxs);
+                }
+            } catch (error) {
+                console.error('Error loading transactions from Firestore:', error);
+                // Fallback to localStorage
+                const localTxs = JSON.parse(localStorage.getItem('transactions') || '[]');
+                renderTransactions(localTxs);
+            }
+        }
+
+        // Function to get user tier from Firestore
+        async function getUserTier(user) {
+            try {
+                const userRef = doc(db, 'users', user.uid);
+                const userSnap = await getDoc(userRef);
+                if (userSnap.exists()) {
+                    const data = userSnap.data();
+                    let tier = data.tier !== undefined ? data.tier : 0;
+                    if (tier === undefined && data.subscriptionPlan) {
+                        const plan = data.subscriptionPlan;
+                        if (plan === 'tier1') tier = 1;
+                        else if (plan === 'tier2') tier = 2;
+                        else if (plan === 'tier3') tier = 3;
+                        else tier = 0;
+                    }
+                    return tier;
+                }
+                return 0;
+            } catch (err) {
+                console.error('Error fetching tier:', err);
+                return 0;
+            }
+        }
+
+        // Wait for auth and check tier
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) {
+                // Redirect to login
+                window.location.href = 'create-email.html';
+                return;
+            }
+
+            // Show loader while checking
+            showLoader(true);
+
+            // Get user tier
+            const tier = await getUserTier(user);
+            
+            // If tier 0, redirect to dashboardful.html
+            if (tier === 0) {
+                window.location.href = 'dashboardful.html';
+                return;
+            }
+
+            // For tiers 1-3, load transactions
+            await loadAndRender(user);
+        });
+
+        // Also listen to storage changes (if another tab updates localStorage)
+        window.addEventListener('storage', (e) => {
+            if (e.key === 'transactions') {
+                const updated = JSON.parse(e.newValue || '[]');
+                renderTransactions(updated);
+            }
+        });
+
+        // Back button (already in HTML onclick, but we keep it)
+        document.querySelector('.header-left').addEventListener('click', () => history.back());
+    </script>
+    <script src="/pwa-check.js"></script>
+    <script src="/network-popup.js"></script>
+</body>
+</html>
