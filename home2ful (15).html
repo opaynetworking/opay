@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+ 
+  <meta name="theme-color" content="#E0F7EE" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#1B3B2A" media="(prefers-color-scheme: dark)">
+
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="OPay">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background-color: #E0F7EE;
+    }
+
+    /* Dark mode background */
+    @media (prefers-color-scheme: dark) {
+      html, body {
+        background-color: #1B3B2A;
+      }
+    }
+
+    /* Make header extend into safe area */
+    .header {
+      padding-top: env(safe-area-inset-top);
+      position: relative;
+    }
+
+    /* Hide scrollbar */
+    .list-section,
+    .transaction-list,
+    [class*="scroll"] {
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+    .list-section::-webkit-scrollbar,
+    .transaction-list::-webkit-scrollbar,
+    [class*="scroll"]::-webkit-scrollbar {
+      display: none;
+    }
+
+    /* Trust GIF styling – larger like the image */
+    .trust-gif {
+      position: absolute;
+      top: 55px;
+      right: 16px;
+      width: 100px;
+      height: auto;
+      z-index: 10;
+      pointer-events: none;
+    }
+    .trust-gif img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    /* Hide trust GIF in dark mode */
+    @media (prefers-color-scheme: dark) {
+      .trust-gif {
+        display: none;
+      }
+    }
+
+    /* ========== PULL TO REFRESH STYLES (Opay style) ========== */
+    .pull-to-refresh {
+      position: fixed;
+      top: -80px;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 2000;
+      transition: top 0.2s ease-out;
+      pointer-events: none;
+    }
+
+    .refresh-indicator {
+      width: 35px;
+      height: 35px;
+      background: white;
+      border-radius: 50%;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.2s ease;
+    }
+
+    .refresh-icon {
+      width: 24px;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #00B876;
+    }
+
+    .refresh-icon svg {
+      width: 100%;
+      height: 100%;
+      stroke: #00B876;
+      stroke-width: 2;
+      fill: none;
+      transition: transform 0.2s ease;
+    }
+
+    /* Pulling state: rotate arrow down */
+    .pull-to-refresh.pulling .refresh-icon svg {
+      transform: rotate(180deg);
+    }
+
+    /* Refreshing state: show spinner instead of arrow */
+    .pull-to-refresh.refreshing .refresh-icon svg {
+      display: none;
+    }
+
+    .pull-to-refresh.refreshing .refresh-icon {
+      animation: spin 1.8s linear infinite;
+    }
+
+    .pull-to-refresh.refreshing .refresh-icon::after {
+      content: "";
+      display: block;
+      width: 20px;
+      height: 20px;
+      border: 2px solid #00B876;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 1.8s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Dark mode: adjust circle background */
+    @media (prefers-color-scheme: dark) {
+      .refresh-indicator {
+        background: #2d2d2d;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+      }
+      .refresh-icon svg {
+        stroke: #00B876;
+      }
+      .pull-to-refresh.refreshing .refresh-icon::after {
+        border: 4px solid #00B876;
+        border-top-color: transparent;
+      }
+    }
+
+    * { -webkit-tap-highlight-color: transparent; }
+    :root {
+      --bg-color:#F8F8FB; --header-bg:#E0F7EE; --card-bg:#fff;
+      --text-color:#212121; --text-bold:#000; --text-muted:#616161;
+      --menu-description-color:#9E9E9E; --chevron-color:#9E9E9E;
+      --nav-bg:#fff; --nav-text:#616161; --nav-active:#00B876;
+      --nav-shadow:rgba(0,0,0,0.05); --profile-border:#E0F7EE;
+      --divider-color:#eee; --eye-icon-color:#212121;
+      --interest-bg:#fff; --interest-text:#757575; --interest-amount:#00B876;
+      --settings-icon-filter: none;
+      --primary: #00B876;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg-color:#121212; --header-bg:#1B3B2A; --card-bg:#1E1E1E;
+        --text-color:#E0E0E0; --text-bold:#FFF; --text-muted:#9E9E9E;
+        --menu-description-color:#9E9E9E; --chevron-color:#9E9E9E;
+        --nav-bg:#1E1E1E; --nav-text:#9E9E9E; --nav-active:#00B876;
+        --nav-shadow:rgba(0,0,0,0.2); --profile-border:#2A4A3A;
+        --divider-color:#333; --eye-icon-color:#FFF;
+        --interest-bg:#2A2A2A; --interest-text:#9E9E9E; --interest-amount:#00B876;
+        --settings-icon-filter: invert(1) brightness(2);
+      }
+    }
+    *{margin:0;padding:0;box-sizing:border-box;}
+    html, body {
+      width: 100%;
+      max-width: 100%;
+      overflow-x: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+    }
+    body {
+      background: var(--bg-color);
+      color: var(--text-color);
+      line-height: 1.5;
+      margin: 0;
+      padding-bottom: 70px;
+      position: relative;
+    }
+    .container{
+      width:100%;
+      max-width:100%;
+      margin:0 auto;
+      background:var(--bg-color);
+      overflow-x:hidden;
+    }
+    img{max-width:100%;height:auto;display:block;}
+
+    /* Header */
+    .header{
+      background: var(--header-bg);
+      padding: 12px;
+      padding-top: calc(env(safe-area-inset-top) + 12px);
+      position: relative;
+    }
+    .profile-section{display:flex;align-items:center;margin-bottom:15px;cursor:pointer;}
+    .profile-image{
+      width:50px;
+      height:50px;
+      border-radius:50%;
+      background:var(--card-bg);
+      border:3px solid var(--profile-border);
+      overflow:hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .profile-image img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+    }
+    .profile-image .default-avatar{
+      font-size: 40px;
+      color: #00C087;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+    }
+    .profile-info{flex:1;padding-left:8px;}
+    .username{font-weight:550;font-size:16px;margin-top:5px;color:var(--text-bold);}
+    .tier-badge img{height:23px;width:55px;}
+
+    .settings-wrapper{position:relative;display:inline-block;cursor:pointer;}
+    .settings-icon img{width:40px;height:30px;filter: var(--settings-icon-filter);}
+    #lottie-coins{position:absolute;top:1%;transform:translateX(-55%) translateY(1px);width:180px;height:180px;pointer-events:none;}
+
+    /* Balance */
+    .balance-section{display:flex;justify-content:space-between;margin-left:6px;}
+    .balance-info{flex:1;}
+    .balance-label{display:flex;align-items:center;font-size:14px;color:var(--text-color);}
+    .hide-btn{
+      background:none;
+      border:none;
+      cursor:pointer;
+      display:inline-flex;
+      align-items:center;
+      padding:0;
+      margin-left:8px;
+      color: var(--eye-icon-color);
+      font-size: 14px;
+    }
+    .amount-display{
+      display:flex;
+      align-items:baseline;
+      min-height: 40px;
+    }
+    .currency{font-size:24px;font-weight:bold;margin-right:2px;color:var(--text-bold);}
+    .amount{font-weight:650;color:var(--text-bold);display:flex;align-items:baseline;}
+    .amount .naira{font-size:30px;}
+    .amount .kobo{font-size:25px;margin-left:2px;}
+    .hidden-amount{
+      font-size:32px;
+      font-weight:650;
+      color:var(--text-bold);
+      letter-spacing:2px;
+    }
+
+    /* Interest line */
+    .interest-line {
+      display: inline-flex;
+      align-items: center;
+      background: var(--interest-bg);
+      padding: 4px;
+      border-radius: 20px;
+      margin-bottom: 2px;
+    }
+    .interest-text {
+      font-size: 12px;
+      color: var(--interest-text);
+      padding-left: 8px;
+    }
+    .interest-amount {
+      font-size: 12px;
+      color: var(--interest-amount);
+      padding: 0 3px;
+      font-weight: 600;
+    }
+
+    /* Menu */
+    .menu-section{background:var(--card-bg);border-radius:12px;margin:0 15px;padding:8px;margin-top:-15px;}
+    .menu-item{display:flex;align-items:center;padding:8px;}
+    .menu-icon img{width:40px;height:40px;margin-right:8px;}
+    .menu-text{flex:1;font-size:14px;color:var(--text-color);}
+    .menu-description{font-size:12px;color:var(--menu-description-color);margin-top:3px;}
+    .chevron-icon{color:var(--chevron-color);}
+
+    /* Bottom nav */
+    .bottom-nav{display:flex;justify-content:space-around;background:var(--nav-bg);padding:8px 0;box-shadow:0 -2px 10px var(--nav-shadow);position:fixed;bottom:0;left:0;right:0;width:100%;max-width:100%;}
+    .nav-item{display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;}
+    .nav-icon img{width:30px;height:30px;}
+    .nav-text{font-size:12px;color:var(--nav-text);}
+    .nav-item.active .nav-text{color:var(--nav-active);font-weight:500;}
+
+    /* Safety Tips Banner */
+    .safety-banner {
+      margin: 0px 15px 20px 15px;
+      background: linear-gradient(90deg, #00C896 0%, #33DDB3 100%);
+      border-radius: 12px;
+      padding: 8px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: white;
+      box-shadow: 0 4px 10px rgba(0, 200, 150, 0.3);
+    }
+    .safety-text h4 {
+      font-size: 14px;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 600;
+    }
+    .safety-text p {
+      font-size: 12px;
+      opacity: 0.9;
+    }
+    .view-btn {
+      background-color: white;
+      color: #00C896;
+      border: none;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 14px;
+      cursor: pointer;
+    }
+    .view-btn:hover {
+      opacity: 0.9;
+    }
+    
+    /* Bottom nav click animation */
+    .nav-item {
+      padding: 6px 12px;
+      border-radius: 30px;
+      transition: background-color 0.15s ease, transform 0.1s ease;
+    }
+    .nav-item:active {
+      background-color: rgba(0, 184, 118, 0.3);
+      transform: scale(1.02);
+    }
+    .nav-item:active .nav-text {
+      color: #00B876;
+    }
+    .nav-item:active .nav-icon img {
+      filter: brightness(0.9) sepia(0.4) hue-rotate(80deg) saturate(3);
+      transition: filter 0.1s;
+    }
+    @media (prefers-color-scheme: dark) {
+      .nav-item:active .nav-icon img {
+        filter: brightness(1.2) sepia(0.3) hue-rotate(70deg) saturate(4);
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Pull-to-refresh indicator (Opay style) -->
+  <div id="pullToRefresh" class="pull-to-refresh">
+    <div class="refresh-indicator">
+      <div class="refresh-icon">
+        <!-- Down arrow SVG (will rotate on pull) -->
+        <svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 5v14m-7-7l7 7 7-7"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <div class="trust-gif">
+        <img src="https://iili.io/qpTqR2V.gif" alt="Trust">
+      </div>
+
+      <div class="profile-section" onclick="location.href='profileful.html'">
+        <div class="profile-image" id="profileImageContainer">
+          <img id="profileImg" src="" alt="Profile" style="display: none;">
+          <i class="fas fa-user-circle default-avatar" id="defaultAvatar" style="display: block;"></i>
+        </div>
+        <div class="profile-info">
+          <div class="username" id="usernameDisplay">HI, LOADING...</div>
+          <div class="tier-badge">
+            <img id="tier-badge-img" src="" alt="Tier" style="display: none;">
+          </div>
+        </div>
+        <div class="settings-wrapper" id="settings-btn">
+          <div class="settings-icon"><img src="images/tohome/setting.png" alt="Settings"></div>
+          <div id="lottie-coins"></div>
+        </div>
+      </div>
+
+      <div class="balance-section">
+        <div class="balance-info">
+          <div class="balance-label">
+            Total Balance
+            <button id="toggleBalanceBtn" class="hide-btn">
+              <i class="fas fa-eye"></i>
+            </button>
+          </div>
+          <div class="amount-display" id="balanceAmount">
+            <div class="currency" id="currencySymbol">₦</div>
+            <div class="amount" id="balanceAmountNumber">
+              <span class="naira" id="mainAmount">0</span>
+              <span class="kobo" id="koboAmount">.00</span>
+            </div>
+          </div>
+          <div class="interest-line" id="interestLine">
+            <span class="interest-text">Interest Credited Today</span>
+            <span class="interest-amount" id="interestAmount">+₦0.00</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 10 Safety Tips Banner -->
+    <div class="safety-banner">
+      <div class="safety-text">
+        <h4><i class="fas fa-exclamation-triangle" style="color: orange;"></i> 10 Safety Tips</h4>
+        <p>Make your account more secure.</p>
+      </div>
+      <button class="view-btn">View</button>
+    </div>
+
+    <!-- Menu Section 1 -->
+    <div class="menu-section">
+      <div class="menu-item"><div class="menu-icon"><img src="images/tohome/history.png"></div><div class="menu-text">Transaction History</div><div class="chevron-icon"><i class="fas fa-chevron-right"></i></div></div>
+      <div class="menu-item"><div class="menu-icon"><img src="images/tohome/speed.png"></div><div class="menu-text">Account Limits<div class="menu-description">View your transaction limits</div></div><div class="chevron-icon"><i class="fas fa-chevron-right"></i></div></div>
+      <div class="menu-item"><div class="menu-icon"><img src="images/tohome/card.png"></div><div class="menu-text">Bank Card/Account<div class="menu-description">Add payment option</div></div><div class="chevron-icon"><i class="fas fa-chevron-right"></i></div></div>
+      <div class="menu-item"><div class="menu-icon"><img src="images/tohome/shop.png"></div><div class="menu-text">My BizPayment<div class="menu-description">Receive payment for business</div></div><div class="chevron-icon"><i class="fas fa-chevron-right"></i></div></div>
+    </div>
+
+    <!-- Menu Section 2 -->
+    <div class="menu-section" style="margin-top: 8px;">
+      <div class="menu-item"><div class="menu-icon"><img src="images/tohome/hurray.png"></div><div class="menu-text">Help Someone Join OPay<div class="menu-description">Help a loved one get an account</div></div><div class="chevron-icon"><i class="fas fa-chevron-right"></i></div></div>
+      <div class="menu-item"><div class="menu-icon"><img src="images/toban/badge.png"></div><div class="menu-text">Security Center<div class="menu-description">Protect your funds</div></div><div class="chevron-icon"><i class="fas fa-chevron-right"></i></div></div>
+      <div class="menu-item"><div class="menu-icon"><img src="images/tohome/support.png"></div><div class="menu-text">Customer Service Center</div><div class="chevron-icon"><i class="fas fa-chevron-right"></i></div></div>
+      <div class="menu-item"><div class="menu-icon"><img src="images/tohome/hurray.png"></div><div class="menu-text">Invitation<div class="menu-description">Invite friends and earn up to ₦6,300 Bonus</div></div><div class="chevron-icon"><i class="fas fa-chevron-right"></i></div></div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <div class="bottom-nav">
+      <div class="nav-item" onclick="location.href='dashboardful.html'"><div class="nav-icon"><img src="images/tohome/home.png"></div><div class="nav-text">Home</div></div>
+      <div class="nav-item"><div class="nav-icon"><img src="images/dashboard/gold.png"></div><div class="nav-text">Rewards</div></div>
+      <div class="nav-item"><div class="nav-icon"><img src="images/dashboard/finance.png"></div><div class="nav-text">Finance</div></div>
+      <div class="nav-item"><div class="nav-icon"><img src="images/dashboard/card.png"></div><div class="nav-text">Cards</div></div>
+      <div class="nav-item active"><div class="nav-icon"><img src="images/tohome/me.png"></div><div class="nav-text">Me</div></div>
+    </div>
+  </div>
+
+  <!-- Lottie library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lottie-web/5.10.2/lottie.min.js"></script>
+
+  <!-- Firebase SDK (module) with real-time data -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
+    import { getFirestore, doc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAjLxkisBi9pzmjlwdHnYfo25XR2Z6ToEs",
+      authDomain: "opay-plus-5802c.firebaseapp.com",
+      projectId: "opay-plus-5802c",
+      storageBucket: "opay-plus-5802c.firebasestorage.app",
+      messagingSenderId: "967061625774",
+      appId: "1:967061625774:web:236f88391ccdd9edd2863f",
+      measurementId: "G-H0QV81VYBY"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+
+    // DOM elements
+    const usernameDisplay = document.getElementById('usernameDisplay');
+    const mainAmount = document.getElementById('mainAmount');
+    const koboAmount = document.getElementById('koboAmount');
+    const tierBadgeImg = document.getElementById('tier-badge-img');
+    const interestAmount = document.getElementById('interestAmount');
+    const profileImg = document.getElementById('profileImg');
+    const defaultAvatar = document.getElementById('defaultAvatar');
+
+    let currentUid = null;
+    let unsubscribeUser = null;
+
+    function updateProfileImage() {
+      const savedImage = localStorage.getItem('profileImage');
+      if (savedImage && savedImage !== 'null' && savedImage !== '') {
+        profileImg.src = savedImage;
+        profileImg.style.display = 'block';
+        defaultAvatar.style.display = 'none';
+      } else {
+        profileImg.style.display = 'none';
+        defaultAvatar.style.display = 'block';
+      }
+    }
+
+    function updateTierBadge(tier) {
+      let imageUrl = 'images/toban/tier0.png';
+      if (tier === 0) imageUrl = 'images/toban/tier0.png';
+      else if (tier === 1) imageUrl = 'images/toban/tier1.png';
+      else if (tier === 2) imageUrl = 'images/toban/tier2.png';
+      else if (tier === 3) imageUrl = 'images/toban/tier3.png';
+      tierBadgeImg.src = imageUrl;
+      // Show the image once we set the source
+      tierBadgeImg.style.display = 'block';
+      localStorage.setItem('tier', `tier${tier}`);
+    }
+
+    function updateUI(userData) {
+      const firstName = userData.firstName || 'USER';
+      usernameDisplay.textContent = `HI, ${firstName.toUpperCase()}`;
+      localStorage.setItem('opayUserFirstName', firstName);
+
+      const balance = userData.balance || 0;
+      const [whole, frac] = balance.toFixed(2).split('.');
+      mainAmount.textContent = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+      koboAmount.textContent = '.' + frac;
+      localStorage.setItem('userBalance', balance.toString());
+
+      let tier = userData.tier;
+      if (tier === undefined && userData.subscriptionPlan) {
+        const plan = userData.subscriptionPlan;
+        if (plan === 'tier1') tier = 1;
+        else if (plan === 'tier2') tier = 2;
+        else if (plan === 'tier3') tier = 3;
+        else tier = 0;
+      } else if (tier === undefined) {
+        tier = 0;
+      }
+      updateTierBadge(tier);
+
+      const interest = userData.interest || 1.37;
+      interestAmount.textContent = `+₦${interest.toFixed(2)}`;
+    }
+
+    function setupUserListener(uid) {
+      if (unsubscribeUser) unsubscribeUser();
+      const userRef = doc(db, 'users', uid);
+      unsubscribeUser = onSnapshot(userRef, (docSnap) => {
+        if (docSnap.exists()) {
+          updateUI(docSnap.data());
+        } else {
+          updateTierBadge(0);
+          usernameDisplay.textContent = 'HI, USER';
+          mainAmount.textContent = '0';
+          koboAmount.textContent = '.00';
+          interestAmount.textContent = '+₦0.00';
+        }
+      }, (error) => {
+        console.error('Snapshot error:', error);
+      });
+    }
+
+    onAuthStateChanged(auth, (user) => {
+      if (user) {
+        currentUid = user.uid;
+        setupUserListener(user.uid);
+        window.addEventListener('storage', (e) => {
+          if (e.key === 'profileImage') updateProfileImage();
+        });
+        updateProfileImage();
+      } else {
+        window.location.href = 'create-email.html';
+      }
+    });
+
+    document.getElementById('settings-btn').addEventListener('click', function (e) {
+      e.stopPropagation();
+      window.location.href = 'settingful.html';
+    });
+
+    lottie.loadAnimation({
+      container: document.getElementById('lottie-coins'),
+      renderer: 'svg',
+      loop: true,
+      autoplay: true,
+      path: 'json/security.json'
+    });
+  </script>
+
+  <!-- Non-module script for balance toggle & pull-to-refresh -->
+  <script>
+    (function() {
+      // Balance toggle logic (unchanged)
+      const toggleBtn = document.getElementById('toggleBalanceBtn');
+      const balanceAmountDiv = document.getElementById('balanceAmount');
+      const currencySpan = document.getElementById('currencySymbol');
+      const balanceNumberDiv = document.getElementById('balanceAmountNumber');
+      const interestSpan = document.getElementById('interestAmount');
+      const mainAmount = document.getElementById('mainAmount');
+      const koboAmount = document.getElementById('koboAmount');
+
+      let balanceVisible = true;
+
+      function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+      }
+
+      function setCookie(name, value, days) {
+        const d = new Date();
+        d.setTime(d.getTime() + (days * 24 * 60 * 60 * 1000));
+        document.cookie = name + "=" + value + ";expires=" + d.toUTCString() + ";path=/";
+      }
+
+      function updateBalanceVisibility(visible) {
+        if (visible) {
+          currencySpan.style.display = 'inline';
+          balanceNumberDiv.style.display = 'flex';
+          const hidden = document.querySelector('.hidden-amount');
+          if (hidden) hidden.remove();
+          const currentInterest = document.getElementById('interestAmount').textContent;
+          interestSpan.textContent = currentInterest;
+          toggleBtn.innerHTML = '<i class="fas fa-eye"></i>';
+        } else {
+          currencySpan.style.display = 'none';
+          balanceNumberDiv.style.display = 'none';
+          let hidden = document.querySelector('.hidden-amount');
+          if (!hidden) {
+            hidden = document.createElement('span');
+            hidden.className = 'hidden-amount';
+            hidden.textContent = '****';
+            balanceAmountDiv.appendChild(hidden);
+          }
+          interestSpan.textContent = '****';
+          toggleBtn.innerHTML = '<i class="fas fa-eye-slash"></i>';
+        }
+      }
+
+      const cookieVal = getCookie('balance_visible');
+      if (cookieVal !== undefined) balanceVisible = cookieVal === 'true';
+      updateBalanceVisibility(balanceVisible);
+
+      toggleBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        balanceVisible = !balanceVisible;
+        updateBalanceVisibility(balanceVisible);
+        setCookie('balance_visible', balanceVisible ? 'true' : 'false', 30);
+      });
+
+      // ========== PULL-TO-REFRESH (Opay style) ==========
+      const pullToRefresh = document.getElementById('pullToRefresh');
+      const refreshIndicator = pullToRefresh.querySelector('.refresh-indicator');
+      const refreshIcon = pullToRefresh.querySelector('.refresh-icon');
+      let startY = 0;
+      let isPulling = false;
+      let refreshing = false;
+      let pullDistance = 0;
+      const threshold = 70; // pixels
+
+      function resetPullState() {
+        pullToRefresh.classList.remove('pulling', 'active');
+        pullToRefresh.style.top = '-80px';
+        isPulling = false;
+        pullDistance = 0;
+      }
+
+      function doRefresh() {
+        if (refreshing) return;
+        refreshing = true;
+        pullToRefresh.classList.add('refreshing');
+        pullToRefresh.classList.remove('pulling');
+        // Keep indicator visible at top
+        pullToRefresh.style.top = '0px';
+        
+        // Simulate refresh: reload the page (or you could trigger a data fetch)
+        setTimeout(() => {
+          window.location.reload();
+        }, 800);
+      }
+
+      function onTouchStart(e) {
+        if (window.pageYOffset === 0 && !refreshing) {
+          startY = e.touches[0].clientY;
+          isPulling = true;
+          pullToRefresh.classList.remove('refreshing');
+          pullToRefresh.classList.add('pulling');
+          pullToRefresh.style.top = '-80px';
+          pullDistance = 0;
+        }
+      }
+
+      function onTouchMove(e) {
+        if (!isPulling || refreshing) return;
+        const currentY = e.touches[0].clientY;
+        const diff = currentY - startY;
+        if (diff > 0) {
+          e.preventDefault();
+          pullDistance = Math.min(diff, 120);
+          let newTop = -80 + pullDistance;
+          if (newTop > 0) newTop = 0;
+          pullToRefresh.style.top = `${newTop}px`;
+          
+          // Rotate arrow based on pull distance
+          const rotateAngle = Math.min(pullDistance / threshold * 180, 180);
+          const svg = refreshIcon.querySelector('svg');
+          if (svg) {
+            svg.style.transform = `rotate(${rotateAngle}deg)`;
+          }
+          
+          if (pullDistance >= threshold) {
+            pullToRefresh.classList.add('active');
+          } else {
+            pullToRefresh.classList.remove('active');
+          }
+        } else {
+          resetPullState();
+        }
+      }
+
+      function onTouchEnd(e) {
+        if (!isPulling || refreshing) return;
+        isPulling = false;
+        if (pullDistance >= threshold) {
+          doRefresh();
+        } else {
+          resetPullState();
+          // Reset arrow rotation
+          const svg = refreshIcon.querySelector('svg');
+          if (svg) svg.style.transform = '';
+        }
+      }
+
+      document.body.addEventListener('touchstart', onTouchStart, { passive: false });
+      document.body.addEventListener('touchmove', onTouchMove, { passive: false });
+      document.body.addEventListener('touchend', onTouchEnd);
+
+      // Disable right-click and dev tools
+      document.addEventListener("contextmenu", function(e){ e.preventDefault(); });
+      document.onkeydown = function(e) {
+        if (e.keyCode == 123) return false;
+        if (e.ctrlKey && e.shiftKey && (e.keyCode == 'I'.charCodeAt(0) || e.keyCode == 'J'.charCodeAt(0))) return false;
+        if (e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false;
+      };
+    })();
+  </script>
+  <script src="/pwa-check.js"></script>
+  <script src="/network-popup.js"></script>
+</body>
+</html>

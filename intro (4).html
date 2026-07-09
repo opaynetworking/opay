@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>Clone</title>
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      background-color: #00B876; /* Green background */
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      font-family: Arial, sans-serif;
+      color: #1E2A78; /* Dark blue text */
+      text-align: center;
+    }
+    
+    .logo-bg {
+        background-color: white;
+        border-radius: 100%;
+        width: auto;
+        height: auto;
+        place-items: center;
+        justify-content: center;
+        overflow: hidden;
+        display: flex;
+        padding: 3px;
+        margin-bottom: 10px;
+    }
+
+    .logo {
+      width: 65px;
+      height: 65px;
+    }
+
+    h1 {
+      font-size: 24px;
+      font-weight: 900;
+      margin: 0;
+      margin-bottom: 15px;
+    }
+
+    .footer {
+      margin-top: 20px;
+      width: 250px;
+    }
+  </style>
+</head>
+<body>
+  <!-- Logo Image -->
+  <div class="logo-bg">
+    <img src="images/dashboard/logo.png" alt="Logo" class="logo">
+  </div>
+
+  <!-- Tagline -->
+  <h1>We are Beyond Banking</h1>
+
+  <!-- License Image -->
+  <img src="images/dashboard/bottom.png" alt="Licensed by CBN and NDIC" class="footer" style="max-height: 100vh; max-width: 100vh; width: 100%;">
+
+  <!-- Firebase SDK (modular) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
+    import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAjLxkisBi9pzmjlwdHnYfo25XR2Z6ToEs",
+      authDomain: "opay-plus-5802c.firebaseapp.com",
+      projectId: "opay-plus-5802c",
+      storageBucket: "opay-plus-5802c.firebasestorage.app",
+      messagingSenderId: "967061625774",
+      appId: "1:967061625774:web:236f88391ccdd9edd2863f",
+      measurementId: "G-H0QV81VYBY"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    // Wait for auth state to be resolved, then redirect after 2.5 seconds
+    onAuthStateChanged(auth, (user) => {
+      const delay = 2500; // milliseconds – adjust for desired splash duration
+      setTimeout(() => {
+        if (user) {
+          // User is logged in → go to dashboard
+          window.location.replace("dashboardful.html");
+        } else {
+          // Not logged in → go to account creation
+          window.location.replace("createacct.html");
+        }
+      }, delay);
+    });
+  </script>
+  <script src="/network-popup.js"></script>
+</body>
+</html>
