@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Draggable image · half off edges</title>
+  <style>
+    /* reset & basic style */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    /* just a simple card to show the page works */
+    .info-card {
+      background: rgba(255,255,255,0.7);
+      backdrop-filter: blur(8px);
+      padding: 2rem 2.5rem;
+      border-radius: 40px;
+      box-shadow: 0 20px 35px -8px rgba(0,0,0,0.2);
+      text-align: center;
+    }
+
+    /* ----- draggable image styles ----- */
+    .draggable-peek {
+      position: fixed;
+      width: 130px;                /* same as original */
+      height: auto;
+      cursor: grab;
+      z-index: 2147483647;
+      user-select: none;
+      -webkit-user-drag: element;
+      pointer-events: auto;
+      will-change: left, top;
+      filter: drop-shadow(0 8px 20px rgba(0,0,0,0.2));
+      transition: none;
+      border-radius: 16px;
+    }
+
+    .draggable-peek.dragging {
+      cursor: grabbing;
+      transition: none;
+      filter: drop-shadow(0 15px 30px rgba(0,0,0,0.3));
+    }
+
+    .draggable-peek:active {
+      opacity: 0.95;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- draggable image with your exact path -->
+  <img src="https://iili.io/qCHzsOG.png" 
+       id="draggableImage" 
+       class="draggable-peek" 
+       alt="movable clapperboard"
+       draggable="false">
+
+  <script>
+    (function() {
+      "use strict";
+
+      const img = document.getElementById('draggableImage');
+      if (!img) return;
+
+      // ----- helper: half of current image width -----
+      function getHalfWidth() {
+        return Math.round((img.offsetWidth || 130) / 2);
+      }
+
+      // ----- set initial bottom‑right position (fully visible) -----
+      function initPosition() {
+        const imgW = img.offsetWidth || 130;
+        const imgH = img.offsetHeight || 92;
+        const margin = 24; // from bottom and right
+
+        let left = window.innerWidth - imgW - margin;
+        let top = window.innerHeight - imgH - margin;
+
+        // keep fully inside (no half‑off at start)
+        left = Math.max(0, Math.min(left, window.innerWidth - imgW));
+        top = Math.max(0, Math.min(top, window.innerHeight - imgH));
+
+        img.style.left = left + 'px';
+        img.style.top = top + 'px';
+        img.style.right = 'auto';
+        img.style.bottom = 'auto';
+      }
+
+      // load guard
+      if (img.complete) {
+        initPosition();
+      } else {
+        img.addEventListener('load', initPosition);
+      }
+      img.addEventListener('error', function() {
+        initPosition(); // fallback
+      });
+
+      // ----- drag state -----
+      let isDragging = false;
+      let dragStarted = false;
+      let startX = 0, startY = 0;
+      let startLeft = 0, startTop = 0;
+      const threshold = 5;   // min movement to start drag
+
+      // ----- extended setPosition: allows half off left/right -----
+      function setPosition(left, top) {
+        const halfW = getHalfWidth();
+        const imgW = img.offsetWidth || 130;
+        const imgH = img.offsetHeight || 92;
+
+        // horizontal limits: from -halfW  to  (window.innerWidth - imgW + halfW)
+        const minLeft = -halfW;
+        const maxLeft = window.innerWidth - imgW + halfW;
+
+        // vertical limits: always fully inside (top/bottom no half‑off)
+        const minTop = 0;
+        const maxTop = window.innerHeight - imgH;
+
+        const constrainedLeft = Math.min(Math.max(left, minLeft), maxLeft);
+        const constrainedTop = Math.min(Math.max(top, minTop), maxTop);
+
+        img.style.left = constrainedLeft + 'px';
+        img.style.top = constrainedTop + 'px';
+      }
+
+      // ----- pointer down -----
+      function onPointerDown(e) {
+        e.preventDefault();
+
+        const clientX = e.clientX ?? (e.touches ? e.touches[0].clientX : 0);
+        const clientY = e.clientY ?? (e.touches ? e.touches[0].clientY : 0);
+
+        startX = clientX;
+        startY = clientY;
+
+        const rect = img.getBoundingClientRect();
+        startLeft = rect.left;
+        startTop = rect.top;
+
+        isDragging = true;
+        dragStarted = false;
+        img.classList.add('dragging');
+      }
+
+      // ----- pointer move -----
+      function onPointerMove(e) {
+        if (!isDragging) return;
+        e.preventDefault();
+
+        const clientX = e.clientX ?? (e.touches ? e.touches[0].clientX : 0);
+        const clientY = e.clientY ?? (e.touches ? e.touches[0].clientY : 0);
+
+        const dx = clientX - startX;
+        const dy = clientY - startY;
+
+        if (!dragStarted && (Math.abs(dx) > threshold || Math.abs(dy) > threshold)) {
+          dragStarted = true;
+        }
+
+        if (dragStarted) {
+          const newLeft = startLeft + dx;
+          const newTop = startTop + dy;
+          setPosition(newLeft, newTop);
+        }
+      }
+
+      // ----- pointer up -----
+      function onPointerUp(e) {
+        if (!isDragging) return;
+        isDragging = false;
+        img.classList.remove('dragging');
+        // No automatic snap – stays exactly where user left it.
+        dragStarted = false;
+      }
+
+      // ----- attach events -----
+      img.addEventListener('mousedown', onPointerDown);
+      window.addEventListener('mousemove', onPointerMove);
+      window.addEventListener('mouseup', onPointerUp);
+
+      img.addEventListener('touchstart', onPointerDown, { passive: false });
+      window.addEventListener('touchmove', onPointerMove, { passive: false });
+      window.addEventListener('touchend', onPointerUp);
+      window.addEventListener('touchcancel', onPointerUp);
+
+      img.addEventListener('dragstart', (e) => e.preventDefault());
+
+      // ----- on window resize, keep inside extended limits -----
+      window.addEventListener('resize', function() {
+        const currentLeft = parseFloat(img.style.left) || 0;
+        const currentTop = parseFloat(img.style.top) || 0;
+        const halfW = getHalfWidth();
+        const imgW = img.offsetWidth || 130;
+        const imgH = img.offsetHeight || 92;
+
+        const minLeft = -halfW;
+        const maxLeft = window.innerWidth - imgW + halfW;
+        const minTop = 0;
+        const maxTop = window.innerHeight - imgH;
+
+        let newLeft = Math.min(Math.max(currentLeft, minLeft), maxLeft);
+        let newTop = Math.min(Math.max(currentTop, minTop), maxTop);
+
+        if (newLeft !== currentLeft || newTop !== currentTop) {
+          setPosition(newLeft, newTop);
+        }
+      });
+
+      // final guard: if position wasn't set, call init after short delay
+      setTimeout(() => {
+        if (!img.style.left || img.style.left === 'auto') {
+          initPosition();
+        }
+      }, 50);
+    })();
+  </script>
+</body>
+</html>
