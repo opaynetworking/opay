@@ -1,0 +1,221 @@
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Roboto', Arial, sans-serif;
+    }
+
+    body {
+      background-color: #FFFFFF;
+      color: #000000;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      padding: 8px;
+    }
+
+    /* Header icons */
+    .return-icon {
+      margin-bottom: 25px;
+      align-self: flex-start;
+      cursor: pointer;
+    }
+
+    /* QR Code */
+    .qr-container {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 25px;
+    }
+
+    /* Form styling */
+    .login-form {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .input-container {
+      margin: 0 10px;
+    }
+
+    .input-group {
+      margin-top: 25px;
+      position: relative;
+    }
+
+    .input-field,
+    .password-field {
+      width: 100%;
+      padding: 15px 12px;
+      font-size: 18px;
+      border: 1px solid #9E9E9E;
+      border-radius: 4px;
+      outline: none;
+      transition: border-color 0.3s, background-color 0.3s, color 0.3s;
+      background-color: #FFFFFF;
+      color: #000000;
+    }
+
+    .input-field:focus,
+    .password-field:focus {
+      border-color: #00B678;
+    }
+
+    .input-field.error,
+    .password-field.error {
+      border-color: #F44336;
+    }
+
+    .input-field::placeholder,
+    .password-field::placeholder {
+      color: #9E9E9E;
+    }
+
+    .password-container {
+      margin: 10px 10px;
+    }
+
+    /* Error message */
+    .error-text {
+      padding: 8px;
+      color: #F44336;
+      font-size: 12px;
+      display: none;
+    }
+
+    /* Forgot password */
+    .forgot-password {
+      padding: 8px;
+      color: #00B678;
+      font-size: 14px;
+      text-align: right;
+      margin-top: 5px;
+      cursor: pointer;
+    }
+
+    /* Login button */
+    .login-button {
+      height: 50px;
+      background-color: #00B678;
+      border-radius: 50px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 20px 10px;
+      cursor: pointer;
+      border: none;
+      transition: background-color 0.3s;
+    }
+
+    .login-button:hover {
+      background-color: #009966;
+    }
+
+    .login-button:disabled {
+      background-color: #9E9E9E;
+      cursor: not-allowed;
+    }
+
+    .login-button span {
+      color: #FFFFFF;
+      font-size: 18px;
+      font-weight: bold;
+    }
+
+    /* Progress bar */
+    .progress-container {
+      display: none;
+      justify-content: center;
+      margin: 10px 0;
+    }
+
+    .progress-bar {
+      width: 30px;
+      height: 30px;
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #00B678;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    /* Spacer */
+    .spacer {
+      flex-grow: 1;
+    }
+
+    /* Sign up section */
+    .signup-container {
+      text-align: center;
+      padding: 8px;
+    }
+
+    .signup-text {
+      color: #424242;
+      font-size: 14px;
+      margin-top: 25px;
+    }
+
+    .signup-link {
+      color: #00B678;
+      font-size: 14px;
+      margin-top: 5px;
+      cursor: pointer;
+      text-decoration: none;
+    }
+
+    /* Footer */
+    .footer-image {
+      display: flex;
+      justify-content: center;
+      margin-top: 25px;
+    }
+
+    .footer-image img {
+      max-width: 500px;
+      width: 100%;
+    }
+
+    /* ===== DARK MODE ===== */
+    @media (prefers-color-scheme: dark) {
+      body {
+        background-color: #121212;
+        color: #FFFFFF;
+      }
+
+      .input-field,
+      .password-field {
+        background-color: #1E1E1E;
+        border: 1px solid #555;
+        color: #FFFFFF;
+      }
+
+      .input-field::placeholder,
+      .password-field::placeholder {
+        color: #AAAAAA;
+      }
+
+      .signup-text {
+        color: #CCCCCC;
+      }
+
+      .forgot-password {
+        color: #00B678;
+      }
+
+      .login-button {
+        background-color: #00B678;
+      }
+
+      .login-button:hover {
+        background-color: #009966;
+      }
+
+      .error-text {
+        color: #FF6B6B;
+      }
+    }

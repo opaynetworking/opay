@@ -1,0 +1,70 @@
+      * {margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Roboto,Arial,sans-serif;}
+      body {
+        background:#F8F8FB;
+        color:#000;
+        line-height:1.6;
+      }
+
+      /* Light Mode Styles */
+      .header {display:flex;align-items:center;background:#fff;padding:16px;}
+      .header i {font-size:20px;color:#000;}
+      .header h1 {font-size:16px;font-weight:500;margin-left:16px;color:#000;}
+
+      .container {padding:8px;max-width:600px;margin:0 auto;}
+      .settings-group {background:#fff;border-radius:8px;margin-bottom:16px;overflow:hidden;}
+      .settings-item {display:flex;align-items:center;padding:16px;cursor:pointer;transition:background 0.2s;}
+      .settings-item:hover {background:#f9f9f9;}
+      .item-icon img {width:35px;height:35px;margin-right:16px;}
+      .item-text {flex:1;font-size:14px;color:#000;}
+      .item-arrow {color:#888;font-size:16px;}
+
+      .sign-out {background:#fff;border-radius:8px;padding:16px;text-align:center;margin:16px 0;
+                 box-shadow:0 1px 3px rgba(0,0,0,0.1);cursor:pointer;transition:background 0.2s;}
+      .sign-out:hover {background:#f9f9f9;}
+      .sign-out-text {font-size:16px;font-weight:500;color:#000;}
+
+      #toast {
+        visibility:hidden;min-width:200px;background:#333;color:#fff;text-align:center;border-radius:6px;
+        padding:12px;position:fixed;bottom:30px;left:50%;transform:translateX(-50%);z-index:1000;
+        opacity:0;transition:opacity 0.5s,bottom 0.5s;
+      }
+      #toast.show {visibility:visible;opacity:1;bottom:50px;}
+
+      /* âœ… Improved True Dark Mode */
+      @media (prefers-color-scheme: dark) {
+        body {
+          background:#121212;   /* true dark background */
+          color:#e0e0e0;
+        }
+        .header,
+        .settings-group,
+        .sign-out {
+          background:#1e1e1e;   /* slightly lighter than body for contrast */
+          color:#e0e0e0;
+          border: 1px solid #2a2a2a; /* subtle border for separation */
+        }
+        .header h1,
+        .item-text,
+        .sign-out-text {
+          color:#e0e0e0;
+        }
+        .item-arrow { color:#aaa; }
+        .item-icon img { 
+          filter: invert(90%) sepia(0%) saturate(0%) hue-rotate(175deg) brightness(105%) contrast(105%);
+        }
+        .header i,
+        .settings-item i,
+        .sign-out i { color:#e0e0e0 !important; }
+        .settings-item:hover,
+        .sign-out:hover { 
+          background:#2a2a2a; 
+        }
+        #toast { 
+          background:#2d2d2d;
+          color:#e0e0e0;
+          border: 1px solid #444;
+        }
+      }
+      * {
+  -webkit-tap-highlight-color: transparent;
+}

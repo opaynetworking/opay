@@ -1,0 +1,252 @@
+:root {
+      --bg-color: #f5f5f5;
+      --text-color: #212121;
+      --card-bg: #FFFFFF;
+      --search-bg: #F8F8FB;
+      --border-color: #f0f0f0;
+      --secondary-text: #9E9E9E;
+      --header-text: #616161;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg-color: #121212;
+        --text-color: #e0e0e0;
+        --card-bg: #1e1e1e;
+        --search-bg: #2d2d2d;
+        --border-color: #333333;
+        --secondary-text: #9E9E9E;
+        --header-text: #b0b0b0;
+      }
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      line-height: 1.5;
+      overflow-x: hidden; /* stop sideways scroll */
+    }
+
+    .linear-layout {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      max-width: 100%;   /* never exceed screen width */
+      margin: 0 auto;
+      background: var(--card-bg);
+    }
+
+    .linear1 {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      background: var(--card-bg);
+    }
+
+    .linear2 {
+      display: flex;
+      align-items: center;
+      padding: 8px;
+      width: 100%;
+    }
+
+    .linear-sracg {
+      display: flex;
+      align-items: center;
+      background: var(--search-bg);
+      margin: 0 10px;
+      padding: 0 8px;
+      border-radius: 10px;
+      flex: 1;
+      margin-left: 10px;
+      margin-right: 10px;
+    }
+
+    .linear18 {
+      display: flex;
+      width: 100%;
+      background: var(--card-bg);
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    .linear8 {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      padding: 8px 0;
+      background: var(--card-bg);
+      max-width: 100%;
+    }
+
+    .linear-frequent, .linearA {
+      display: flex;
+      align-items: center;
+      padding: 0 8px;
+    }
+
+    .linear-frequent {
+      margin: 5px 0 3px 0;
+    }
+
+    .linear5 {
+      display: flex;
+      flex-direction: column;
+      background: var(--search-bg);
+      margin: 0 0 15px 10px;
+      padding: 10px;
+      border-radius: 4px;
+    }
+
+    .linear10, .linear11 {
+      display: flex;
+      flex-wrap: wrap;  /* allow items to wrap on small screens */
+      justify-content: center;
+      align-items: center;
+      width: 100%;
+    }
+
+    .linear12, .linear13, .linear14, .linear15, .linear16, .linear17 {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex: 1 1 30%;  /* responsive grid */
+      max-width: 33%; /* each row max 3 items */
+      padding: 5px;
+    }
+
+    .text-view {
+      font-size: 14px;
+      color: var(--text-color);
+    }
+
+    .text-view-small {
+      font-size: 12px;
+      color: var(--text-color);
+      text-align: center;
+      padding-top: 8px;
+    }
+
+    .text-view-gray {
+      font-size: 14px;
+      color: var(--secondary-text);
+    }
+
+    .text-view-header {
+      font-size: 16px;
+      color: var(--header-text);
+    }
+
+    .edit-text {
+      width: 100%;
+      padding: 8px;
+      background: transparent;
+      border: none;
+      outline: none;
+      font-size: 16px;
+      color: var(--text-color);
+    }
+
+    .edit-text::placeholder {
+      color: var(--secondary-text);
+    }
+
+    .image-view {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .image-view img {
+      max-width: 100%;
+      height: auto;
+      object-fit: contain;
+    }
+
+    .alphabet-sidebar {
+      width: 25px;
+      background: var(--card-bg);
+      font-size: 10px;
+      color: var(--text-color);
+      text-align: center;
+      line-height: 1.5;
+      padding: 5px 0;
+      position: sticky;
+      right: 0;
+    }
+
+    .list-view {
+      width: 100%;
+      padding: 0;
+      list-style-type: none;
+    }
+
+    .linear4 {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      background: var(--card-bg);
+      padding: 8px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .circle-image-view {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .circle-image-view img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .list-item-text {
+      flex: 1;
+      padding: 8px;
+      font-size: 14px;
+      color: var(--text-color);
+      word-break: break-word;
+    }
+
+    .bank-item {
+      display: flex;
+      align-items: center;
+      padding: 8px;
+      background: var(--card-bg);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .bank-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--border-color);
+      margin-right: 12px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .bank-icon img {
+      width: 30px;
+      height: 30px;
+    }
+
+    .bank-name {
+      font-size: 16px;
+      color: var(--text-color);
+    }
