@@ -44,6 +44,9 @@
     justify-content: center;
     cursor: pointer;
     color: #1a1a2e;
+    border: none;
+    background: none;
+    padding: 0;
   }
 
   .back-btn svg {
@@ -366,11 +369,11 @@
   <!-- Header -->
   <div class="header">
     <div class="header-top">
-      <div class="back-btn">
+      <button class="back-btn" onclick="goBack()" aria-label="Go back">
         <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="15 18 9 12 15 6"/>
         </svg>
-      </div>
+      </button>
       <div class="menu-dots">
         <span></span><span></span><span></span>
       </div>
@@ -572,12 +575,42 @@
 </div>
 
 <!-- Live Chat Button (Triggers Tawk.to) -->
-<button class="live-chat-btn" onclick="if(typeof Tawk_API !== 'undefined' && typeof Tawk_API.toggle === 'function'){ Tawk_API.toggle(); } else { alert('Chat is loading, please wait a moment.'); }">
+<button class="live-chat-btn" onclick="openLiveChat()">
   <svg viewBox="0 0 24 24" fill="white">
     <path d="M20 2H4C2.9 2 2 2.9 2 4V22L6 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2Z"/>
   </svg>
   Live Chat
 </button>
+
+<script>
+// Back button functionality
+function goBack() {
+  if (window.history.length > 1) {
+    window.history.back();
+  } else {
+    // If no history, redirect to home or close
+    window.close();
+    // Fallback: try to go to previous page or home
+    window.location.href = '/';
+  }
+}
+
+// Live Chat functionality
+function openLiveChat() {
+  if (typeof Tawk_API !== 'undefined' && typeof Tawk_API.toggle === 'function') {
+    Tawk_API.toggle();
+  } else {
+    // Show loading message if chat is not ready yet
+    alert('Chat is loading, please wait a moment...');
+    // Try again after a short delay
+    setTimeout(function() {
+      if (typeof Tawk_API !== 'undefined' && typeof Tawk_API.toggle === 'function') {
+        Tawk_API.toggle();
+      }
+    }, 2000);
+  }
+}
+</script>
 
 <!--Start of Tawk.to Script-->
 <script type="text/javascript">
