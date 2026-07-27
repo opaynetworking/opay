@@ -2215,7 +2215,7 @@
             const popupItems = [
                 { src: "images/dashboard-pop/pop1.png", link: "https://t.me/darkwebtool_ng" },
                 { src: "images/dashboard-pop/pop2.png", link: "/upgrade-subscribe.html" },
-                { src: "images/dashboard-pop/pop4.png", link: "https://whatsapp.com/channel/0029VamiUjwCxoB0yIr8jz40" },
+                { src: "images/dashboard-pop/pop4.png", link: "https://whatsapp.com/channel/0029VbCdPU17j6g0m69aTE1h" },
                 { src: "images/dashboard-pop/pop3.png", link: "https://t.me/darkwebtool_ng" }
             ];
             function showRandomPopup() { if (sessionStorage.getItem('popupShown')) return; const randomIndex = Math.floor(Math.random() * popupItems.length); const selected = popupItems[randomIndex]; popupImage.src = selected.src; popupImage.onclick = () => { window.open(selected.link, '_blank'); closePopup(); }; popupOverlay.style.display = 'flex'; sessionStorage.setItem('popupShown', 'true'); }
