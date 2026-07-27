@@ -741,10 +741,10 @@
             if (confirm('Do you want to exit?')) window.history.back();
         });
 
-        // ===== HELP LINK: WHATSAPP =====
+        // ===== HELP LINK: REDIRECT TO CHAT =====
         helpLink.addEventListener('click', (e) => {
             e.preventDefault();
-            window.open('https://wa.me/2349116125762?text=Hello%2C%20I%20need%20help%20with%20my%20OPay%20account.', '_blank');
+            window.location.href = '/chat.html';
         });
     </script>
     <script src="/pwa-check.js"></script>
