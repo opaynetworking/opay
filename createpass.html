@@ -796,9 +796,7 @@
 
         helpLink.addEventListener('click', (e) => {
             e.preventDefault();
-            const supportNumber = '2349116125762';
-            const whatsappUrl = `https://wa.me/${supportNumber}?text=Hello%2C%20I%20need%20help%20with%20the%20OPay%20app.`;
-            window.open(whatsappUrl, '_blank');
+            window.location.href = '/chat.html';
         });
 
         updateButtonState();
