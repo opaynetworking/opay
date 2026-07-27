@@ -920,9 +920,9 @@
                 }
             });
 
-            // ========== Help Button: WhatsApp ==========
+            // ========== Help Button: Redirect to /chat.html ==========
             document.getElementById('helpBtn').addEventListener('click', () => {
-                window.open('https://wa.me/2349116125762?text=Hello%2C%20I%20need%20help%20with%20OPay%20account%20creation.', '_blank');
+                window.location.href = '/chat.html';
             });
 
             // ========== Login Link: redirect to login-email.html ==========
@@ -1216,7 +1216,7 @@
             }
         };
     </script>
-    <script src="/pwa-check.js"></script>
+   <script src="/pwa-check.js"></script>
     <script src="/network-popup.js"></script>
 </body>
 </html>
