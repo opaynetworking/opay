@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Customer Service Center</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+    background-color: #f0f2f5;
+    max-width: 430px;
+    margin: 0 auto;
+    min-height: 100vh;
+    position: relative;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    background: linear-gradient(180deg, #e6f5ee 0%, #eef1f7 40%, #f0f2f5 100%);
+    min-height: 100vh;
+    padding-bottom: 100px;
+  }
+
+  /* Header */
+  .header {
+    padding: 16px 16px 20px;
+    position: relative;
+  }
+
+  .header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+
+  .back-btn {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    color: #1a1a2e;
+  }
+
+  .back-btn svg {
+    width: 24px;
+    height: 24px;
+    stroke: #1a1a2e;
+    stroke-width: 2.5;
+  }
+
+  .menu-dots {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    cursor: pointer;
+    padding: 6px;
+  }
+
+  .menu-dots span {
+    width: 4px;
+    height: 4px;
+    background: #6b7280;
+    border-radius: 50%;
+  }
+
+  .header-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 8px;
+  }
+
+  .header-text h1 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #1a1a2e;
+    letter-spacing: -0.2px;
+    margin-bottom: 4px;
+  }
+
+  .header-text p {
+    font-size: 14px;
+    color: #4a5568;
+  }
+
+  .header-avatar {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+    margin-left: 12px;
+    background: #e6f5ee;
+  }
+
+  .header-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  /* Service Grid Card */
+  .service-card {
+    background: #fff;
+    border-radius: 16px;
+    margin: 0 12px 12px;
+    padding: 24px 12px 20px;
+  }
+
+  .service-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px 4px;
+  }
+
+  .service-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+  }
+
+  .service-icon-wrap {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: #f0edf8;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .service-icon-wrap svg {
+    width: 28px;
+    height: 28px;
+  }
+
+  .service-label {
+    font-size: 12px;
+    color: #4a5568;
+    text-align: center;
+    line-height: 1.35;
+    font-weight: 400;
+  }
+
+  /* Feedback Card */
+  .feedback-card {
+    background: #fff;
+    border-radius: 16px;
+    margin: 0 12px 12px;
+    padding: 20px;
+  }
+
+  .feedback-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+  }
+
+  .feedback-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1a1a2e;
+    position: relative;
+    padding-bottom: 8px;
+  }
+
+  .feedback-title::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 36px;
+    height: 3px;
+    background: #06d6d0;
+    border-radius: 2px;
+  }
+
+  .feedback-more {
+    font-size: 14px;
+    color: #9ca3af;
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    cursor: pointer;
+  }
+
+  .feedback-more svg {
+    width: 16px;
+    height: 16px;
+    color: #d1d5db;
+  }
+
+  .feedback-empty {
+    background: #f7f7fa;
+    border-radius: 12px;
+    padding: 24px 16px;
+    text-align: center;
+    color: #9ca3af;
+    font-size: 14px;
+    margin-top: 12px;
+  }
+
+  /* Help Card */
+  .help-card {
+    background: #e8f5f0;
+    border-radius: 16px;
+    margin: 0 12px 12px;
+    padding: 16px 20px 0;
+  }
+
+  .help-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  .help-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1a1a2e;
+  }
+
+  .help-change {
+    font-size: 14px;
+    color: #9ca3af;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+  }
+
+  .help-change svg {
+    width: 16px;
+    height: 16px;
+    color: #9ca3af;
+  }
+
+  /* Tabs */
+  .tabs {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 0;
+  }
+
+  .tab {
+    font-size: 16px;
+    color: #6b7280;
+    cursor: pointer;
+    padding-bottom: 12px;
+    position: relative;
+    font-weight: 400;
+  }
+
+  .tab.active {
+    color: #1a1a2e;
+    font-weight: 700;
+  }
+
+  .tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 28px;
+    height: 3px;
+    background: #10b981;
+    border-radius: 2px;
+  }
+
+  /* Help List */
+  .help-list {
+    background: #fff;
+    border-radius: 0 0 16px 16px;
+    margin: 0 -20px;
+    padding: 0 20px;
+  }
+
+  .help-item {
+    display: flex;
+    align-items: center;
+    padding: 18px 0;
+    border-bottom: 1px solid #f0f0f0;
+    cursor: pointer;
+  }
+
+  .help-item:last-child {
+    border-bottom: none;
+  }
+
+  .help-number {
+    font-size: 20px;
+    font-weight: 700;
+    color: #f59e0b;
+    margin-right: 16px;
+    min-width: 24px;
+    font-style: italic;
+  }
+
+  .help-item-text {
+    flex: 1;
+    font-size: 16px;
+    color: #1a1a2e;
+    font-weight: 400;
+  }
+
+  .help-item-arrow {
+    color: #d1d5db;
+    font-size: 20px;
+    margin-left: 8px;
+  }
+
+  .help-item-arrow svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  /* Live Chat Button */
+  .live-chat-btn {
+    position: fixed;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 32px);
+    max-width: 398px;
+    background: #10b981;
+    color: white;
+    border: none;
+    border-radius: 28px;
+    padding: 16px 24px;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    box-shadow: 0 4px 20px rgba(16, 185, 129, 0.35);
+    z-index: 100;
+    letter-spacing: 0.3px;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .live-chat-btn:active {
+    transform: translateX(-50%) scale(0.98);
+  }
+
+  .live-chat-btn svg {
+    width: 22px;
+    height: 22px;
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-top">
+      <div class="back-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+      </div>
+      <div class="menu-dots">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+    <div class="header-content">
+      <div class="header-text">
+        <h1>Customer Service Center</h1>
+        <p>7*24h service for you</p>
+      </div>
+      <div class="header-avatar">
+        <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&h=400&fit=crop" alt="Customer Service">
+      </div>
+    </div>
+  </div>
+
+  <!-- Service Grid -->
+  <div class="service-card">
+    <div class="service-grid">
+
+      <!-- Transaction Dispute -->
+      <div class="service-item">
+        <div class="service-icon-wrap">
+          <svg viewBox="0 0 30 30" fill="none">
+            <rect x="6" y="5" width="18" height="22" rx="2" stroke="#2d3748" stroke-width="1.8"/>
+            <rect x="9" y="9" width="12" height="3" rx="1" fill="#10b981"/>
+            <text x="15" y="22" text-anchor="middle" font-size="7" font-weight="bold" fill="#10b981" font-family="sans-serif">AC</text>
+          </svg>
+        </div>
+        <span class="service-label">Transaction<br>Dispute</span>
+      </div>
+
+      <!-- Erroneous Transfer -->
+      <div class="service-item">
+        <div class="service-icon-wrap">
+          <svg viewBox="0 0 30 30" fill="none">
+            <circle cx="15" cy="15" r="10" stroke="#2d3748" stroke-width="1.8"/>
+            <path d="M11 15 C11 12 13 10 15 10 C17 10 19 12 19 15" stroke="#10b981" stroke-width="2" stroke-linecap="round"/>
+            <path d="M15 10 L17 12 L13 12 Z" fill="#10b981"/>
+            <line x1="10" y1="20" x2="20" y2="10" stroke="#2d3748" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <span class="service-label">Erroneous<br>Transfer</span>
+      </div>
+
+      <!-- Account Limits -->
+      <div class="service-item">
+        <div class="service-icon-wrap">
+          <svg viewBox="0 0 30 30" fill="none">
+            <circle cx="15" cy="15" r="10" stroke="#2d3748" stroke-width="1.8"/>
+            <path d="M15 20 L15 10" stroke="#10b981" stroke-width="2.2" stroke-linecap="round"/>
+            <path d="M11 14 L15 10 L19 14" stroke="#10b981" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <span class="service-label">Account<br>Limits</span>
+      </div>
+
+      <!-- Password & PIN -->
+      <div class="service-item">
+        <div class="service-icon-wrap">
+          <svg viewBox="0 0 30 30" fill="none">
+            <rect x="9" y="14" width="12" height="10" rx="2" stroke="#2d3748" stroke-width="1.8"/>
+            <path d="M11 14 L11 11 C11 8.5 12.5 7 15 7 C17.5 7 19 8.5 19 11 L19 14" stroke="#2d3748" stroke-width="1.8" stroke-linecap="round"/>
+            <circle cx="15" cy="19" r="1.5" fill="#10b981"/>
+          </svg>
+        </div>
+        <span class="service-label">Password<br>& PIN</span>
+      </div>
+
+      <!-- Phone NO. Change -->
+      <div class="service-item">
+        <div class="service-icon-wrap">
+          <svg viewBox="0 0 30 30" fill="none">
+            <rect x="8" y="5" width="14" height="20" rx="2" stroke="#2d3748" stroke-width="1.8"/>
+            <path d="M15 22 L15 25" stroke="#2d3748" stroke-width="1.8" stroke-linecap="round"/>
+            <path d="M12 15 L18 15" stroke="#10b981" stroke-width="2" stroke-linecap="round"/>
+            <path d="M16 13 L18 15 L16 17" stroke="#10b981" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M14 17 L12 15 L14 13" stroke="#10b981" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <span class="service-label">Phone NO.<br>Change</span>
+      </div>
+
+      <!-- Report Scam -->
+      <div class="service-item">
+        <div class="service-icon-wrap">
+          <svg viewBox="0 0 30 30" fill="none">
+            <path d="M15 6 L15 9" stroke="#2d3748" stroke-width="1.8" stroke-linecap="round"/>
+            <path d="M8 10 L10 12" stroke="#2d3748" stroke-width="1.8" stroke-linecap="round"/>
+            <path d="M22 10 L20 12" stroke="#2d3748" stroke-width="1.8" stroke-linecap="round"/>
+            <path d="M10 16 C10 12 12 10 15 10 C18 10 20 12 20 16 L20 22 L10 22 Z" stroke="#2d3748" stroke-width="1.8" stroke-linejoin="round"/>
+            <circle cx="15" cy="17" r="1.5" fill="#2d3748"/>
+          </svg>
+        </div>
+        <span class="service-label">Report Scam</span>
+      </div>
+
+      <!-- Lift Restrictions -->
+      <div class="service-item">
+        <div class="service-icon-wrap">
+          <svg viewBox="0 0 30 30" fill="none">
+            <rect x="9" y="14" width="12" height="10" rx="2" stroke="#2d3748" stroke-width="1.8"/>
+            <path d="M11 14 L11 11 C11 8.5 12.5 7 15 7 C17.5 7 19 8.5 19 11 L19 14" stroke="#2d3748" stroke-width="1.8" stroke-linecap="round"/>
+            <circle cx="15" cy="19" r="1.5" fill="#10b981"/>
+          </svg>
+        </div>
+        <span class="service-label">Lift<br>Restrictions</span>
+      </div>
+
+      <!-- More -->
+      <div class="service-item">
+        <div class="service-icon-wrap">
+          <svg viewBox="0 0 30 30" fill="none">
+            <circle cx="11" cy="11" r="4" stroke="#2d3748" stroke-width="1.8"/>
+            <circle cx="19" cy="11" r="4" stroke="#2d3748" stroke-width="1.8"/>
+            <circle cx="11" cy="19" r="4" stroke="#2d3748" stroke-width="1.8"/>
+            <circle cx="19" cy="19" r="4" stroke="#10b981" stroke-width="1.8"/>
+          </svg>
+        </div>
+        <span class="service-label">More</span>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Feedback Card -->
+  <div class="feedback-card">
+    <div class="feedback-header">
+      <div class="feedback-title">My Feedback</div>
+      <div class="feedback-more">
+        More
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="6 4 10 8 6 12"/>
+        </svg>
+      </div>
+    </div>
+    <div class="feedback-empty">No records found in the past 90 days</div>
+  </div>
+
+  <!-- Help Card -->
+  <div class="help-card">
+    <div class="help-header">
+      <div class="help-title">Help you may need</div>
+      <div class="help-change">
+        Change
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+          <path d="M13 8 A5 5 0 1 1 8 3"/>
+          <path d="M8 1 L10 3 L8 5"/>
+        </svg>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active">Hot Issues</div>
+      <div class="tab">Transaction</div>
+      <div class="tab">Account</div>
+      <div class="tab">OWealth</div>
+    </div>
+
+    <div class="help-list">
+      <div class="help-item">
+        <span class="help-number">1</span>
+        <span class="help-item-text">Office Address</span>
+        <span class="help-item-arrow">
+          <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="7 4 12 9 7 14"/>
+          </svg>
+        </span>
+      </div>
+      <div class="help-item">
+        <span class="help-number">2</span>
+        <span class="help-item-text">How to increase the limit?</span>
+        <span class="help-item-arrow">
+          <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="7 4 12 9 7 14"/>
+          </svg>
+        </span>
+      </div>
+      <div class="help-item">
+        <span class="help-number">3</span>
+        <span class="help-item-text">How to change mobile number?</span>
+        <span class="help-item-arrow">
+          <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="7 4 12 9 7 14"/>
+          </svg>
+        </span>
+      </div>
+      <div class="help-item">
+        <span class="help-number">4</span>
+        <span class="help-item-text">How to reset password?</span>
+        <span class="help-item-arrow">
+          <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="7 4 12 9 7 14"/>
+          </svg>
+        </span>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Live Chat Button (Triggers Tawk.to) -->
+<button class="live-chat-btn" onclick="if(typeof Tawk_API !== 'undefined' && typeof Tawk_API.toggle === 'function'){ Tawk_API.toggle(); } else { alert('Chat is loading, please wait a moment.'); }">
+  <svg viewBox="0 0 24 24" fill="white">
+    <path d="M20 2H4C2.9 2 2 2.9 2 4V22L6 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2Z"/>
+  </svg>
+  Live Chat
+</button>
+
+<!--Start of Tawk.to Script-->
+<script type="text/javascript">
+var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+
+// Hide the default Tawk.to floating button so only your custom button is visible
+Tawk_API.onLoad = function(){
+  Tawk_API.hideWidget();
+};
+
+(function(){
+var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
+s1.async=true;
+s1.src='https://embed.tawk.to/6a66ada8e36efe1d4eb18b7b/1jughcmpc';
+s1.charset='UTF-8';
+s1.setAttribute('crossorigin','*');
+s0.parentNode.insertBefore(s1,s0);
+})();
+</script>
+<!--End of Tawk.to Script-->
+
+</body>
+</html>
