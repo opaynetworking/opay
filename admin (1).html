@@ -1,0 +1,1019 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel | Master Control & Auto-Expiry Plans</title>
+    <!-- Tailwind CSS + Font Awesome -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Custom Styles - unchanged */
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: #f1f5f9;
+        }
+        .card-hover:hover {
+            transform: translateY(-2px);
+            transition: all 0.2s ease;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .badge {
+            @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+        }
+        .badge-tier0 { background-color: #f3f4f6; color: #1f2937; }
+        .badge-tier1 { background-color: #dbeafe; color: #1e40af; }
+        .badge-tier2 { background-color: #dcfce7; color: #166534; }
+        .badge-tier3 { background-color: #fef9c3; color: #854d0e; }
+        .badge-suspended { background-color: #fee2e2; color: #b91c1c; }
+        .badge-active { background-color: #e0f2fe; color: #0369a1; }
+        .badge-expired { background-color: #fef3c7; color: #b45309; }
+        .action-btn {
+            @apply px-3 py-1.5 rounded-lg text-sm font-medium transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-offset-1;
+        }
+        .btn-primary { background-color: #10b981; color: white; }
+        .btn-primary:hover { background-color: #059669; }
+        .btn-danger { background-color: #ef4444; color: white; }
+        .btn-danger:hover { background-color: #dc2626; }
+        .btn-warning { background-color: #f59e0b; color: white; }
+        .btn-warning:hover { background-color: #d97706; }
+        .btn-outline { background-color: white; border: 1px solid #e2e8f0; color: #1e293b; }
+        .btn-outline:hover { background-color: #f8fafc; }
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(3px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background: white;
+            border-radius: 1rem;
+            max-width: 550px;
+            width: 90%;
+            padding: 1.5rem;
+            animation: modalFadeIn 0.2s ease;
+        }
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .admin-row-highlight {
+            background-color: rgba(16, 185, 129, 0.05);
+            border-left: 3px solid #10b981;
+        }
+        .create-user-card {
+            background: white;
+            border-radius: 1rem;
+            margin-bottom: 1.5rem;
+            padding: 1.5rem;
+            border: 1px solid #e2e8f0;
+        }
+        .input-field {
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            font-size: 0.875rem;
+            outline: none;
+        }
+        .input-field:focus {
+            border-color: #10b981;
+            ring: 2px solid #10b981;
+        }
+        .search-loader {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid #e2e8f0;
+            border-radius: 50%;
+            border-top-color: #10b981;
+            animation: spin 0.6s linear infinite;
+            margin-right: 6px;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .result-badge {
+            background: #f1f5f9;
+            padding: 2px 8px;
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: 500;
+        }
+        .expiry-badge {
+            font-size: 0.7rem;
+            font-weight: 500;
+            padding: 2px 8px;
+            border-radius: 20px;
+            background: #fef3c7;
+            color: #b45309;
+        }
+        .toast-notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            z-index: 1100;
+            font-size: 0.875rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            animation: slideIn 0.2s ease;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .pagination-btn {
+            @apply px-3 py-1 rounded-md border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed;
+        }
+        .checkbox-col {
+            width: 32px;
+            text-align: center;
+        }
+        .user-checkbox {
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+        .bulk-bar {
+            background: #f9fafb;
+            border-bottom: 1px solid #e5e7eb;
+            padding: 10px 16px;
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .group-select {
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: 1px solid #d1d5db;
+            background: white;
+            font-size: 0.875rem;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <div class="container mx-auto px-4 py-8 max-w-7xl">
+        <!-- Header Card -->
+        <div class="bg-white rounded-2xl shadow-sm p-6 mb-8 border border-gray-100 card-hover">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                        <i class="fas fa-shield-alt text-emerald-600"></i> Admin Dashboard
+                    </h1>
+                    <p class="text-gray-500 text-sm mt-1">Manage subscriptions · Auto-expiry · Send messages with optional links</p>
+                </div>
+                <div id="adminStatus" class="text-sm text-gray-500 flex items-center gap-2">
+                    <i class="fas fa-spinner fa-pulse"></i> Loading...
+                </div>
+            </div>
+        </div>
+
+        <!-- Create New User Card (Admin Only) -->
+        <div id="createUserCard" class="create-user-card hidden">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-semibold text-gray-800"><i class="fas fa-user-plus text-emerald-500 mr-2"></i>Create New User</h2>
+                <button onclick="toggleCreateForm()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="createUserForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+                    <input type="email" id="newUserEmail" class="input-field" placeholder="user@example.com" required>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Password (min 6 characters)</label>
+                    <input type="password" id="newUserPassword" class="input-field" placeholder="••••••" required minlength="6">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Full Name (optional)</label>
+                    <input type="text" id="newUserFullName" class="input-field" placeholder="John Doe">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Phone Number (optional)</label>
+                    <input type="tel" id="newUserPhone" class="input-field" placeholder="+234xxxxxxxxxx">
+                </div>
+                <div class="flex justify-end gap-3 pt-2">
+                    <button type="button" onclick="toggleCreateForm()" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700">Create User & Set Balance ₦30,000</button>
+                </div>
+            </form>
+            <div id="createUserMessage" class="mt-3 text-sm hidden"></div>
+        </div>
+
+        <!-- Main Content -->
+        <div id="adminContent" class="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100">
+            <div class="flex justify-center items-center p-12">
+                <i class="fas fa-circle-notch fa-spin text-3xl text-emerald-500"></i>
+                <span class="ml-3 text-gray-500">Verifying admin access...</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Global confirmation modal (for destructive actions) -->
+    <div id="confirmModal" class="modal-backdrop hidden">
+        <div class="modal-content">
+            <h3 id="modalTitle" class="text-lg font-semibold mb-2">Confirm Action</h3>
+            <p id="modalMessage" class="text-gray-600 mb-4">Are you sure?</p>
+            <div class="flex justify-end gap-3">
+                <button id="modalCancel" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">Cancel</button>
+                <button id="modalConfirm" class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Send Message Modal (single user) with optional link -->
+    <div id="messageModal" class="modal-backdrop hidden">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-800"><i class="fas fa-envelope text-emerald-500 mr-2"></i>Send Message to User</h3>
+                <button onclick="closeMessageModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="mb-3">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Recipient</label>
+                <input type="text" id="messageRecipientEmail" class="input-field bg-gray-50" readonly>
+            </div>
+            <div class="mb-3">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Subject</label>
+                <input type="text" id="messageSubject" class="input-field" placeholder="Important update...">
+            </div>
+            <div class="mb-3">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Message</label>
+                <textarea id="messageBody" rows="3" class="input-field" placeholder="Write your message here..."></textarea>
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Link (optional)</label>
+                <input type="url" id="messageLink" class="input-field" placeholder="https://example.com">
+                <p class="text-xs text-gray-500 mt-1">This link will be shown as a clickable button in the user's inbox.</p>
+            </div>
+            <div class="flex justify-end gap-3">
+                <button onclick="closeMessageModal()" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">Cancel</button>
+                <button id="sendMessageBtn" class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700">Send Message</button>
+            </div>
+            <div id="messageModalError" class="mt-2 text-sm text-red-600 hidden"></div>
+        </div>
+    </div>
+
+    <!-- Bulk / Group Message Modal with optional link -->
+    <div id="bulkMessageModal" class="modal-backdrop hidden">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-800"><i class="fas fa-users text-emerald-500 mr-2"></i>Send Bulk / Group Message</h3>
+                <button onclick="closeBulkMessageModal()" class="text-gray-400 hover:text-gray-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="mb-3">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Target</label>
+                <input type="text" id="bulkTargetInfo" class="input-field bg-gray-50" readonly>
+            </div>
+            <div class="mb-3">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Subject</label>
+                <input type="text" id="bulkSubject" class="input-field" placeholder="Important update...">
+            </div>
+            <div class="mb-3">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Message</label>
+                <textarea id="bulkBody" rows="3" class="input-field" placeholder="Write your message here..."></textarea>
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Link (optional)</label>
+                <input type="url" id="bulkLink" class="input-field" placeholder="https://example.com">
+                <p class="text-xs text-gray-500 mt-1">This link will be shown as a clickable button in each user's inbox.</p>
+            </div>
+            <div class="flex justify-end gap-3">
+                <button onclick="closeBulkMessageModal()" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">Cancel</button>
+                <button id="sendBulkMessageBtn" class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700">Send to Selected</button>
+            </div>
+            <div id="bulkMessageError" class="mt-2 text-sm text-red-600 hidden"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
+        import { getFirestore, collection, query, where, getDocs, doc, updateDoc, deleteDoc, orderBy, limit, getDoc, setDoc, startAfter, addDoc, serverTimestamp, writeBatch } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAjLxkisBi9pzmjlwdHnYfo25XR2Z6ToEs",
+            authDomain: "opay-plus-5802c.firebaseapp.com",
+            projectId: "opay-plus-5802c",
+            storageBucket: "opay-plus-5802c.firebasestorage.app",
+            messagingSenderId: "967061625774",
+            appId: "1:967061625774:web:236f88391ccdd9edd2863f",
+            measurementId: "G-H0QV81VYBY"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // DOM elements
+        const adminContent = document.getElementById('adminContent');
+        const adminStatus = document.getElementById('adminStatus');
+        const confirmModal = document.getElementById('confirmModal');
+        const createUserCard = document.getElementById('createUserCard');
+        const messageModal = document.getElementById('messageModal');
+        const bulkMessageModal = document.getElementById('bulkMessageModal');
+        let pendingAction = null;
+        let currentMessageTargetUid = null;
+        
+        // Bulk messaging state
+        let selectedUserIds = new Set();
+        let currentUserList = [];
+        let bulkTargetType = '';
+        let bulkGroupFilter = '';
+        
+        // Pagination state
+        let currentPage = 1;
+        let pageSize = 50;
+        let totalUsers = 0;
+        let lastDocSnapshot = null;
+        let currentSearchTerm = '';
+        
+        // Full cache for search
+        let fullUsersCache = null;
+        let isFetchingFullList = false;
+        
+        // Helper functions (unchanged)
+        function formatDate(timestamp) {
+            if (!timestamp) return 'Never';
+            const date = new Date(timestamp.seconds * 1000);
+            return date.toLocaleString();
+        }
+        function formatLastLogin(lastActivity) {
+            if (!lastActivity) return 'Never';
+            let date;
+            if (lastActivity.seconds) date = new Date(lastActivity.seconds * 1000);
+            else if (typeof lastActivity === 'number') date = new Date(lastActivity);
+            else date = new Date(lastActivity);
+            return date.toLocaleString();
+        }
+        function getPlanBadgeClass(plan) {
+            switch (plan) {
+                case 'tier0': return 'badge-tier0';
+                case 'tier1': return 'badge-tier1';
+                case 'tier2': return 'badge-tier2';
+                case 'tier3': return 'badge-tier3';
+                default: return 'badge-tier0';
+            }
+        }
+        function getStatusBadge(suspended) {
+            if (suspended) return '<span class="badge badge-suspended"><i class="fas fa-ban mr-1"></i> Suspended</span>';
+            return '<span class="badge badge-active"><i class="fas fa-check-circle mr-1"></i> Active</span>';
+        }
+        function formatBalance(balance) {
+            if (balance === undefined || balance === null) return '₦0';
+            return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGP' }).format(balance).replace('NGP', '₦');
+        }
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
+        }
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.className = 'toast-notification';
+            toast.style.background = type === 'success' ? '#10b981' : '#ef4444';
+            toast.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i> ${message}`;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+        function showConfirm(title, message, onConfirm) {
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalMessage').innerText = message;
+            pendingAction = onConfirm;
+            confirmModal.classList.remove('hidden');
+        }
+        document.getElementById('modalCancel').addEventListener('click', () => {
+            confirmModal.classList.add('hidden');
+            pendingAction = null;
+        });
+        document.getElementById('modalConfirm').addEventListener('click', () => {
+            if (pendingAction) {
+                pendingAction();
+                pendingAction = null;
+            }
+            confirmModal.classList.add('hidden');
+        });
+
+        // ---------- SEND MESSAGE FUNCTIONALITY (single) with optional link ----------
+        window.showMessageModal = function(uid, email) {
+            currentMessageTargetUid = uid;
+            document.getElementById('messageRecipientEmail').value = email;
+            document.getElementById('messageSubject').value = '';
+            document.getElementById('messageBody').value = '';
+            document.getElementById('messageLink').value = '';
+            document.getElementById('messageModalError').classList.add('hidden');
+            messageModal.classList.remove('hidden');
+        };
+        window.closeMessageModal = function() {
+            messageModal.classList.add('hidden');
+            currentMessageTargetUid = null;
+        };
+        async function sendMessageToUser(uid, subject, body, link) {
+            if (!subject.trim() || !body.trim()) {
+                document.getElementById('messageModalError').textContent = 'Subject and message cannot be empty.';
+                document.getElementById('messageModalError').classList.remove('hidden');
+                return false;
+            }
+            try {
+                const adminUser = auth.currentUser;
+                const adminEmail = adminUser.email;
+                const messageData = {
+                    subject: subject.trim(),
+                    body: body.trim(),
+                    from: adminEmail,
+                    fromUid: adminUser.uid,
+                    timestamp: serverTimestamp(),
+                    read: false
+                };
+                if (link && link.trim()) {
+                    messageData.link = link.trim();
+                }
+                const messagesRef = collection(db, 'users', uid, 'messages');
+                await addDoc(messagesRef, messageData);
+                showToast(`Message sent to ${escapeHtml(document.getElementById('messageRecipientEmail').value)}`, 'success');
+                closeMessageModal();
+                return true;
+            } catch (err) {
+                console.error('Send message error:', err);
+                document.getElementById('messageModalError').textContent = 'Failed to send message: ' + err.message;
+                document.getElementById('messageModalError').classList.remove('hidden');
+                return false;
+            }
+        }
+        document.getElementById('sendMessageBtn').addEventListener('click', async () => {
+            if (!currentMessageTargetUid) return;
+            const subject = document.getElementById('messageSubject').value;
+            const body = document.getElementById('messageBody').value;
+            const link = document.getElementById('messageLink').value;
+            await sendMessageToUser(currentMessageTargetUid, subject, body, link);
+        });
+
+        // ---------- BULK / GROUP MESSAGING with optional link ----------
+        function closeBulkMessageModal() {
+            bulkMessageModal.classList.add('hidden');
+            bulkTargetType = '';
+            bulkGroupFilter = '';
+        }
+        window.closeBulkMessageModal = closeBulkMessageModal;
+        async function sendBulkMessage(uids, subject, body, link) {
+            if (!subject.trim() || !body.trim()) {
+                document.getElementById('bulkMessageError').textContent = 'Subject and message cannot be empty.';
+                document.getElementById('bulkMessageError').classList.remove('hidden');
+                return false;
+            }
+            if (uids.length === 0) {
+                document.getElementById('bulkMessageError').textContent = 'No users selected.';
+                document.getElementById('bulkMessageError').classList.remove('hidden');
+                return false;
+            }
+            try {
+                const adminUser = auth.currentUser;
+                const adminEmail = adminUser.email;
+                const batch = writeBatch(db);
+                for (const uid of uids) {
+                    const msgRef = doc(collection(db, 'users', uid, 'messages'));
+                    const messageData = {
+                        subject: subject.trim(),
+                        body: body.trim(),
+                        from: adminEmail,
+                        fromUid: adminUser.uid,
+                        timestamp: serverTimestamp(),
+                        read: false
+                    };
+                    if (link && link.trim()) {
+                        messageData.link = link.trim();
+                    }
+                    batch.set(msgRef, messageData);
+                }
+                await batch.commit();
+                showToast(`Message sent to ${uids.length} user(s).`, 'success');
+                closeBulkMessageModal();
+                selectedUserIds.clear();
+                refreshUserList();
+                return true;
+            } catch (err) {
+                console.error('Bulk send error:', err);
+                document.getElementById('bulkMessageError').textContent = 'Failed to send bulk message: ' + err.message;
+                document.getElementById('bulkMessageError').classList.remove('hidden');
+                return false;
+            }
+        }
+        async function getUsersByGroup(groupType, groupValue) {
+            const usersRef = collection(db, 'users');
+            let q;
+            if (groupType === 'plan') {
+                if (groupValue === 'tier0') q = query(usersRef, where('subscriptionPlan', '==', 'tier0'));
+                else if (groupValue === 'tier1') q = query(usersRef, where('subscriptionPlan', '==', 'tier1'));
+                else if (groupValue === 'tier2') q = query(usersRef, where('subscriptionPlan', '==', 'tier2'));
+                else if (groupValue === 'tier3') q = query(usersRef, where('subscriptionPlan', '==', 'tier3'));
+                else q = query(usersRef, where('tier', '==', parseInt(groupValue.replace('tier',''))));
+            } else if (groupType === 'status') {
+                const suspended = (groupValue === 'suspended');
+                q = query(usersRef, where('suspended', '==', suspended));
+            } else {
+                return [];
+            }
+            const snapshot = await getDocs(q);
+            const users = [];
+            snapshot.forEach(docSnap => users.push({ uid: docSnap.id, email: docSnap.data().email }));
+            return users;
+        }
+        window.showBulkMessageForSelected = function() {
+            if (selectedUserIds.size === 0) {
+                alert('Please select at least one user.');
+                return;
+            }
+            bulkTargetType = 'selected';
+            document.getElementById('bulkTargetInfo').value = `${selectedUserIds.size} user(s) selected`;
+            document.getElementById('bulkSubject').value = '';
+            document.getElementById('bulkBody').value = '';
+            document.getElementById('bulkLink').value = '';
+            document.getElementById('bulkMessageError').classList.add('hidden');
+            bulkMessageModal.classList.remove('hidden');
+        };
+        window.showBulkMessageForAll = function() {
+            bulkTargetType = 'all';
+            document.getElementById('bulkTargetInfo').value = `ALL users (${totalUsers} users)`;
+            document.getElementById('bulkSubject').value = '';
+            document.getElementById('bulkBody').value = '';
+            document.getElementById('bulkLink').value = '';
+            document.getElementById('bulkMessageError').classList.add('hidden');
+            bulkMessageModal.classList.remove('hidden');
+        };
+        window.showBulkMessageForGroup = function() {
+            const groupSelect = document.getElementById('groupSelectFilter');
+            const groupValue = groupSelect.value;
+            if (!groupValue) {
+                alert('Please select a group.');
+                return;
+            }
+            bulkTargetType = 'group';
+            bulkGroupFilter = groupValue;
+            let display = '';
+            if (groupValue === 'tier0') display = 'All Tier 0 (Free) users';
+            else if (groupValue === 'tier1') display = 'All Tier 1 users';
+            else if (groupValue === 'tier2') display = 'All Tier 2 users';
+            else if (groupValue === 'tier3') display = 'All Tier 3 users';
+            else if (groupValue === 'active') display = 'All Active users';
+            else if (groupValue === 'suspended') display = 'All Suspended users';
+            document.getElementById('bulkTargetInfo').value = display;
+            document.getElementById('bulkSubject').value = '';
+            document.getElementById('bulkBody').value = '';
+            document.getElementById('bulkLink').value = '';
+            document.getElementById('bulkMessageError').classList.add('hidden');
+            bulkMessageModal.classList.remove('hidden');
+        };
+        document.getElementById('sendBulkMessageBtn').addEventListener('click', async () => {
+            const subject = document.getElementById('bulkSubject').value;
+            const body = document.getElementById('bulkBody').value;
+            const link = document.getElementById('bulkLink').value;
+            let targetUids = [];
+            if (bulkTargetType === 'selected') {
+                targetUids = Array.from(selectedUserIds);
+            } else if (bulkTargetType === 'all') {
+                let allUsers = await fetchAllUsersFromFirestore();
+                targetUids = allUsers.map(u => u.uid);
+            } else if (bulkTargetType === 'group') {
+                const groupValue = bulkGroupFilter;
+                let groupType = 'plan';
+                if (groupValue === 'active' || groupValue === 'suspended') groupType = 'status';
+                const users = await getUsersByGroup(groupType, groupValue);
+                targetUids = users.map(u => u.uid);
+            }
+            await sendBulkMessage(targetUids, subject, body, link);
+        });
+
+        // ---------- AUTO-DOWNGRADE ----------
+        async function downgradeExpiredSubscriptions() {
+            try {
+                const now = new Date();
+                const usersRef = collection(db, 'users');
+                const expiredQuery = query(usersRef, where('subscriptionExpiry', '<', now));
+                const querySnapshot = await getDocs(expiredQuery);
+                let downgradeCount = 0;
+                const updatePromises = [];
+                querySnapshot.forEach(docSnap => {
+                    const userData = docSnap.data();
+                    const currentPlan = userData.subscriptionPlan || 'tier0';
+                    if (currentPlan !== 'tier0' && (currentPlan === 'tier1' || currentPlan === 'tier2' || currentPlan === 'tier3')) {
+                        updatePromises.push(updateDoc(doc(db, 'users', docSnap.id), {
+                            subscriptionPlan: 'tier0',
+                            tier: 0,
+                            balance: 30000,
+                            subscriptionExpiry: null,
+                            suspended: false
+                        }));
+                        downgradeCount++;
+                    }
+                });
+                if (updatePromises.length > 0) {
+                    await Promise.all(updatePromises);
+                    invalidateUserCache();
+                    const statusDiv = document.getElementById('adminStatus');
+                    if (statusDiv) {
+                        const originalHtml = statusDiv.innerHTML;
+                        statusDiv.innerHTML = `<i class="fas fa-sync-alt text-amber-500 mr-1"></i> Auto-downgraded ${downgradeCount} expired user(s)`;
+                        setTimeout(() => {
+                            if (document.getElementById('adminStatus')) document.getElementById('adminStatus').innerHTML = originalHtml;
+                        }, 4000);
+                    }
+                }
+                return downgradeCount;
+            } catch (err) { console.error(err); return 0; }
+        }
+        
+        // ---------- FETCH ALL USERS (cached) ----------
+        async function fetchAllUsersFromFirestore(forceRefresh = false) {
+            if (!forceRefresh && fullUsersCache !== null) return fullUsersCache;
+            if (isFetchingFullList) {
+                let retries = 0;
+                while (isFetchingFullList && retries < 30) { await new Promise(r => setTimeout(r, 100)); retries++; }
+                if (fullUsersCache) return fullUsersCache;
+            }
+            isFetchingFullList = true;
+            try {
+                const usersRef = collection(db, 'users');
+                let allUsers = [];
+                let lastSnapshot = null;
+                let hasMore = true;
+                const chunkSize = 300;
+                while (hasMore) {
+                    let q = lastSnapshot ? query(usersRef, orderBy('email'), startAfter(lastSnapshot), limit(chunkSize)) : query(usersRef, orderBy('email'), limit(chunkSize));
+                    const snapshot = await getDocs(q);
+                    if (snapshot.empty) break;
+                    const batchUsers = [];
+                    snapshot.forEach(docSnap => batchUsers.push({ uid: docSnap.id, ...docSnap.data() }));
+                    allUsers.push(...batchUsers);
+                    lastSnapshot = snapshot.docs[snapshot.docs.length - 1];
+                    if (snapshot.docs.length < chunkSize) hasMore = false;
+                }
+                fullUsersCache = allUsers;
+                return allUsers;
+            } catch (err) { throw err; } finally { isFetchingFullList = false; }
+        }
+        
+        function invalidateUserCache() { fullUsersCache = null; }
+        
+        async function fetchUsersPage(page, searchTerm = '') {
+            if (searchTerm.trim() !== '') {
+                let allUsers = await fetchAllUsersFromFirestore();
+                const lowerSearch = searchTerm.toLowerCase().trim();
+                let filtered = allUsers.filter(user => user.email && user.email.toLowerCase().includes(lowerSearch));
+                filtered.sort((a,b) => (a.email || '').localeCompare(b.email || ''));
+                totalUsers = filtered.length;
+                const start = (page - 1) * pageSize;
+                const end = start + pageSize;
+                return filtered.slice(start, end);
+            } else {
+                const usersRef = collection(db, 'users');
+                let q;
+                if (page === 1) {
+                    q = query(usersRef, orderBy('email'), limit(pageSize));
+                    lastDocSnapshot = null;
+                } else {
+                    if (!lastDocSnapshot) {
+                        const firstPage = await getDocs(query(usersRef, orderBy('email'), limit(pageSize)));
+                        if (firstPage.empty) return [];
+                        lastDocSnapshot = firstPage.docs[firstPage.docs.length - 1];
+                    }
+                    q = query(usersRef, orderBy('email'), startAfter(lastDocSnapshot), limit(pageSize));
+                }
+                const snapshot = await getDocs(q);
+                if (snapshot.empty) return [];
+                lastDocSnapshot = snapshot.docs[snapshot.docs.length - 1];
+                const users = [];
+                snapshot.forEach(docSnap => users.push({ uid: docSnap.id, ...docSnap.data() }));
+                const countSnapshot = await getDocs(query(usersRef, orderBy('email')));
+                totalUsers = countSnapshot.size;
+                return users;
+            }
+        }
+        
+        async function loadUsersAndRender(searchTerm = '', page = 1) {
+            const searchInputElem = document.getElementById('searchInput');
+            const currentSearch = (searchTerm !== undefined) ? searchTerm : (searchInputElem ? searchInputElem.value : '');
+            currentSearchTerm = currentSearch;
+            currentPage = page;
+            adminContent.innerHTML = `<div class="p-8 text-center"><i class="fas fa-spinner fa-pulse text-2xl text-emerald-500"></i><p class="mt-2 text-gray-500">Loading users page ${page}...</p></div>`;
+            try {
+                await downgradeExpiredSubscriptions();
+                let users = await fetchUsersPage(page, currentSearch);
+                renderUsersTable(users, currentSearch, currentSearch.trim() !== '', page, totalUsers);
+            } catch (err) {
+                adminContent.innerHTML = `<div class="p-8 text-center text-red-500"><i class="fas fa-exclamation-triangle mr-2"></i>Failed to load users: ${err.message}</div>`;
+            }
+        }
+        
+        function renderUsersTable(users, searchTerm, isFullSearchMode, currentPageNum, total) {
+            const currentAdminUid = auth.currentUser?.uid;
+            const filtered = users;
+            const totalPages = Math.ceil(total / pageSize) || 1;
+            currentUserList = users;
+            
+            let resultInfo = '';
+            if (searchTerm && searchTerm.trim() !== '') {
+                resultInfo = `<span class="result-badge ml-3"><i class="fas fa-search mr-1"></i> Found ${total} user${total !== 1 ? 's' : ''} matching "${escapeHtml(searchTerm)}"</span>`;
+                if (isFullSearchMode) resultInfo += `<span class="result-badge ml-2 bg-emerald-50 text-emerald-700"><i class="fas fa-database"></i> Scanned ALL registered users</span>`;
+            } else {
+                resultInfo = `<span class="result-badge ml-3"><i class="fas fa-eye"></i> Showing ${users.length} of ${total} users</span>`;
+            }
+            
+            let html = `
+                <div class="p-4 border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-3 flex-wrap">
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <i class="fas fa-users text-gray-400"></i>
+                        <h2 class="text-lg font-semibold text-gray-800">User Directory</h2>
+                        ${resultInfo}
+                    </div>
+                    <div class="flex gap-3 flex-wrap">
+                        <div class="relative">
+                            <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm"></i>
+                            <input type="text" id="searchInput" class="pl-9 pr-3 py-2 border border-gray-200 rounded-lg w-64 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="Search by email (finds everyone)..." value="${escapeHtml(searchTerm)}">
+                        </div>
+                        <button onclick="showCreateUserForm()" class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition flex items-center gap-2"><i class="fas fa-plus-circle"></i> Create User</button>
+                        <button onclick="handleSignOut()" class="px-4 py-2 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition flex items-center gap-2"><i class="fas fa-sign-out-alt"></i> Sign Out</button>
+                    </div>
+                </div>
+                <div class="bulk-bar">
+                    <div class="flex items-center gap-2">
+                        <input type="checkbox" id="selectAllCheckbox" class="user-checkbox">
+                        <label for="selectAllCheckbox" class="text-sm text-gray-700">Select All</label>
+                    </div>
+                    <button id="bulkSelectedBtn" class="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-md text-sm hover:bg-indigo-200"><i class="fas fa-envelope mr-1"></i> Send to Selected</button>
+                    <button id="bulkAllBtn" class="px-3 py-1 bg-green-100 text-green-700 rounded-md text-sm hover:bg-green-200"><i class="fas fa-globe mr-1"></i> Send to All</button>
+                    <div class="flex items-center gap-2 ml-auto">
+                        <select id="groupSelectFilter" class="group-select">
+                            <option value="">-- Group by Plan/Status --</option>
+                            <option value="tier0">Tier 0 (Free)</option>
+                            <option value="tier1">Tier 1</option>
+                            <option value="tier2">Tier 2</option>
+                            <option value="tier3">Tier 3</option>
+                            <option value="active">Active Users</option>
+                            <option value="suspended">Suspended Users</option>
+                        </select>
+                        <button id="bulkGroupBtn" class="px-3 py-1 bg-purple-100 text-purple-700 rounded-md text-sm hover:bg-purple-200"><i class="fas fa-layer-group mr-1"></i> Send to Group</button>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="checkbox-col px-2 py-3"><input type="checkbox" id="selectAllHeader" class="user-checkbox"></th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Plan</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Balance</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Expiry</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Login</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-100">
+            `;
+            if (filtered.length === 0) {
+                html += `<tr><td colspan="8" class="px-6 py-12 text-center text-gray-400"><i class="fas fa-user-slash text-2xl mb-2 block"></i>No users found.</td></tr>`;
+            } else {
+                filtered.forEach(user => {
+                    const plan = user.subscriptionPlan || (user.tier !== undefined ? `tier${user.tier}` : 'tier0');
+                    const balance = user.balance !== undefined ? user.balance : 0;
+                    const expiry = user.subscriptionExpiry ? formatDate(user.subscriptionExpiry) : 'Never';
+                    const lastLogin = user.lastActivity ? formatLastLogin(user.lastActivity) : 'Never';
+                    const suspended = user.suspended === true;
+                    const statusHtml = getStatusBadge(suspended);
+                    const isCurrentUser = user.uid === currentAdminUid;
+                    const rowClass = isCurrentUser ? 'admin-row-highlight' : '';
+                    const isExpired = user.subscriptionExpiry && new Date(user.subscriptionExpiry.seconds * 1000) < new Date() && plan !== 'tier0';
+                    const expiryNote = isExpired ? '<span class="expiry-badge ml-2"><i class="fas fa-hourglass-end"></i> Expired</span>' : '';
+                    const isChecked = selectedUserIds.has(user.uid) ? 'checked' : '';
+                    html += `
+                        <tr class="hover:bg-gray-50 transition ${rowClass}">
+                            <td class="checkbox-col px-2 py-4 text-center"><input type="checkbox" class="user-checkbox user-select" data-uid="${user.uid}" ${isChecked}></td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0 h-8 w-8 ${isCurrentUser ? 'bg-emerald-100' : 'bg-gray-100'} rounded-full flex items-center justify-center ${isCurrentUser ? 'text-emerald-600' : 'text-gray-500'}"><i class="fas fa-user text-sm"></i></div>
+                                    <div class="ml-3"><div class="text-sm font-medium text-gray-900">${escapeHtml(user.email)}</div><div class="text-xs text-gray-500">${escapeHtml(user.uid?.slice(0,8))}...</div>${isCurrentUser ? '<span class="text-xs text-emerald-600 font-medium">(You)</span>' : ''}</div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <select class="plan-select text-sm border border-gray-200 rounded-md px-2 py-1.5 bg-white focus:ring-emerald-500" data-uid="${user.uid}">
+                                    <option value="tier0" ${plan === 'tier0' ? 'selected' : ''}>Tier 0 (Free - ₦30k)</option>
+                                    <option value="tier1" ${plan === 'tier1' ? 'selected' : ''}>Tier 1 (7 days)</option>
+                                    <option value="tier2" ${plan === 'tier2' ? 'selected' : ''}>Tier 2 (1 month)</option>
+                                    <option value="tier3" ${plan === 'tier3' ? 'selected' : ''}>Tier 3 (1 month)</option>
+                                </select>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
+                                ${formatBalance(balance)}
+                                <button class="ml-2 text-emerald-600 hover:text-emerald-800 text-xs" onclick="setTier0Balance('${user.uid}')" title="Set Tier0 balance to ₦30,000"><i class="fas fa-coins"></i></button>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${expiry} ${expiryNote}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${escapeHtml(lastLogin)}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">${statusHtml}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                <div class="flex gap-2 flex-wrap">
+                                    <button class="action-btn bg-emerald-50 text-emerald-700 hover:bg-emerald-100" onclick="activatePlan('${user.uid}')"><i class="fas fa-check-circle mr-1"></i> Activate</button>
+                                    ${!suspended ? `<button class="action-btn bg-amber-50 text-amber-700 hover:bg-amber-100" onclick="suspendUser('${user.uid}', true)"><i class="fas fa-pause-circle mr-1"></i> Suspend</button>` : `<button class="action-btn bg-emerald-50 text-emerald-700 hover:bg-emerald-100" onclick="suspendUser('${user.uid}', false)"><i class="fas fa-play-circle mr-1"></i> Unsuspend</button>`}
+                                    <button class="action-btn bg-blue-50 text-blue-700 hover:bg-blue-100" onclick="clearUserStorage('${user.uid}')"><i class="fas fa-database mr-1"></i> Clear Storage</button>
+                                    <button class="action-btn bg-indigo-50 text-indigo-700 hover:bg-indigo-100" onclick="showMessageModal('${user.uid}', '${escapeHtml(user.email)}')"><i class="fas fa-envelope mr-1"></i> Message</button>
+                                    <button class="action-btn bg-red-50 text-red-700 hover:bg-red-100" onclick="deleteUserAccount('${user.uid}', '${escapeHtml(user.email)}')"><i class="fas fa-trash-alt mr-1"></i> Delete</button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+            html += `</tbody></table>`;
+            html += `<div class="flex justify-between items-center p-4 border-t border-gray-200 bg-gray-50">
+                        <button id="prevPageBtn" class="pagination-btn" ${currentPageNum <= 1 ? 'disabled' : ''}><i class="fas fa-chevron-left mr-1"></i> Previous</button>
+                        <span class="text-sm text-gray-600">Page ${currentPageNum} of ${totalPages}</span>
+                        <button id="nextPageBtn" class="pagination-btn" ${currentPageNum >= totalPages ? 'disabled' : ''}>Next <i class="fas fa-chevron-right ml-1"></i></button>
+                    </div>`;
+            adminContent.innerHTML = html;
+            
+            // Attach search listener
+            const searchInput = document.getElementById('searchInput');
+            if (searchInput) {
+                let debounceTimer;
+                searchInput.addEventListener('input', (e) => {
+                    clearTimeout(debounceTimer);
+                    debounceTimer = setTimeout(() => { currentPage = 1; loadUsersAndRender(e.target.value, 1); }, 350);
+                });
+            }
+            // Pagination
+            document.getElementById('prevPageBtn')?.addEventListener('click', () => { if (currentPageNum > 1) loadUsersAndRender(currentSearchTerm, currentPageNum - 1); });
+            document.getElementById('nextPageBtn')?.addEventListener('click', () => { if (currentPageNum < totalPages) loadUsersAndRender(currentSearchTerm, currentPageNum + 1); });
+            
+            // Selection sync
+            const selectAllHeader = document.getElementById('selectAllHeader');
+            const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+            const userCheckboxes = document.querySelectorAll('.user-select');
+            function updateSelectAll() {
+                const allChecked = userCheckboxes.length > 0 && Array.from(userCheckboxes).every(cb => cb.checked);
+                if (selectAllHeader) selectAllHeader.checked = allChecked;
+                if (selectAllCheckbox) selectAllCheckbox.checked = allChecked;
+            }
+            function syncSelectedIds() {
+                selectedUserIds.clear();
+                document.querySelectorAll('.user-select:checked').forEach(cb => {
+                    const uid = cb.getAttribute('data-uid');
+                    if (uid) selectedUserIds.add(uid);
+                });
+                updateSelectAll();
+            }
+            userCheckboxes.forEach(cb => cb.addEventListener('change', syncSelectedIds));
+            if (selectAllHeader) selectAllHeader.addEventListener('change', (e) => {
+                const checked = e.target.checked;
+                userCheckboxes.forEach(cb => cb.checked = checked);
+                syncSelectedIds();
+            });
+            if (selectAllCheckbox) selectAllCheckbox.addEventListener('change', (e) => {
+                const checked = e.target.checked;
+                userCheckboxes.forEach(cb => cb.checked = checked);
+                syncSelectedIds();
+            });
+            // Bulk buttons
+            document.getElementById('bulkSelectedBtn')?.addEventListener('click', () => window.showBulkMessageForSelected());
+            document.getElementById('bulkAllBtn')?.addEventListener('click', () => window.showBulkMessageForAll());
+            document.getElementById('bulkGroupBtn')?.addEventListener('click', () => window.showBulkMessageForGroup());
+        }
+        
+        async function refreshUserList() {
+            const searchBox = document.getElementById('searchInput');
+            const currentSearch = searchBox ? searchBox.value : '';
+            currentPage = 1;
+            invalidateUserCache();
+            await downgradeExpiredSubscriptions();
+            await loadUsersAndRender(currentSearch, 1);
+        }
+        
+        // Admin actions (unchanged)
+        window.activatePlan = async function(uid) {
+            const select = document.querySelector(`select[data-uid="${uid}"]`);
+            if (!select) return;
+            const newPlan = select.value;
+            let tierNum = 0;
+            if (newPlan === 'tier1') tierNum = 1;
+            else if (newPlan === 'tier2') tierNum = 2;
+            else if (newPlan === 'tier3') tierNum = 3;
+            let expiry = null;
+            const now = new Date();
+            if (newPlan === 'tier1') expiry = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+            else if (newPlan === 'tier2' || newPlan === 'tier3') expiry = new Date(now.setMonth(now.getMonth() + 1));
+            try {
+                const userRef = doc(db, 'users', uid);
+                const updateData = { subscriptionPlan: newPlan, tier: tierNum, subscriptionExpiry: expiry, suspended: false };
+                if (newPlan === 'tier0') updateData.balance = 30000;
+                await updateDoc(userRef, updateData);
+                alert(`Plan ${newPlan.toUpperCase()} activated.`);
+                await refreshUserList();
+            } catch (error) { alert('Failed to update plan.'); }
+        };
+        window.setTier0Balance = async function(uid) {
+            showConfirm('Set Tier0 Balance', "Set balance to ₦30,000 and plan Tier 0?", async () => {
+                await updateDoc(doc(db, 'users', uid), { balance: 30000, subscriptionPlan: 'tier0', tier: 0, subscriptionExpiry: null, suspended: false });
+                await refreshUserList();
+            });
+        };
+        window.suspendUser = async function(uid, suspend) {
+            showConfirm(suspend ? 'Suspend User' : 'Unsuspend User', suspend ? 'User will be unable to log in.' : 'Restore user access.', async () => {
+                await updateDoc(doc(db, 'users', uid), { suspended: suspend });
+                await refreshUserList();
+            });
+        };
+        window.clearUserStorage = async function(uid) {
+            showConfirm('Clear Storage', 'Reset files and storageUsed for this user.', async () => {
+                await updateDoc(doc(db, 'users', uid), { storageUsed: 0, files: [] });
+                await refreshUserList();
+            });
+        };
+        window.deleteUserAccount = async function(uid, email) {
+            showConfirm('Delete Account', `Permanently delete ${email}?`, async () => {
+                await deleteDoc(doc(db, 'users', uid));
+                if (uid === auth.currentUser?.uid) { await signOut(auth); window.location.href = 'create-email.html'; return; }
+                invalidateUserCache();
+                await refreshUserList();
+            });
+        };
+        async function createNewUser(email, password, fullName, phone) {
+            try {
+                const lowerEmail = email.toLowerCase().trim();
+                const userCredential = await createUserWithEmailAndPassword(auth, lowerEmail, password);
+                const uid = userCredential.user.uid;
+                const nameParts = fullName ? fullName.trim().split(' ') : [];
+                const userData = {
+                    email: lowerEmail, firstName: nameParts[0] || '', lastName: nameParts.slice(1).join(' ') || '', phone: phone || '',
+                    subscriptionPlan: 'tier0', tier: 0, balance: 30000, subscriptionExpiry: null, suspended: false,
+                    createdAt: new Date().toISOString(), lastActivity: Date.now(), storageUsed: 0, isAdmin: false
+                };
+                await setDoc(doc(db, 'users', uid), userData);
+                return { success: true, uid };
+            } catch (error) { return { success: false, error: error.message }; }
+        }
+        document.getElementById('createUserForm')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('newUserEmail').value.trim();
+            const password = document.getElementById('newUserPassword').value;
+            const fullName = document.getElementById('newUserFullName').value.trim();
+            const phone = document.getElementById('newUserPhone').value.trim();
+            const messageDiv = document.getElementById('createUserMessage');
+            if (!email || !password) { messageDiv.textContent = 'Email and password required.'; messageDiv.classList.remove('hidden'); return; }
+            messageDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating user...';
+            messageDiv.classList.remove('hidden');
+            const result = await createNewUser(email, password, fullName, phone);
+            if (result.success) {
+                messageDiv.innerHTML = '<i class="fas fa-check-circle"></i> User created with Tier0 & ₦30,000!';
+                messageDiv.classList.add('text-green-600');
+                document.getElementById('createUserForm').reset();
+                invalidateUserCache();
+                await refreshUserList();
+                setTimeout(() => toggleCreateForm(), 1800);
+            } else {
+                messageDiv.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Error: ${result.error}`;
+                messageDiv.classList.add('text-red-600');
+            }
+        });
+        window.showCreateUserForm = function() { createUserCard.classList.remove('hidden'); createUserCard.scrollIntoView({ behavior: 'smooth' }); };
+        window.toggleCreateForm = function() { createUserCard.classList.add('hidden'); document.getElementById('createUserForm')?.reset(); const msgDiv = document.getElementById('createUserMessage'); msgDiv.classList.add('hidden'); msgDiv.innerHTML = ''; };
+        window.handleSignOut = function() { signOut(auth).then(() => window.location.href = 'create-email.html'); };
+        
+        async function checkAdmin() {
+            const user = auth.currentUser;
+            if (!user) { window.location.href = 'create-email.html'; return; }
+            try {
+                const userSnap = await getDoc(doc(db, 'users', user.uid));
+                if (!userSnap.exists() || !userSnap.data().isAdmin) {
+                    adminContent.innerHTML = `<div class="p-8 text-center"><i class="fas fa-lock text-5xl text-red-400 mb-4 block"></i><h3 class="text-xl font-semibold text-gray-800">Access Denied</h3><p class="text-gray-500 mt-2">No administrator privileges.</p><button onclick="handleSignOut()" class="mt-6 px-6 py-2 bg-emerald-600 text-white rounded-lg">Sign Out</button></div>`;
+                    adminStatus.innerHTML = '<i class="fas fa-times-circle text-red-500"></i> Unauthorized';
+                    return;
+                }
+                adminStatus.innerHTML = '<i class="fas fa-check-circle text-emerald-500"></i> Admin Access · Auto-expiry active';
+                createUserCard.classList.remove('hidden');
+                await downgradeExpiredSubscriptions();
+                await loadUsersAndRender('', 1);
+            } catch (err) { adminContent.innerHTML = '<div class="p-8 text-center text-red-500">Failed to load admin panel.</div>'; }
+        }
+        onAuthStateChanged(auth, (user) => { if (user) checkAdmin(); else window.location.href = 'create-email.html'; });
+    </script>
+</body>
+</html>
