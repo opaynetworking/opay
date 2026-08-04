@@ -25,7 +25,7 @@
 
   /* Header */
   .header {
-    padding: 16px 16px 20px;
+    padding: 14px 16px 16px;
     position: relative;
   }
 
@@ -33,12 +33,12 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
   }
 
   .back-btn {
-    width: 32px;
-    height: 32px;
+    width: 28px;
+    height: 28px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -50,8 +50,8 @@
   }
 
   .back-btn svg {
-    width: 24px;
-    height: 24px;
+    width: 22px;
+    height: 22px;
     stroke: #1a1a2e;
     stroke-width: 2.5;
   }
@@ -59,7 +59,7 @@
   .menu-dots {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 3px;
     cursor: pointer;
     padding: 6px;
   }
@@ -75,35 +75,38 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-top: 8px;
+    margin-top: 4px;
   }
 
   .header-text h1 {
-    font-size: 22px;
+    font-size: 20px;
     font-weight: 700;
     color: #1a1a2e;
     letter-spacing: -0.2px;
-    margin-bottom: 4px;
+    margin-bottom: 2px;
   }
 
   .header-text p {
-    font-size: 14px;
+    font-size: 13px;
     color: #4a5568;
   }
 
   .header-avatar {
-    width: 72px;
-    height: 72px;
+    width: 64px;
+    height: 64px;
     border-radius: 50%;
     overflow: hidden;
     flex-shrink: 0;
     margin-left: 12px;
     background: #e6f5ee;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
   }
 
   .header-avatar img {
     width: 100%;
-    height: 100%;
+    height: auto;
     object-fit: cover;
   }
 
@@ -112,43 +115,47 @@
     background: #fff;
     border-radius: 16px;
     margin: 0 12px 12px;
-    padding: 24px 12px 20px;
+    padding: 20px 8px 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.02);
   }
 
   .service-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 20px 4px;
+    gap: 12px 0px;
   }
 
   .service-item {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
     cursor: pointer;
   }
 
   .service-icon-wrap {
-    width: 56px;
-    height: 56px;
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
-    background: #f0edf8;
+    background: #f4f4f9;
     display: flex;
     align-items: center;
     justify-content: center;
   }
 
-  .service-icon-wrap svg {
-    width: 28px;
-    height: 28px;
+  /* Styles for the custom image icon */
+  .service-icon-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 50%;
   }
 
   .service-label {
-    font-size: 12px;
+    font-size: 11px;
     color: #4a5568;
     text-align: center;
-    line-height: 1.35;
+    line-height: 1.3;
     font-weight: 400;
   }
 
@@ -157,22 +164,23 @@
     background: #fff;
     border-radius: 16px;
     margin: 0 12px 12px;
-    padding: 20px;
+    padding: 16px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.02);
   }
 
   .feedback-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 4px;
+    margin-bottom: 2px;
   }
 
   .feedback-title {
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 700;
     color: #1a1a2e;
     position: relative;
-    padding-bottom: 8px;
+    padding-bottom: 6px;
   }
 
   .feedback-title::after {
@@ -180,14 +188,14 @@
     position: absolute;
     bottom: 0;
     left: 0;
-    width: 36px;
+    width: 28px;
     height: 3px;
     background: #06d6d0;
     border-radius: 2px;
   }
 
   .feedback-more {
-    font-size: 14px;
+    font-size: 13px;
     color: #9ca3af;
     display: flex;
     align-items: center;
@@ -196,19 +204,19 @@
   }
 
   .feedback-more svg {
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
     color: #d1d5db;
   }
 
   .feedback-empty {
     background: #f7f7fa;
-    border-radius: 12px;
-    padding: 24px 16px;
+    border-radius: 10px;
+    padding: 18px 16px;
     text-align: center;
     color: #9ca3af;
-    font-size: 14px;
-    margin-top: 12px;
+    font-size: 13px;
+    margin-top: 8px;
   }
 
   /* Help Card */
@@ -216,24 +224,24 @@
     background: #e8f5f0;
     border-radius: 16px;
     margin: 0 12px 12px;
-    padding: 16px 20px 0;
+    padding: 14px 16px 0;
   }
 
   .help-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 16px;
+    margin-bottom: 12px;
   }
 
   .help-title {
-    font-size: 18px;
+    font-size: 16px;
     font-weight: 700;
     color: #1a1a2e;
   }
 
   .help-change {
-    font-size: 14px;
+    font-size: 13px;
     color: #9ca3af;
     display: flex;
     align-items: center;
@@ -242,23 +250,23 @@
   }
 
   .help-change svg {
-    width: 16px;
-    height: 16px;
+    width: 14px;
+    height: 14px;
     color: #9ca3af;
   }
 
   /* Tabs */
   .tabs {
     display: flex;
-    gap: 24px;
+    gap: 16px;
     margin-bottom: 0;
   }
 
   .tab {
-    font-size: 16px;
+    font-size: 14px;
     color: #6b7280;
     cursor: pointer;
-    padding-bottom: 12px;
+    padding-bottom: 10px;
     position: relative;
     font-weight: 400;
   }
@@ -274,7 +282,7 @@
     bottom: 0;
     left: 50%;
     transform: translateX(-50%);
-    width: 28px;
+    width: 24px;
     height: 3px;
     background: #10b981;
     border-radius: 2px;
@@ -284,14 +292,14 @@
   .help-list {
     background: #fff;
     border-radius: 0 0 16px 16px;
-    margin: 0 -20px;
-    padding: 0 20px;
+    margin: 0 -16px;
+    padding: 0 16px;
   }
 
   .help-item {
     display: flex;
     align-items: center;
-    padding: 18px 0;
+    padding: 16px 0;
     border-bottom: 1px solid #f0f0f0;
     cursor: pointer;
   }
@@ -301,30 +309,47 @@
   }
 
   .help-number {
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 700;
     color: #f59e0b;
-    margin-right: 16px;
-    min-width: 24px;
+    margin-right: 14px;
+    min-width: 20px;
     font-style: italic;
   }
 
   .help-item-text {
     flex: 1;
-    font-size: 16px;
+    font-size: 15px;
     color: #1a1a2e;
     font-weight: 400;
+    display: flex;
+    align-items: center;
   }
 
   .help-item-arrow {
     color: #d1d5db;
-    font-size: 20px;
     margin-left: 8px;
+    display: flex;
+    align-items: center;
   }
 
   .help-item-arrow svg {
-    width: 18px;
-    height: 18px;
+    width: 16px;
+    height: 16px;
+  }
+
+  /* HOT Badge styling */
+  .hot-badge {
+    background-color: #ff6b81;
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 12px;
+    margin-left: 10px;
+    vertical-align: middle;
+    display: inline-block;
+    line-height: 1.4;
   }
 
   /* Live Chat Button */
@@ -339,15 +364,15 @@
     color: white;
     border: none;
     border-radius: 28px;
-    padding: 16px 24px;
-    font-size: 18px;
+    padding: 14px 24px;
+    font-size: 16px;
     font-weight: 600;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
-    box-shadow: 0 4px 20px rgba(16, 185, 129, 0.35);
+    gap: 8px;
+    box-shadow: 0 4px 16px rgba(16, 185, 129, 0.30);
     z-index: 100;
     letter-spacing: 0.3px;
     transition: transform 0.2s, box-shadow 0.2s;
@@ -358,8 +383,9 @@
   }
 
   .live-chat-btn svg {
-    width: 22px;
-    height: 22px;
+    width: 18px;
+    height: 18px;
+    fill: white;
   }
 </style>
 </head>
@@ -384,7 +410,7 @@
         <p>7*24h service for you</p>
       </div>
       <div class="header-avatar">
-        <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=400&h=400&fit=crop" alt="Customer Service">
+        <img src="https://iili.io/CgBrKlf.png=400&h=400&fit=crop" alt="Customer Service">
       </div>
     </div>
   </div>
@@ -396,11 +422,7 @@
       <!-- Transaction Dispute -->
       <div class="service-item">
         <div class="service-icon-wrap">
-          <svg viewBox="0 0 30 30" fill="none">
-            <rect x="6" y="5" width="18" height="22" rx="2" stroke="#2d3748" stroke-width="1.8"/>
-            <rect x="9" y="9" width="12" height="3" rx="1" fill="#10b981"/>
-            <text x="15" y="22" text-anchor="middle" font-size="7" font-weight="bold" fill="#10b981" font-family="sans-serif">AC</text>
-          </svg>
+          <img src="https://iili.io/CgBDdmb.png" alt="Transaction Dispute">
         </div>
         <span class="service-label">Transaction<br>Dispute</span>
       </div>
@@ -408,12 +430,7 @@
       <!-- Erroneous Transfer -->
       <div class="service-item">
         <div class="service-icon-wrap">
-          <svg viewBox="0 0 30 30" fill="none">
-            <circle cx="15" cy="15" r="10" stroke="#2d3748" stroke-width="1.8"/>
-            <path d="M11 15 C11 12 13 10 15 10 C17 10 19 12 19 15" stroke="#10b981" stroke-width="2" stroke-linecap="round"/>
-            <path d="M15 10 L17 12 L13 12 Z" fill="#10b981"/>
-            <line x1="10" y1="20" x2="20" y2="10" stroke="#2d3748" stroke-width="1.8" stroke-linecap="round"/>
-          </svg>
+          <img src="https://iili.io/CgCJOVs.png" alt="Erroneous Transfer">
         </div>
         <span class="service-label">Erroneous<br>Transfer</span>
       </div>
@@ -421,11 +438,7 @@
       <!-- Account Limits -->
       <div class="service-item">
         <div class="service-icon-wrap">
-          <svg viewBox="0 0 30 30" fill="none">
-            <circle cx="15" cy="15" r="10" stroke="#2d3748" stroke-width="1.8"/>
-            <path d="M15 20 L15 10" stroke="#10b981" stroke-width="2.2" stroke-linecap="round"/>
-            <path d="M11 14 L15 10 L19 14" stroke="#10b981" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
+          <img src="https://iili.io/CgCBMu4.png" alt="Account Limits">
         </div>
         <span class="service-label">Account<br>Limits</span>
       </div>
@@ -433,11 +446,7 @@
       <!-- Password & PIN -->
       <div class="service-item">
         <div class="service-icon-wrap">
-          <svg viewBox="0 0 30 30" fill="none">
-            <rect x="9" y="14" width="12" height="10" rx="2" stroke="#2d3748" stroke-width="1.8"/>
-            <path d="M11 14 L11 11 C11 8.5 12.5 7 15 7 C17.5 7 19 8.5 19 11 L19 14" stroke="#2d3748" stroke-width="1.8" stroke-linecap="round"/>
-            <circle cx="15" cy="19" r="1.5" fill="#10b981"/>
-          </svg>
+          <img src="https://iili.io/CgCxSg1.png" alt="Password & PIN">
         </div>
         <span class="service-label">Password<br>& PIN</span>
       </div>
@@ -445,13 +454,7 @@
       <!-- Phone NO. Change -->
       <div class="service-item">
         <div class="service-icon-wrap">
-          <svg viewBox="0 0 30 30" fill="none">
-            <rect x="8" y="5" width="14" height="20" rx="2" stroke="#2d3748" stroke-width="1.8"/>
-            <path d="M15 22 L15 25" stroke="#2d3748" stroke-width="1.8" stroke-linecap="round"/>
-            <path d="M12 15 L18 15" stroke="#10b981" stroke-width="2" stroke-linecap="round"/>
-            <path d="M16 13 L18 15 L16 17" stroke="#10b981" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M14 17 L12 15 L14 13" stroke="#10b981" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
+          <img src="https://iili.io/CgCAoFV.png" alt="Phone NO. Change">
         </div>
         <span class="service-label">Phone NO.<br>Change</span>
       </div>
@@ -459,13 +462,7 @@
       <!-- Report Scam -->
       <div class="service-item">
         <div class="service-icon-wrap">
-          <svg viewBox="0 0 30 30" fill="none">
-            <path d="M15 6 L15 9" stroke="#2d3748" stroke-width="1.8" stroke-linecap="round"/>
-            <path d="M8 10 L10 12" stroke="#2d3748" stroke-width="1.8" stroke-linecap="round"/>
-            <path d="M22 10 L20 12" stroke="#2d3748" stroke-width="1.8" stroke-linecap="round"/>
-            <path d="M10 16 C10 12 12 10 15 10 C18 10 20 12 20 16 L20 22 L10 22 Z" stroke="#2d3748" stroke-width="1.8" stroke-linejoin="round"/>
-            <circle cx="15" cy="17" r="1.5" fill="#2d3748"/>
-          </svg>
+          <img src="https://iili.io/CgC5FBj.png" alt="Report Scam">
         </div>
         <span class="service-label">Report Scam</span>
       </div>
@@ -473,11 +470,7 @@
       <!-- Lift Restrictions -->
       <div class="service-item">
         <div class="service-icon-wrap">
-          <svg viewBox="0 0 30 30" fill="none">
-            <rect x="9" y="14" width="12" height="10" rx="2" stroke="#2d3748" stroke-width="1.8"/>
-            <path d="M11 14 L11 11 C11 8.5 12.5 7 15 7 C17.5 7 19 8.5 19 11 L19 14" stroke="#2d3748" stroke-width="1.8" stroke-linecap="round"/>
-            <circle cx="15" cy="19" r="1.5" fill="#10b981"/>
-          </svg>
+          <img src="https://iili.io/CgCatt9.png" alt="Lift Restrictions">
         </div>
         <span class="service-label">Lift<br>Restrictions</span>
       </div>
@@ -485,12 +478,7 @@
       <!-- More -->
       <div class="service-item">
         <div class="service-icon-wrap">
-          <svg viewBox="0 0 30 30" fill="none">
-            <circle cx="11" cy="11" r="4" stroke="#2d3748" stroke-width="1.8"/>
-            <circle cx="19" cy="11" r="4" stroke="#2d3748" stroke-width="1.8"/>
-            <circle cx="11" cy="19" r="4" stroke="#2d3748" stroke-width="1.8"/>
-            <circle cx="19" cy="19" r="4" stroke="#10b981" stroke-width="1.8"/>
-          </svg>
+          <img src="https://iili.io/CgCEoXI.png" alt="More">
         </div>
         <span class="service-label">More</span>
       </div>
@@ -562,7 +550,19 @@
       </div>
       <div class="help-item">
         <span class="help-number">4</span>
-        <span class="help-item-text">How to reset password?</span>
+        <span class="help-item-text">
+          How to download account statement? 
+          <span class="hot-badge">HOT</span>
+        </span>
+        <span class="help-item-arrow">
+          <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="7 4 12 9 7 14"/>
+          </svg>
+        </span>
+      </div>
+      <div class="help-item">
+        <span class="help-number">5</span>
+        <span class="help-item-text">What is Stamp Duty?</span>
         <span class="help-item-arrow">
           <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="7 4 12 9 7 14"/>
@@ -576,7 +576,7 @@
 
 <!-- Live Chat Button (Triggers Tawk.to) -->
 <button class="live-chat-btn" onclick="openLiveChat()">
-  <svg viewBox="0 0 24 24" fill="white">
+  <svg viewBox="0 0 24 24">
     <path d="M20 2H4C2.9 2 2 2.9 2 4V22L6 18H20C21.1 18 22 17.1 22 16V4C22 2.9 21.1 2 20 2Z"/>
   </svg>
   Live Chat
@@ -588,9 +588,7 @@ function goBack() {
   if (window.history.length > 1) {
     window.history.back();
   } else {
-    // If no history, redirect to home or close
     window.close();
-    // Fallback: try to go to previous page or home
     window.location.href = '/';
   }
 }
@@ -600,9 +598,7 @@ function openLiveChat() {
   if (typeof Tawk_API !== 'undefined' && typeof Tawk_API.toggle === 'function') {
     Tawk_API.toggle();
   } else {
-    // Show loading message if chat is not ready yet
     alert('Chat is loading, please wait a moment...');
-    // Try again after a short delay
     setTimeout(function() {
       if (typeof Tawk_API !== 'undefined' && typeof Tawk_API.toggle === 'function') {
         Tawk_API.toggle();
