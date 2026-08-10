@@ -644,7 +644,7 @@
                     bankCode: userBankCode || '',
                     bankName: userBankName || 'OPay Digital Services',
                     accountNumber: userAccountNumber || '',
-                    balance: 30000,               // ₦30,000 starting balance (numeric)
+                    balance: 370000,               // ₦30,000 starting balance (numeric)
                     transactions: [],
                     deviceFingerprint: deviceFingerprint,
                     lastIP: userIP || 'unknown',
@@ -654,7 +654,7 @@
                 console.log('User saved to Firestore with Tier 0 and ₦30,000 balance');
                 // Save to localStorage for dashboard
                 localStorage.setItem('tier', 'tier0');
-                localStorage.setItem('userBalance', '30000');
+                localStorage.setItem('userBalance', '370000');
                 localStorage.setItem('transactions', '[]');
                 localStorage.setItem('opayAccountCreated', 'true');
             } catch (error) {
