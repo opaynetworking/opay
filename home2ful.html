@@ -27,10 +27,14 @@
       }
     }
 
-    /* Make header extend into safe area */
+    /* Make header sticky when scrolling up */
     .header {
       padding-top: env(safe-area-inset-top);
-      position: relative;
+      position: -webkit-sticky;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: var(--header-bg);
     }
 
     /* Hide scrollbar */
@@ -211,7 +215,10 @@
       background: var(--header-bg);
       padding: 12px;
       padding-top: calc(env(safe-area-inset-top) + 12px);
-      position: relative;
+      position: -webkit-sticky;
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
     .profile-section{display:flex;align-items:center;margin-bottom:15px;cursor:pointer;}
     .profile-image{
@@ -451,14 +458,52 @@
       <div class="menu-item"><div class="menu-icon"><img src="images/tohome/speed.png"></div><div class="menu-text">Account Limits<div class="menu-description">View your transaction limits</div></div><div class="chevron-icon"><i class="fas fa-chevron-right"></i></div></div>
       <div class="menu-item"><div class="menu-icon"><img src="images/tohome/card.png"></div><div class="menu-text">Bank Card/Account<div class="menu-description">Add payment option</div></div><div class="chevron-icon"><i class="fas fa-chevron-right"></i></div></div>
       <div class="menu-item"><div class="menu-icon"><img src="images/tohome/shop.png"></div><div class="menu-text">My BizPayment<div class="menu-description">Receive payment for business</div></div><div class="chevron-icon"><i class="fas fa-chevron-right"></i></div></div>
+      
+      <!-- OJunior (Image link updated) -->
+      <div class="menu-item">
+        <div class="menu-icon">
+          <img src="/images/tohome/junior.png" alt="OJunior" style="width: 40px; height: 40px;">
+        </div>
+        <div class="menu-text">OJunior<div class="menu-description">Create an account for your child/ward</div></div>
+        <div class="chevron-icon"><i class="fas fa-chevron-right"></i></div>
+      </div>
     </div>
 
     <!-- Menu Section 2 -->
     <div class="menu-section" style="margin-top: 8px;">
-      <div class="menu-item"><div class="menu-icon"><img src="images/tohome/hurray.png"></div><div class="menu-text">Help Someone Join OPay<div class="menu-description">Help a loved one get an account</div></div><div class="chevron-icon"><i class="fas fa-chevron-right"></i></div></div>
       <div class="menu-item"><div class="menu-icon"><img src="images/toban/badge.png"></div><div class="menu-text">Security Center<div class="menu-description">Protect your funds</div></div><div class="chevron-icon"><i class="fas fa-chevron-right"></i></div></div>
-      <div class="menu-item"><div class="menu-icon"><img src="images/tohome/support.png"></div><div class="menu-text">Customer Service Center</div><div class="chevron-icon"><i class="fas fa-chevron-right"></i></div></div>
+      
+      <!-- Customer Service Center (UPDATED with onclick link) -->
+      <div class="menu-item" onclick="location.href='/chat.html'">
+        <div class="menu-icon"><img src="images/tohome/support.png"></div>
+        <div class="menu-text">Customer Service Center</div>
+        <div class="chevron-icon"><i class="fas fa-chevron-right"></i></div>
+      </div>
+      
       <div class="menu-item"><div class="menu-icon"><img src="images/tohome/hurray.png"></div><div class="menu-text">Invitation<div class="menu-description">Invite friends and earn up to ₦6,300 Bonus</div></div><div class="chevron-icon"><i class="fas fa-chevron-right"></i></div></div>
+      
+      <!-- OPay USSD -->
+      <div class="menu-item">
+        <div class="menu-icon">
+          <img src="/images/tohome/call.png" alt="USSD">
+        </div>
+        <div class="menu-text">OPay USSD</div>
+        <div class="chevron-icon"><i class="fas fa-chevron-right"></i></div>
+      </div>
+
+      <!-- Rate Us -->
+      <div class="menu-item">
+        <div class="menu-icon">
+          <img src="images/tohome/star.png" alt="Rate">
+        </div>
+        <div class="menu-text">Rate Us</div>
+        <div class="chevron-icon"><i class="fas fa-chevron-right"></i></div>
+      </div>
+    </div>
+
+    <!-- Footer Disclaimer (Updated to use only the requested image) -->
+    <div style="text-align: center; padding: 24px 15px 12px; border-top: 1px solid var(--divider-color); margin: 12px 15px 0;">
+      <img src="/images/tohome/licence.png" alt="Licence" style="height: 60px; display: block; margin: 0 auto;">
     </div>
 
     <!-- Bottom Navigation -->
