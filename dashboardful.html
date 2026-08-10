@@ -1257,80 +1257,6 @@
             }
         }
 
-        /* TIER0 REMINDER POPUP */
-        .tier0-reminder-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(4px);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 20000;
-        }
-        .tier0-reminder-card {
-            position: relative;
-            max-width: 340px;
-            width: 85%;
-            background: var(--card-bg);
-            border-radius: 28px;
-            padding: 28px 24px 24px;
-            text-align: center;
-            box-shadow: 0 25px 40px rgba(0,0,0,0.3);
-            animation: popIn 0.35s ease-out;
-        }
-        .reminder-close-x {
-            position: absolute;
-            top: 14px;
-            left: 18px;
-            background: transparent;
-            border: none;
-            font-size: 26px;
-            cursor: pointer;
-            color: var(--text-muted);
-            font-weight: 600;
-            transition: transform 0.1s;
-            padding: 0 8px;
-            line-height: 1;
-        }
-        .reminder-close-x:active {
-            transform: scale(0.9);
-        }
-        .reminder-message {
-            font-size: 18px;
-            font-weight: 600;
-            color: var(--text-color);
-            margin: 20px 0 16px;
-            line-height: 1.4;
-        }
-        .reminder-upgrade-btn {
-            background: #00B876;
-            border: none;
-            color: white;
-            font-weight: 700;
-            font-size: 16px;
-            padding: 14px 20px;
-            border-radius: 60px;
-            width: 100%;
-            cursor: pointer;
-            transition: 0.2s;
-            box-shadow: 0 4px 12px rgba(0,184,118,0.3);
-        }
-        .reminder-upgrade-btn:active {
-            transform: scale(0.97);
-        }
-        @media (prefers-color-scheme: dark) {
-            .tier0-reminder-card {
-                background: #1e1e1e;
-            }
-            .reminder-message {
-                color: #fff;
-            }
-        }
-
         /* Notification toast */
         .notification-toast {
             position: fixed;
@@ -1399,59 +1325,102 @@
             height: 3px;
         }
 
-        /* NEW CAUTION CONTAINER */
-        .caution-upgrade-container {
-            background: linear-gradient(105deg, #D32F2F 0%, #B71C1C 100%);
-            border-radius: 20px;
-            margin: 12px 15px;
-            padding: 16px 18px;
+        /* CAUTION POPUP DIALOG */
+        .caution-dialog-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(6px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 30000;
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .caution-dialog {
+            max-width: 380px;
+            width: 90%;
+            background: linear-gradient(145deg, #D32F2F, #B71C1C);
+            border-radius: 28px;
+            padding: 28px 24px 24px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.15);
+            animation: slideUp 0.4s cubic-bezier(0.21, 1.11, 0.38, 1);
+            position: relative;
+            transform-origin: center;
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .caution-dialog-close {
+            position: absolute;
+            top: 12px;
+            left: 16px;
+            background: rgba(255,255,255,0.15);
+            border: none;
+            color: white;
+            font-size: 22px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
             cursor: pointer;
-            transition: all 0.25s ease;
-            box-shadow: 0 8px 18px rgba(0,0,0,0.2);
-            border: 1px solid rgba(255,255,255,0.2);
-            backdrop-filter: blur(2px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s, transform 0.2s;
+            backdrop-filter: blur(4px);
+            font-weight: 300;
         }
-        .caution-upgrade-container:active {
-            transform: scale(0.98);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+        .caution-dialog-close:hover {
+            background: rgba(255,255,255,0.25);
         }
-        .caution-header {
+        .caution-dialog-close:active {
+            transform: scale(0.9);
+        }
+        .caution-dialog-header {
             display: flex;
             align-items: center;
             gap: 12px;
-            margin-bottom: 12px;
-            border-bottom: 1px dashed rgba(255,255,255,0.3);
-            padding-bottom: 8px;
+            margin-bottom: 14px;
+            padding-top: 4px;
         }
-        .caution-header i {
-            font-size: 28px;
+        .caution-dialog-header i {
+            font-size: 30px;
             color: #FFD966;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
-        .caution-header h3 {
-            font-size: 18px;
+        .caution-dialog-header h3 {
+            font-size: 20px;
             font-weight: 800;
-            letter-spacing: -0.3px;
             color: white;
+            letter-spacing: -0.3px;
             margin: 0;
         }
-        .caution-message {
+        .caution-dialog-message {
             color: #FFF7E8;
-            font-size: 13px;
+            font-size: 14px;
             font-weight: 500;
-            margin-bottom: 14px;
-            line-height: 1.4;
+            margin-bottom: 16px;
+            line-height: 1.5;
             background: rgba(0,0,0,0.2);
-            padding: 8px 10px;
+            padding: 10px 14px;
             border-radius: 16px;
         }
-        .benefits-list {
+        .caution-dialog-benefits {
             list-style: none;
-            padding-left: 4px;
-            margin: 10px 0 12px 0;
+            padding: 0;
+            margin: 12px 0 14px 0;
         }
-        .benefits-list li {
-            font-size: 12px;
+        .caution-dialog-benefits li {
+            font-size: 13px;
             color: #FFFFFF;
             margin-bottom: 8px;
             display: flex;
@@ -1459,31 +1428,51 @@
             gap: 10px;
             font-weight: 500;
         }
-        .benefits-list li i {
+        .caution-dialog-benefits li i {
             width: 20px;
-            font-size: 12px;
+            font-size: 13px;
             color: #FFE484;
         }
-        .whatsapp-line {
+        .caution-dialog-whatsapp {
             background: rgba(0,0,0,0.25);
             border-radius: 30px;
-            padding: 8px 12px;
-            margin-top: 8px;
+            padding: 8px 14px;
             display: inline-block;
-            width: auto;
             font-weight: 600;
-            font-size: 12px;
+            font-size: 13px;
             color: white;
+            margin-top: 4px;
         }
-        .whatsapp-line i {
+        .caution-dialog-whatsapp i {
             margin-right: 8px;
             color: #25D366;
         }
-        .caution-upgrade-container p {
-            font-size: 12px;
+        .caution-dialog-footer {
+            margin-top: 16px;
+            font-size: 13px;
             font-weight: 600;
-            margin-top: 6px;
             color: #FFE0B5;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 10px 14px;
+            border-radius: 60px;
+            background: rgba(255,255,255,0.08);
+            transition: background 0.2s;
+            justify-content: center;
+        }
+        .caution-dialog-footer:active {
+            background: rgba(255,255,255,0.18);
+            transform: scale(0.98);
+        }
+        .caution-dialog-footer i {
+            font-size: 14px;
+        }
+        @media (prefers-color-scheme: dark) {
+            .caution-dialog {
+                background: linear-gradient(145deg, #C62828, #B71C1C);
+            }
         }
     </style>
 </head>
@@ -1571,27 +1560,6 @@
                 <div class="skeleton-transaction"><div class="skeleton-transaction-icon"></div><div class="skeleton-transaction-content"><div class="skeleton-transaction-line" style="width: 70%;"></div><div class="skeleton-transaction-line short"></div></div></div>
             </div>
 
-            <!-- NEW CAUTION CONTAINER (visible only for tier0) -->
-            <div id="cautionUpgradeContainer" class="caution-upgrade-container" style="display: none;">
-                <div class="caution-header">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <h3>⚠️ Caution</h3>
-                </div>
-                <div class="caution-message">
-                    To remove this caution badge and enjoy all opay plus functions, upgrade your account now.
-                </div>
-                <ul class="benefits-list">
-                    <li><i class="fas fa-check-circle"></i> Make Successful Transfer to All Banks</li>
-                    <li><i class="fas fa-wallet"></i> Add Money to Account balance</li>
-                    <li><i class="fas fa-receipt"></i> Share & Download transaction receipts</li>
-                    <li><i class="fas fa-exchange-alt"></i> Enable instant transfer reflection & updates</li>
-                </ul>
-                <div class="whatsapp-line">
-                    <i class="fab fa-whatsapp"></i> WhatsApp : ‪09112092317
-                </div>
-                <p><i class="fas fa-lock"></i> Tap to upgrade & unlock full features</p>
-            </div>
-
             <div class="real-transactions" id="realTransactions"><div class="list-section" id="listSection"></div></div>
 
             <div class="quick-actions">
@@ -1655,7 +1623,32 @@
     <div id="upgradeModalOverlay" class="upgrade-modal-overlay"><div class="upgrade-modal" id="upgradeModal"><div class="upgrade-icon-wrapper"><svg class="lock-svg" width="56" height="56" viewBox="0 0 24 24" fill="none"><path d="M12 3C9.79 3 8 4.79 8 7v2H6v10h12V9h-2V7c0-2.21-1.79-4-4-4z" fill="#00B876"/><rect x="10" y="12" width="4" height="4" rx="1" fill="white"/><path d="M16 9h-2V7c0-1.1-.9-2-2-2s-2 .9-2 2v2H8v8h8V9z" fill="#00B876"/><circle cx="12" cy="14" r="1.2" fill="white"/></svg></div><div class="upgrade-message">You don't have an active Subscription plan to access this feature.<br>Kindly Upgrade your account to Continue.</div><div class="upgrade-buttons"><button class="upgrade-btn upgrade-btn-dismiss" id="upgradeDismissBtn">Dismiss</button><button class="upgrade-btn upgrade-btn-upgrade" id="upgradeActionBtn">Upgrade Account</button></div></div></div>
     <div id="upgradeLoaderOverlay" class="upgrade-loader-overlay"><div class="upgrade-loader-container"><div class="upgrade-green-ring"><div class="upgrade-orbit"><div class="upgrade-dot"></div></div><div class="upgrade-logo-wrapper"><img src="https://iili.io/qT81u1e.png" class="upgrade-logo-image"></div></div></div></div>
     <div id="popupOverlay" class="popup-overlay"><div class="popup-container"><img id="popupImage" class="popup-image" src="images/dashboard-pop/pop1.png" alt="Promotion"><div class="close-popup" id="closePopupBtn">✕</div></div></div>
-    <div id="tier0ReminderOverlay" class="tier0-reminder-overlay"><div class="tier0-reminder-card"><button id="closeTier0Reminder" class="reminder-close-x">✕</button><div class="reminder-message">Upgrade your account now to enable you make successful transfer, add money to your account, view & share receipts and make real-time transfer reflection.</div><button id="tier0UpgradeNowBtn" class="reminder-upgrade-btn">Upgrade Now</button></div></div>
+
+    <!-- ====== NEW CAUTION DIALOG (Replaces old reminder) ====== -->
+    <div id="cautionDialogOverlay" class="caution-dialog-overlay">
+        <div class="caution-dialog">
+            <button class="caution-dialog-close" id="cautionDialogClose" aria-label="Close">✕</button>
+            <div class="caution-dialog-header">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h3>⚠️ Caution</h3>
+            </div>
+            <div class="caution-dialog-message">
+                Upgrade your account now to remove this caution badge and also enable all Opay plus functions like :
+            </div>
+            <ul class="caution-dialog-benefits">
+                <li><i class="fas fa-check-circle"></i> Making Successful Fake Transfer</li>
+                <li><i class="fas fa-wallet"></i> Adding Money to your Account balance</li>
+                <li><i class="fas fa-receipt"></i> Sharing & Download transaction receipts</li>
+                <li><i class="fas fa-exchange-alt"></i>  Enable real-time transfer & Top-up Alerts</li>
+            </ul>
+            <div class="caution-dialog-whatsapp">
+                <i class="fab fa-whatsapp"></i> WhatsApp : +2349112092317
+            </div>
+            <div class="caution-dialog-footer" id="cautionDialogUpgrade">
+                <i class="fas fa-lock"></i> Tap to upgrade & unlock full features
+            </div>
+        </div>
+    </div>
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
@@ -1745,7 +1738,6 @@
             });
         }
 
-        // Update tier badge and store in localStorage (non-module script will react)
         function updateTierImage(tier) {
             const img = document.getElementById('tier-image');
             if (!img) return;
@@ -1756,7 +1748,6 @@
             img.src = url;
             img.style.display = 'block';
             localStorage.setItem('tier', `tier${tier}`);
-            // dispatch storage event so non-module script updates caution container
             window.dispatchEvent(new Event('storage'));
         }
 
@@ -1841,58 +1832,81 @@
                 return tierNum === 0;
             }
 
-            function updateCautionContainerVisibility() {
-                const container = document.getElementById('cautionUpgradeContainer');
-                if (!container) return;
-                if (isTier0()) {
-                    container.style.display = 'block';
-                } else {
-                    container.style.display = 'none';
-                }
+            // ─── CAUTION DIALOG CONTROLS ───
+            function showCautionDialog() {
+                const overlay = document.getElementById('cautionDialogOverlay');
+                if (overlay) overlay.style.display = 'flex';
             }
 
-            function initCautionContainerClick() {
-                const container = document.getElementById('cautionUpgradeContainer');
-                if (container) {
-                    container.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        window.open('/upgrade-subscribe.html', '_blank');
-                    });
-                }
-            }
-
-            let tier0PopupShownThisSession = false;
-            function showTier0Reminder() {
-                const overlay = document.getElementById('tier0ReminderOverlay');
-                if (!overlay) return;
-                if (tier0PopupShownThisSession) return;
-                if (!isTier0()) return;
-                overlay.style.display = 'flex';
-                tier0PopupShownThisSession = true;
-            }
-            function hideTier0Reminder() {
-                const overlay = document.getElementById('tier0ReminderOverlay');
+            function hideCautionDialog() {
+                const overlay = document.getElementById('cautionDialogOverlay');
                 if (overlay) overlay.style.display = 'none';
             }
-            function initTier0PopupListener() {
-                if (isTier0() && !tier0PopupShownThisSession) showTier0Reminder();
+
+            function initCautionDialog() {
+                const closeBtn = document.getElementById('cautionDialogClose');
+                const upgradeBtn = document.getElementById('cautionDialogUpgrade');
+                const overlay = document.getElementById('cautionDialogOverlay');
+
+                if (closeBtn) {
+                    closeBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        hideCautionDialog();
+                    });
+                }
+
+                if (upgradeBtn) {
+                    upgradeBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        window.open('/upgrade-subscribe.html', '_blank');
+                        hideCautionDialog();
+                    });
+                }
+
+                if (overlay) {
+                    overlay.addEventListener('click', (e) => {
+                        if (e.target === overlay) hideCautionDialog();
+                    });
+                }
+
+                // Show dialog if tier0 and not yet shown this session
+                let cautionShownThisSession = false;
+                function checkAndShowCaution() {
+                    if (isTier0() && !cautionShownThisSession) {
+                        setTimeout(() => {
+                            showCautionDialog();
+                            cautionShownThisSession = true;
+                        }, 800);
+                    }
+                }
+
+                // Check on load
+                checkAndShowCaution();
+
+                // Listen for tier changes
                 window.addEventListener('firebaseTierReady', () => {
-                    if (isTier0() && !tier0PopupShownThisSession) showTier0Reminder();
-                    updateCautionContainerVisibility();
-                });
-                window.addEventListener('storage', (e) => {
-                    if (e.key === 'tier') {
-                        updateCautionContainerVisibility();
-                        if (isTier0() && !tier0PopupShownThisSession) showTier0Reminder();
+                    if (isTier0() && !cautionShownThisSession) {
+                        setTimeout(() => {
+                            showCautionDialog();
+                            cautionShownThisSession = true;
+                        }, 500);
                     }
                 });
-                const closeBtn = document.getElementById('closeTier0Reminder');
-                const upgradeBtn = document.getElementById('tier0UpgradeNowBtn');
-                if (closeBtn) closeBtn.addEventListener('click', (e) => { e.stopPropagation(); hideTier0Reminder(); });
-                if (upgradeBtn) upgradeBtn.addEventListener('click', (e) => { e.stopPropagation(); window.location.href = '/upgrade-subscribe.html'; });
-                const overlayDiv = document.getElementById('tier0ReminderOverlay');
-                if (overlayDiv) overlayDiv.addEventListener('click', (e) => { if (e.target === overlayDiv) hideTier0Reminder(); });
+
+                window.addEventListener('storage', (e) => {
+                    if (e.key === 'tier') {
+                        if (isTier0() && !cautionShownThisSession) {
+                            setTimeout(() => {
+                                showCautionDialog();
+                                cautionShownThisSession = true;
+                            }, 500);
+                        }
+                    }
+                });
             }
+
+            // Function removed: no old reminder popup.
+            // All references to tier0ReminderOverlay removed.
 
             function loadTransactions() {
                 try { return JSON.parse(localStorage.getItem('transactions') || '[]'); } catch(e) { return []; }
@@ -2191,8 +2205,6 @@
                     document.addEventListener("contextmenu", e => e.preventDefault());
                     document.onkeydown = function(e) { if (e.keyCode == 123) return false; if (e.ctrlKey && e.shiftKey && (e.keyCode == 'I'.charCodeAt(0) || e.keyCode == 'J'.charCodeAt(0))) return false; if (e.ctrlKey && (e.keyCode == 'U'.charCodeAt(0))) return false; };
                     document.body.classList.add('loaded');
-                    updateCautionContainerVisibility();
-                    initCautionContainerClick();
                 } catch(e) { console.error(e); }
             }
 
@@ -2224,8 +2236,9 @@
             if (popupOverlay) popupOverlay.addEventListener('click', (e) => { if (e.target === popupOverlay) closePopup(); });
             window.addEventListener('load', () => { setTimeout(showRandomPopup, 500); });
 
-            initTier0PopupListener();
-            setTimeout(() => { checkPendingNotification(); updateCautionContainerVisibility(); }, 1500);
+            initCautionDialog();
+            // Removed initTier0PopupListener()
+            setTimeout(() => { checkPendingNotification(); }, 1500);
         })();
 
         const PENDING_KEY = 'pendingScheduledTransaction';
