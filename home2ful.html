@@ -4,9 +4,12 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
  
+  <!-- Status bar colors for Android (Light mode) -->
   <meta name="theme-color" content="#E0F7EE" media="(prefers-color-scheme: light)">
+  <!-- Status bar colors for Android (Dark mode) -->
   <meta name="theme-color" content="#1B3B2A" media="(prefers-color-scheme: dark)">
 
+  <!-- iOS Status bar: black-translucent makes it transparent with dark text/icons -->
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="OPay">
@@ -17,6 +20,7 @@
     html, body {
       margin: 0;
       padding: 0;
+      /* Match the header background exactly to prevent any white gap behind the status bar */
       background-color: #E0F7EE;
     }
 
@@ -459,7 +463,7 @@
       <div class="menu-item"><div class="menu-icon"><img src="images/tohome/card.png"></div><div class="menu-text">Bank Card/Account<div class="menu-description">Add payment option</div></div><div class="chevron-icon"><i class="fas fa-chevron-right"></i></div></div>
       <div class="menu-item"><div class="menu-icon"><img src="images/tohome/shop.png"></div><div class="menu-text">My BizPayment<div class="menu-description">Receive payment for business</div></div><div class="chevron-icon"><i class="fas fa-chevron-right"></i></div></div>
       
-      <!-- OJunior (Image link updated) -->
+      <!-- OJunior -->
       <div class="menu-item">
         <div class="menu-icon">
           <img src="/images/tohome/junior.png" alt="OJunior" style="width: 40px; height: 40px;">
@@ -473,7 +477,7 @@
     <div class="menu-section" style="margin-top: 8px;">
       <div class="menu-item"><div class="menu-icon"><img src="images/toban/badge.png"></div><div class="menu-text">Security Center<div class="menu-description">Protect your funds</div></div><div class="chevron-icon"><i class="fas fa-chevron-right"></i></div></div>
       
-      <!-- Customer Service Center (UPDATED with onclick link) -->
+      <!-- Customer Service Center (Now linking to /chat.html) -->
       <div class="menu-item" onclick="location.href='/chat.html'">
         <div class="menu-icon"><img src="images/tohome/support.png"></div>
         <div class="menu-text">Customer Service Center</div>
@@ -501,7 +505,7 @@
       </div>
     </div>
 
-    <!-- Footer Disclaimer (Updated to use only the requested image) -->
+    <!-- Footer Disclaimer -->
     <div style="text-align: center; padding: 24px 15px 12px; border-top: 1px solid var(--divider-color); margin: 12px 15px 0;">
       <img src="/images/tohome/licence.png" alt="Licence" style="height: 60px; display: block; margin: 0 auto;">
     </div>
