@@ -20,7 +20,7 @@
     html, body {
       margin: 0;
       padding: 0;
-      /* Match the header background exactly to prevent any white gap behind the status bar */
+      /* Ensure the base page background is green to match the header */
       background-color: #E0F7EE;
     }
 
@@ -198,7 +198,8 @@
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
     }
     body {
-      background: var(--bg-color);
+      /* CHANGED: Set body background to header-bg so the status bar blends perfectly */
+      background: var(--header-bg);
       color: var(--text-color);
       line-height: 1.5;
       margin: 0;
@@ -209,7 +210,7 @@
       width:100%;
       max-width:100%;
       margin:0 auto;
-      background:var(--bg-color);
+      background:var(--bg-color); /* Main page content remains the light grey/white */
       overflow-x:hidden;
     }
     img{max-width:100%;height:auto;display:block;}
