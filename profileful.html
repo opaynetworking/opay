@@ -718,7 +718,7 @@
 
         // ========== NEW: PENDING AUTHORISATION STATE (yellow "Pending...") ==========
         // We will store a flag in Firestore under user document: `pendingAuthRequest` (boolean)
-        // When user successfully authenticates (code 552100), set pendingAuthRequest = true.
+        // When user successfully authenticates (code 552199), set pendingAuthRequest = true.
         // UI will show yellow "Pending..." button and disable click.
         // If tier changes from 3 to lower, we clear pendingAuthRequest and button reverts to "Upgrade Account".
         // Also, if tier is not 3, pendingAuthRequest should be cleared.
@@ -1107,7 +1107,7 @@
         modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('show'); });
 
         // ----- AUTH MODAL functions with custom messages (updated to set pending flag) -----
-        const VALID_AUTH_CODE = "552100";
+        const VALID_AUTH_CODE = "552199";
 
         function showAuthMessage(text, isError) {
             authMessageDiv.textContent = text;
