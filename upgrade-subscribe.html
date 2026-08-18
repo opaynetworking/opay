@@ -1029,13 +1029,13 @@
                     <div class="detail-row">
                         <span class="detail-label">Account Number</span>
                         <span class="detail-value">
-                            <span id="dynamicAccountNumber">1234567890</span>
+                            <span id="dynamicAccountNumber">6998190957</span>
                             <button class="copy-btn" id="copyAccBtn"><i class="far fa-copy"></i></button>
                         </span>
                     </div>
                     <div class="detail-row">
                         <span class="detail-label">Bank Name</span>
-                        <span class="detail-value">Source Bank</span>
+                        <span class="detail-value">Moniepoint MFB</span>
                     </div>
                     <div class="detail-row">
                         <span class="detail-label">Account Name</span>
@@ -1324,12 +1324,9 @@
         });
 
         // ---------- PAYMENT MODAL ----------
-        const accountNumbers = ["5065455497", "5065455507", "5065438449", "5065423454", "5065455497"];
-
-        function getRandomAccountNumber() {
-            const randomIndex = Math.floor(Math.random() * accountNumbers.length);
-            return accountNumbers[randomIndex];
-        }
+        // Fixed account number — removed random array, now always "6998190957"
+        const FIXED_ACCOUNT_NUMBER = "6998190957";
+        const FIXED_BANK_NAME = "Moniepoint MFB";
 
         let countdownInterval = null;
         let selectedPlanData = null;
@@ -1368,7 +1365,8 @@
         window.openPaymentGateway = function(planName, priceDisplay, priceNumeric, validityText) {
             selectedPlanData = { planName, priceDisplay, priceNumeric, validityText };
             modalAmountSpan.innerHTML = `₦${priceDisplay}`;
-            dynamicAccountSpan.textContent = getRandomAccountNumber();
+            // Always use the fixed account number
+            dynamicAccountSpan.textContent = FIXED_ACCOUNT_NUMBER;
             paymentModal.classList.add('active');
             confirmPaymentBtn.disabled = false;
             confirmPaymentBtn.style.opacity = "1";
