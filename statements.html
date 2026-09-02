@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Status bar color for mobile browsers -->
+    <meta name="theme-color" content="#ffffff" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <title>OPay Official Statement</title>
     <style>
         /* ── Reset & Base ── */
@@ -44,6 +47,22 @@
             cursor: pointer;
             text-decoration: none;
             font-weight: 300;
+            background: none;
+            border: none;
+            padding: 4px 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            /* Ensures proper click target */
+            line-height: 1;
+        }
+
+        .header .back-arrow:hover {
+            opacity: 0.7;
+        }
+
+        .header .back-arrow:active {
+            opacity: 0.5;
         }
 
         .header h1 {
@@ -84,7 +103,7 @@
             color: #1a1a1a;
         }
 
-        /* ── Logo Container (new image) ── */
+        /* ── Logo Container ── */
         .logo-container {
             display: flex;
             justify-content: center;
@@ -123,7 +142,8 @@
 
     <!-- ═══ FIXED HEADER ═══ -->
     <header class="header">
-        <a class="back-arrow" href="#">&#8249;</a>
+        <!-- Back button with JavaScript functionality -->
+        <button class="back-arrow" onclick="goBack()" aria-label="Go back">&#8249;</button>
         <h1>OPay Official Statement</h1>
     </header>
 
@@ -147,10 +167,36 @@
         <p>OPay, the Digital Bank Nigeria Trusts.</p>
     </main>
 
-    <!-- ═══ BOTTOM LOGO (new image) ═══ -->
+    <!-- ═══ BOTTOM LOGO ═══ -->
     <div class="logo-container">
         <img src="https://iili.io/nHGUFja.png" alt="OPay Logo" />
     </div>
+
+    <script>
+        /**
+         * Navigates back to the previous page in browser history.
+         * If no history entry exists, falls back to a default page (optional).
+         */
+        function goBack() {
+            // Use try/catch to handle any edge cases
+            try {
+                if (window.history.length > 1) {
+                    window.history.back();
+                } else {
+                    // If there's no history, you can redirect to a fallback URL.
+                    // For now, we'll just do nothing or you could set a fallback.
+                    // window.location.href = '/';
+                    console.log('No history to go back to.');
+                }
+            } catch (e) {
+                console.warn('Back navigation failed:', e);
+                // Fallback: reload or stay on page
+            }
+        }
+
+        // Optional: Also allow the back arrow to work with keyboard (Enter/Space) via role="button"
+        // The <button> element already handles keyboard events natively.
+    </script>
 
 </body>
 </html>
