@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>OPay Official Statement</title>
+    <style>
+        /* ── Reset & Base ── */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #ffffff;
+            color: #1a1a1a;
+            padding-top: 70px;
+            /* space for fixed header */
+        }
+
+        /* ── Fixed Header ── */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 16px 16px;
+            background-color: #ffffff;
+            border-bottom: 1px solid #e0e0e0;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+        }
+
+        .header .back-arrow {
+            position: absolute;
+            left: 16px;
+            font-size: 24px;
+            color: #1a1a1a;
+            cursor: pointer;
+            text-decoration: none;
+            font-weight: 300;
+        }
+
+        .header h1 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+
+        /* ── Banner ── */
+        .banner {
+            width: 100%;
+            min-height: 200px;
+            background-image: url('https://iili.io/nHGzyBt.jpg');
+            background-size: 100%;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        /* ── Content (scrollable) ── */
+        .content {
+            padding: 28px 24px 30px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .content p {
+            font-size: 17px;
+            line-height: 1.7;
+            color: #1a1a1a;
+            margin-bottom: 22px;
+            font-weight: 400;
+        }
+
+        .content p.bold-paragraph {
+            font-weight: 700;
+            font-size: 17px;
+            line-height: 1.7;
+            color: #1a1a1a;
+        }
+
+        /* ── Logo Container (new image) ── */
+        .logo-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px 24px 40px;
+        }
+
+        .logo-container img {
+            max-width: 160px;
+            height: auto;
+            display: block;
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 480px) {
+            body {
+                padding-top: 60px;
+            }
+
+            .banner {
+                min-height: 140px;
+            }
+
+            .content p,
+            .content p.bold-paragraph {
+                font-size: 16px;
+            }
+
+            .logo-container img {
+                max-width: 120px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ═══ FIXED HEADER ═══ -->
+    <header class="header">
+        <a class="back-arrow" href="#">&#8249;</a>
+        <h1>OPay Official Statement</h1>
+    </header>
+
+    <!-- ═══ BANNER ═══ -->
+    <div class="banner"></div>
+
+    <!-- ═══ SCROLLABLE CONTENT ═══ -->
+    <main class="content">
+        <p>We are aware of false messages circulating on social media claiming that OPay is shutting down or going on indefinite leave, and urging users to withdraw their funds. This information is completely false and should be disregarded.</p>
+
+        <p>OPay remains fully operational, and your money is safe and secure. Our services continue to run as normal, and customers can keep using their OPay accounts with confidence.</p>
+
+        <p>OPay is duly licensed by the Central Bank of Nigeria (CBN) and insured by the Nigeria Deposit Insurance Corporation (NDIC). We remain firmly committed to providing safe, reliable and convenient financial services to Nigerians.</p>
+
+        <p class="bold-paragraph">We take this matter seriously. The Central Bank of Nigeria, alongside security and law-enforcement agencies, is investigating to identify those responsible for creating and spreading this false information - and violators will be prosecuted to the full extent of the law.</p>
+
+        <p>OPay is committed to Nigeria and Nigerians. We are here, and we are not going anywhere. Please do not believe or share unverified messages — for accurate information, always rely on OPay's official communication channels.</p>
+
+        <p>Thank you for your continued trust in OPay.</p>
+
+        <p>OPay, the Digital Bank Nigeria Trusts.</p>
+    </main>
+
+    <!-- ═══ BOTTOM LOGO (new image) ═══ -->
+    <div class="logo-container">
+        <img src="https://iili.io/nHGUFja.png" alt="OPay Logo" />
+    </div>
+
+</body>
+</html>
