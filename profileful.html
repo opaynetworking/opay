@@ -1,12 +1,15 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>My Profile - OPay</title>
     <!-- Google Fonts & Icons -->
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <!-- EmailJS SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js">
+    </script>
 
     <style>
         * {
@@ -24,7 +27,6 @@
             min-height: 100vh;
         }
 
-        /* Mobile container */
         .app-container {
             width: 100%;
             max-width: 420px;
@@ -33,7 +35,6 @@
             position: relative;
         }
 
-        /* Header */
         .header {
             display: flex;
             align-items: center;
@@ -56,7 +57,6 @@
             flex: 1;
         }
 
-        /* Upgrade button in header - dynamic text */
         .upgrade-header {
             background-color: #e53935;
             color: white;
@@ -82,7 +82,6 @@
             background-color: #f9a825;
         }
 
-        /* Cards */
         .card {
             background: #ffffff;
             margin: 0 12px 12px 12px;
@@ -91,7 +90,6 @@
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
         }
 
-        /* Banner Card */
         .banner-card {
             display: flex;
             align-items: center;
@@ -124,7 +122,6 @@
             color: #999;
         }
 
-        /* Profile Summary */
         .profile-summary {
             text-align: center;
             padding-top: 25px;
@@ -229,7 +226,6 @@
             color: #e53935;
         }
 
-        /* Details List */
         .details-list {
             padding: 0 20px;
         }
@@ -277,7 +273,6 @@
             margin-left: 4px;
         }
 
-        /* Hidden overlay for gender & dob pickers */
         .hidden-picker {
             position: absolute;
             top: 0;
@@ -288,7 +283,6 @@
             cursor: pointer;
         }
 
-        /* Modal for editing full name */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -354,12 +348,10 @@
             color: #fff;
         }
 
-        /* Hidden file input */
         #avatarUpload {
             display: none;
         }
 
-        /* Tier image styling */
         .tier-image {
             height: 30px;
             width: auto;
@@ -488,14 +480,12 @@
             background-color: #00a871;
         }
 
-        /* ----- NEW: "Don't have code? Get one" link ----- */
         .auth-get-code-link {
             display: block;
             text-align: center;
             font-size: 14px;
             font-weight: 500;
             color: #f9a825;
-            /* yellow */
             text-decoration: none;
             cursor: pointer;
             margin-bottom: 16px;
@@ -527,7 +517,7 @@
             margin-right: 6px;
             color: #00C087;
         }
-        /* Custom toast message inside modal */
+
         .auth-message {
             margin-top: 12px;
             padding: 10px;
@@ -551,18 +541,36 @@
         body.modal-open {
             overflow: hidden;
         }
+
+        /* spinner for email sending */
+        .spinner {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            vertical-align: middle;
+            margin-right: 6px;
+        }
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
     </style>
 </head>
 <body>
     <div class="app-container">
-        <!-- Header with dynamic button -->
+        <!-- Header -->
         <div class="header">
             <i class="fas fa-chevron-left back-btn" onclick="history.back()"></i>
             <span class="header-title">My Profile</span>
             <div class="upgrade-header" id="upgradeHeaderBtn">Upgrade Account</div>
         </div>
 
-        <!-- Banner Card (static) -->
+        <!-- Banner Card -->
         <div class="card banner-card">
             <div class="banner-icon">
                 <i class="far fa-envelope"></i>
@@ -574,15 +582,15 @@
             </div>
         </div>
 
-        <!-- Profile Summary Card (dynamic) -->
+        <!-- Profile Summary Card -->
         <div class="card profile-summary" id="profileSummary">
             <div class="avatar-container" id="avatarContainer">
-                <img src="" alt="Avatar" class="avatar-img" id="avatarImg" style="display: none;">
+                <img src="" alt="Avatar" class="avatar-img" id="avatarImg" style="display: none;" />
                 <i class="fas fa-user-circle default-avatar" id="defaultAvatar"></i>
                 <div class="camera-icon">
                     <i class="fas fa-camera"></i>
                 </div>
-                <input type="file" id="avatarUpload" accept="image/*">
+                <input type="file" id="avatarUpload" accept="image/*" />
             </div>
             <div class="user-name-large" id="displayName"></div>
 
@@ -596,7 +604,7 @@
             <div class="info-row">
                 <span class="label">Account Tier</span>
                 <span class="value">
-                    <img id="tierImage" src="" alt="Tier" class="tier-image">
+                    <img id="tierImage" src="" alt="Tier" class="tier-image" />
                     <i class="fas fa-chevron-right chevron" id="tierChevron"></i>
                 </span>
             </div>
@@ -638,7 +646,7 @@
             <div class="detail-item" id="dobRow">
                 <span class="detail-label">Date of Birth</span>
                 <span class="detail-value active" id="dobDisplay">**-**-26</span>
-                <input type="date" id="dobInput" class="hidden-picker" aria-label="Select date of birth">
+                <input type="date" id="dobInput" class="hidden-picker" aria-label="Select date of birth" />
                 <i class="fas fa-chevron-right detail-chevron" style="margin-left: auto;"></i>
             </div>
 
@@ -647,7 +655,6 @@
                 <span class="detail-value active" id="emailDisplay">user@example.com</span>
             </div>
 
-            <!-- Subscription Plan (dynamic based on tier) -->
             <div class="detail-item">
                 <span class="detail-label">Subscription Plan</span>
                 <span class="detail-value active" id="subscriptionPlanDisplay">Tier 0</span>
@@ -660,7 +667,7 @@
     <div class="modal-overlay" id="nameEditModal">
         <div class="modal-content">
             <div class="modal-title">Update Account Name</div>
-            <input type="text" class="modal-input" id="editNameInput" placeholder="Enter your Account name">
+            <input type="text" class="modal-input" id="editNameInput" placeholder="Enter your Account name" />
             <div class="modal-actions">
                 <button class="modal-btn cancel" id="cancelNameEdit">Cancel</button>
                 <button class="modal-btn save" id="saveNameEdit">Save</button>
@@ -679,14 +686,11 @@
             </div>
             <div class="auth-modal-body">
                 <p class="auth-info-text">Please enter your authentication code to Authorise transfer reflection</p>
-                <input type="text" id="authCodeInput" class="auth-code-input" placeholder="Enter 6-digit code" maxlength="8" autocomplete="off">
+                <input type="text" id="authCodeInput" class="auth-code-input" placeholder="Enter 6-digit code" maxlength="8" autocomplete="off" />
                 <button id="authCompleteBtn" class="auth-complete-btn">Authorise Transaction</button>
-
-                <!-- NEW: Yellow "Don't have code? Get one" link -->
                 <a href="chat.html" class="auth-get-code-link" id="getCodeLink">
                     Don't have code? Get one
                 </a>
-
                 <div id="authMessage" class="auth-message"></div>
             </div>
             <div class="auth-security-note">
@@ -697,10 +701,12 @@
 
     <!-- Firebase SDK (modular) -->
     <script type="module">
+        // ----- imports -----
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
         import { getFirestore, doc, onSnapshot, updateDoc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
 
+        // ----- Firebase config -----
         const firebaseConfig = {
             apiKey: "AIzaSyAjLxkisBi9pzmjlwdHnYfo25XR2Z6ToEs",
             authDomain: "opay-plus-5802c.firebaseapp.com",
@@ -715,7 +721,7 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // DOM elements
+        // ----- DOM refs -----
         const displayNameEl = document.getElementById('displayName');
         const accountNumberSpan = document.getElementById('accountNumber');
         const fullNameEl = document.getElementById('fullName');
@@ -735,46 +741,65 @@
         const upgradeHeaderBtn = document.getElementById('upgradeHeaderBtn');
         const tierChevron = document.getElementById('tierChevron');
 
-        // Avatar elements
         const avatarImg = document.getElementById('avatarImg');
         const defaultAvatar = document.getElementById('defaultAvatar');
         const avatarUpload = document.getElementById('avatarUpload');
         const avatarContainer = document.getElementById('avatarContainer');
-
-        // Tier image element
         const tierImage = document.getElementById('tierImage');
 
-        // Auth modal elements
         const authOverlay = document.getElementById('authModalOverlay');
         const authCloseBtn = document.getElementById('authCloseModalBtn');
         const authCompleteBtn = document.getElementById('authCompleteBtn');
         const authCodeInput = document.getElementById('authCodeInput');
         const authMessageDiv = document.getElementById('authMessage');
 
-        // NEW: "Get one" link (already in HTML as <a href="chat.html">)
-        // No extra JS needed – it's a plain link.
+        // ----- EmailJS config (from user) -----
+        const EMAILJS_SERVICE_ID = 'service_kioo54k';
+        const EMAILJS_PUBLIC_KEY = 'Dqvofs4zc5JLQf-Qc';
+        const EMAILJS_TEMPLATE_ID = 'template_89oi7c7';
 
-        // ========== PENDING AUTHORISATION STATE (yellow "Pending...") ==========
+        // Init EmailJS
+        (function initEmailJS() {
+            if (typeof emailjs !== 'undefined') {
+                emailjs.init({
+                    publicKey: EMAILJS_PUBLIC_KEY,
+                    blockHeadless: false,
+                    limitRate: {
+                        id: 'opay-auth',
+                        throttle: 10000
+                    }
+                });
+                console.log('EmailJS initialised');
+            } else {
+                console.warn('EmailJS SDK not loaded');
+            }
+        })();
+
+        // ----- state -----
         let currentUserTier = 0;
         let pendingAuthFlag = false;
+        let currentUserData = {};
+        let currentUid = null;
 
+        // ----- helper: update upgrade button -----
         function updateUpgradeButton() {
             if (!upgradeHeaderBtn) return;
             if (currentUserTier === 3 && pendingAuthFlag) {
-                upgradeHeaderBtn.textContent = "Pending...";
+                upgradeHeaderBtn.textContent = 'Pending...';
                 upgradeHeaderBtn.classList.add('pending');
-                upgradeHeaderBtn.style.cursor = "default";
+                upgradeHeaderBtn.style.cursor = 'default';
             } else if (currentUserTier === 3 && !pendingAuthFlag) {
-                upgradeHeaderBtn.textContent = "Authorise Account";
+                upgradeHeaderBtn.textContent = 'Authorise Account';
                 upgradeHeaderBtn.classList.remove('pending');
-                upgradeHeaderBtn.style.cursor = "pointer";
+                upgradeHeaderBtn.style.cursor = 'pointer';
             } else {
-                upgradeHeaderBtn.textContent = "Upgrade Account";
+                upgradeHeaderBtn.textContent = 'Upgrade Account';
                 upgradeHeaderBtn.classList.remove('pending');
-                upgradeHeaderBtn.style.cursor = "pointer";
+                upgradeHeaderBtn.style.cursor = 'pointer';
             }
         }
 
+        // ----- Firestore helpers -----
         async function setPendingAuthRequest(uid, status) {
             try {
                 const userRef = doc(db, 'users', uid);
@@ -782,7 +807,7 @@
                 pendingAuthFlag = status;
                 updateUpgradeButton();
             } catch (err) {
-                console.error("Failed to update pendingAuthRequest:", err);
+                console.error('Failed to update pendingAuthRequest:', err);
             }
         }
 
@@ -794,47 +819,12 @@
                     pendingAuthFlag = false;
                     updateUpgradeButton();
                 } catch (err) {
-                    console.error("Failed to clear pending flag:", err);
+                    console.error('Failed to clear pending flag:', err);
                 }
             }
         }
 
-        async function onSuccessfulAuth(uid) {
-            await setPendingAuthRequest(uid, true);
-            showAuthMessage('Authentication successful! Transaction completed.', false);
-            setTimeout(() => {
-                closeAuthModal();
-            }, 1500);
-        }
-
-        function loadProfileImage() {
-            const savedImage = localStorage.getItem('profileImage');
-            if (savedImage) {
-                avatarImg.src = savedImage;
-                avatarImg.style.display = 'block';
-                defaultAvatar.style.display = 'none';
-            } else {
-                avatarImg.style.display = 'none';
-                defaultAvatar.style.display = 'block';
-            }
-        }
-
-        avatarContainer.addEventListener('click', () => avatarUpload.click());
-        avatarUpload.addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = (event) => {
-                    const dataUrl = event.target.result;
-                    localStorage.setItem('profileImage', dataUrl);
-                    avatarImg.src = dataUrl;
-                    avatarImg.style.display = 'block';
-                    defaultAvatar.style.display = 'none';
-                };
-                reader.readAsDataURL(file);
-            }
-        });
-
+        // ----- format helpers -----
         function formatDateForDisplay(dateString) {
             if (!dateString) return '**-**-****';
             const d = new Date(dateString);
@@ -852,12 +842,21 @@
             return { firstName, lastName };
         }
 
+        function getFullNameFromData(data) {
+            const f = data.firstName || '';
+            const l = data.lastName || '';
+            return `${f} ${l}`.trim().toUpperCase() || ' ';
+        }
+
+        // ----- update UI -----
         function updateUI(userData, uid) {
+            currentUserData = userData;
+            currentUid = uid;
+
             const firstName = userData.firstName || '';
             displayNameEl.textContent = firstName.toUpperCase();
 
-            const lastName = userData.lastName || '';
-            const full = `${firstName} ${lastName}`.trim().toUpperCase() || ' ';
+            const full = getFullNameFromData(userData);
             fullNameEl.textContent = full;
 
             const accNumber = userData.accountNumber || '8123456789';
@@ -915,7 +914,9 @@
             updateUpgradeButton();
         }
 
+        // ----- sync missing data -----
         let syncInProgress = false;
+
         async function syncMissingDataFromLocalStorage(userId, currentUserData) {
             if (syncInProgress) return;
             syncInProgress = true;
@@ -981,7 +982,9 @@
             }
         }
 
+        // ----- listen to auth state -----
         let unsubscribe = null;
+
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 if (unsubscribe) unsubscribe();
@@ -1040,6 +1043,7 @@
             }
         });
 
+        // ----- copy account number -----
         copyBtn.addEventListener('click', async (e) => {
             e.stopPropagation();
             const text = accountNumberSpan.textContent;
@@ -1051,6 +1055,7 @@
             }
         });
 
+        // ----- gender picker -----
         genderSelect.addEventListener('change', async (e) => {
             const newGender = e.target.value;
             genderDisplay.textContent = newGender;
@@ -1067,6 +1072,7 @@
             genderSelect.click();
         });
 
+        // ----- dob picker -----
         dobInput.addEventListener('change', async (e) => {
             const newDob = e.target.value;
             if (newDob) {
@@ -1085,10 +1091,7 @@
             dobInput.showPicker();
         });
 
-        document.querySelectorAll('.detail-chevron').forEach(icon => {
-            icon.addEventListener('click', (e) => e.stopPropagation());
-        });
-
+        // ----- edit full name modal -----
         let currentFullName = '';
         editChevron.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -1114,8 +1117,39 @@
         });
         modal.addEventListener('click', (e) => { if (e.target === modal) modal.classList.remove('show'); });
 
-        // ----- AUTH MODAL functions -----
-        const VALID_AUTH_CODE = "552199";
+        // ----- avatar -----
+        function loadProfileImage() {
+            const savedImage = localStorage.getItem('profileImage');
+            if (savedImage) {
+                avatarImg.src = savedImage;
+                avatarImg.style.display = 'block';
+                defaultAvatar.style.display = 'none';
+            } else {
+                avatarImg.style.display = 'none';
+                defaultAvatar.style.display = 'block';
+            }
+        }
+        avatarContainer.addEventListener('click', () => avatarUpload.click());
+        avatarUpload.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    const dataUrl = event.target.result;
+                    localStorage.setItem('profileImage', dataUrl);
+                    avatarImg.src = dataUrl;
+                    avatarImg.style.display = 'block';
+                    defaultAvatar.style.display = 'none';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+        loadProfileImage();
+
+        // ============================================================
+        //  AUTH MODAL — with EmailJS integration
+        // ============================================================
+        const VALID_AUTH_CODE = '552199';
 
         function showAuthMessage(text, isError) {
             authMessageDiv.textContent = text;
@@ -1123,7 +1157,7 @@
             authMessageDiv.style.display = 'block';
             setTimeout(() => {
                 authMessageDiv.style.display = 'none';
-            }, 3000);
+            }, 4000);
         }
 
         function openAuthModal() {
@@ -1138,7 +1172,7 @@
             } else if (currentUserTier === 3 && pendingAuthFlag) {
                 showAuthMessage('Authorisation already pending. Please wait for expiry.', true);
             } else {
-                console.warn("Cannot open auth modal: tier not 3 or already pending");
+                console.warn('Cannot open auth modal: tier not 3 or already pending');
             }
         }
 
@@ -1147,26 +1181,104 @@
             document.body.classList.remove('modal-open');
         }
 
+        // ----- send email via EmailJS -----
+        async function sendAuthorisationEmail(userData, userEmail) {
+            try {
+                // build the data for EmailJS template
+                const fullName = getFullNameFromData(userData);
+                const accountNumber = userData.accountNumber || '8123456789';
+                const tierNumber = userData.tier !== undefined ? parseInt(userData.tier, 10) : 0;
+                const planText = isNaN(tierNumber) ? 'Tier 0' : `Tier ${tierNumber}`;
+
+                const templateParams = {
+                    to_email: userEmail,
+                    account_name: fullName || 'Username',
+                    account_number: accountNumber,
+                    subscription_plan: planText,
+                    // extra fields in case the template expects them
+                    user_name: fullName || 'Username',
+                    tier: planText,
+                    // The EmailJS template can use these placeholders:
+                    // {{account_name}}, {{account_number}}, {{subscription_plan}}, {{to_email}}
+                };
+
+                console.log('📧 Sending email via EmailJS with params:', templateParams);
+
+                const response = await emailjs.send(
+                    EMAILJS_SERVICE_ID,
+                    EMAILJS_TEMPLATE_ID,
+                    templateParams
+                );
+
+                console.log('✅ Authorised successfully:', response);
+                return { success: true, response };
+            } catch (error) {
+                console.error('❌ Invalid Authorise  Code:', error);
+                return { success: false, error };
+            }
+        }
+
+        // ----- handle auth complete (with EmailJS) -----
         async function handleAuthComplete() {
             const code = authCodeInput.value.trim();
+
             if (code !== VALID_AUTH_CODE) {
                 authCodeInput.style.borderColor = '#e53e3e';
                 authCodeInput.style.backgroundColor = '#fff5f5';
                 showAuthMessage('Invalid Code. Please try again.', true);
                 return;
             }
+
             const user = auth.currentUser;
-            if (user) {
+            if (!user) {
+                showAuthMessage('User not authenticated. Please login again.', true);
+                return;
+            }
+
+            // Get the user's email from the profile
+            const userEmail = currentUserData.email || user.email || '';
+            if (!userEmail || userEmail === 'No email' || userEmail === 'user@example.com') {
+                showAuthMessage('Please update your email address in your profile first.', true);
+                return;
+            }
+
+            // Disable button & show spinner
+            authCompleteBtn.disabled = true;
+            authCompleteBtn.innerHTML = '<span class="spinner"></span> Processing..';
+
+            try {
+                // 1. Send email via EmailJS
+                const result = await sendAuthorisationEmail(currentUserData, userEmail);
+
+                if (!result.success) {
+                    showAuthMessage('Failed to send email. Please try again.', true);
+                    authCompleteBtn.disabled = false;
+                    authCompleteBtn.textContent = 'Authorise Transaction';
+                    return;
+                }
+
+                // 2. Mark pending auth request in Firestore
                 await setPendingAuthRequest(user.uid, true);
-                showAuthMessage('Authentication successful! Transaction completed.', false);
+
+                // 3. Show success
+                showAuthMessage('Authentication Verified successful!', false);
+
+                // 4. Close modal after delay
                 setTimeout(() => {
                     closeAuthModal();
-                }, 1500);
-            } else {
-                showAuthMessage('User not authenticated. Please login again.', true);
+                    authCompleteBtn.disabled = false;
+                    authCompleteBtn.textContent = 'Authorise Transaction';
+                }, 1800);
+
+            } catch (err) {
+                console.error('Error during auth completion:', err);
+                showAuthMessage('An error occurred. Please try again.', true);
+                authCompleteBtn.disabled = false;
+                authCompleteBtn.textContent = 'Authorise Transaction';
             }
         }
 
+        // ----- modal event listeners -----
         if (authCloseBtn) authCloseBtn.addEventListener('click', closeAuthModal);
         if (authCompleteBtn) authCompleteBtn.addEventListener('click', handleAuthComplete);
         if (authOverlay) {
@@ -1174,8 +1286,10 @@
         }
         if (authCodeInput) {
             authCodeInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') { e.preventDefault();
-                    handleAuthComplete(); }
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    handleAuthComplete();
+                }
             });
             authCodeInput.addEventListener('focus', () => {
                 authCodeInput.style.borderColor = '#00C087';
@@ -1183,8 +1297,8 @@
             });
         }
 
-        // ----- UPGRADE / AUTHORISE action -----
-        const UPGRADE_URL = "/upgrade-subscribe.html";
+        // ----- upgrade / authorise action -----
+        const UPGRADE_URL = '/upgrade-subscribe.html';
 
         function handleUpgradeOrAuthorise() {
             if (currentUserTier === 3 && !pendingAuthFlag) {
@@ -1198,15 +1312,17 @@
         if (upgradeHeaderBtn) upgradeHeaderBtn.addEventListener('click', handleUpgradeOrAuthorise);
         if (tierChevron) tierChevron.addEventListener('click', handleUpgradeOrAuthorise);
 
-        // Security: prevent dev tools
-        document.addEventListener("contextmenu", (e) => e.preventDefault());
+        // ----- security: prevent dev tools -----
+        document.addEventListener('contextmenu', (e) => e.preventDefault());
         document.onkeydown = (e) => {
             if (e.keyCode == 123) return false;
             if (e.ctrlKey && e.shiftKey && (e.keyCode == 'I'.charCodeAt(0) || e.keyCode == 'J'.charCodeAt(0))) return false;
             if (e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false;
         };
 
-        loadProfileImage();
+        console.log('🔐 OPay Profile with EmailJS ready');
+        console.log('📧 Service:', EMAILJS_SERVICE_ID);
+        console.log('📧 Template:', EMAILJS_TEMPLATE_ID);
     </script>
     <script src="/pwa-check.js"></script>
     <script src="/network-popup.js"></script>
