@@ -412,6 +412,31 @@
             from { opacity: 0; transform: scale(0.95); }
             to { opacity: 1; transform: scale(1); }
         }
+
+        /* ===== "NOT AVAILABLE" TOAST NOTIFICATION ===== */
+        .toast {
+            position: fixed;
+            left: 50%;
+            bottom: 40px;
+            transform: translateX(-50%) translateY(20px);
+            background: var(--modal-bg);
+            color: var(--modal-text);
+            font-size: 14px;
+            font-weight: 600;
+            padding: 12px 24px;
+            border-radius: 30px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.25s ease, transform 0.25s ease;
+            z-index: 10001;
+            white-space: nowrap;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
     </style>
 </head>
 <body>
@@ -476,17 +501,6 @@
     </div>
 
     <!-- ===== CUSTOM MODALS ===== -->
-    <!-- Change Email Modal -->
-    <div id="changeEmailModal" class="modal-overlay">
-        <div class="modal-container">
-            <div class="modal-title">Change Email</div>
-            <div class="modal-message">Enter your new email address:</div>
-            <input type="email" id="newEmailInput" class="modal-input" placeholder="example@domain.com">
-            <button id="confirmEmailBtn" class="modal-btn">Update</button>
-            <button id="cancelEmailBtn" class="modal-btn modal-btn-secondary">Cancel</button>
-        </div>
-    </div>
-
     <!-- Account Already Exists Modal -->
     <div id="accountExistsModal" class="modal-overlay">
         <div class="modal-container">
@@ -496,6 +510,9 @@
             <button id="closeExistsModalBtn" class="modal-btn modal-btn-secondary">Cancel</button>
         </div>
     </div>
+
+    <!-- ===== "NOT AVAILABLE" TOAST ===== -->
+    <div id="notAvailableToast" class="toast">Not available</div>
 
     <!-- Firebase SDK (module) -->
     <script type="module">
@@ -529,20 +546,28 @@
         const pageTitle = document.getElementById('pageTitle');
 
         // ===== MODAL ELEMENTS =====
-        const changeEmailModal = document.getElementById('changeEmailModal');
-        const newEmailInput = document.getElementById('newEmailInput');
-        const confirmEmailBtn = document.getElementById('confirmEmailBtn');
-        const cancelEmailBtn = document.getElementById('cancelEmailBtn');
-
         // Account exists modal
         const accountExistsModal = document.getElementById('accountExistsModal');
         const loginFromModalBtn = document.getElementById('loginFromModalBtn');
         const closeExistsModalBtn = document.getElementById('closeExistsModalBtn');
 
+        // Toast notification
+        const notAvailableToast = document.getElementById('notAvailableToast');
+        let toastTimer = null;
+
         function showModal(modal) { modal.classList.add('show'); }
         function hideModal(modal) { modal.classList.remove('show'); }
 
-        cancelEmailBtn.addEventListener('click', () => hideModal(changeEmailModal));
+        // ===== TOAST HELPER =====
+        function showToast(message) {
+            notAvailableToast.textContent = message;
+            notAvailableToast.classList.add('show');
+            if (toastTimer) clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => {
+                notAvailableToast.classList.remove('show');
+            }, 2000);
+        }
+
         closeExistsModalBtn.addEventListener('click', () => hideModal(accountExistsModal));
         loginFromModalBtn.addEventListener('click', () => {
             hideModal(accountExistsModal);
@@ -712,22 +737,11 @@
             }, 500);
         });
 
-        // ===== "CHANGE NOW" LINK – Custom Modal =====
+        // ===== "CHANGE NOW" LINK – FEATURE DISABLED =====
+        // The change-email function is disabled. Clicking the link now simply
+        // shows a "Not available" notification.
         changeSpan.addEventListener('click', () => {
-            newEmailInput.value = '';
-            showModal(changeEmailModal);
-        });
-
-        confirmEmailBtn.addEventListener('click', () => {
-            const newEmail = newEmailInput.value.trim();
-            if (!isValidEmail(newEmail)) {
-                alert('Please enter a valid email address.');
-                return;
-            }
-            input.value = newEmail;
-            localStorage.setItem('opayUserEmail', newEmail);
-            input.dispatchEvent(new Event('input'));
-            hideModal(changeEmailModal);
+            showToast('Not available');
         });
 
         // ===== "LOG IN" LINK – redirect to login-email.html =====
