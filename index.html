@@ -1383,5 +1383,116 @@
         })();
     </script>
     <script src="/network-popup.js"></script>
+    <!-- Hide AppMint watermark if it is injected into the webpage -->
+<style>
+  #appmint-watermark,
+  .appmint-watermark,
+  [id*="appmint" i],
+  [class*="appmint" i],
+  a[href*="appmint" i],
+  iframe[src*="appmint" i],
+  [data-appmint],
+  .made-with-appmint,
+  .powered-by-appmint {
+    display: none !important;
+    visibility: hidden !important;
+    opacity: 0 !important;
+    height: 0 !important;
+    width: 0 !important;
+    pointer-events: none !important;
+  }
+</style>
+
+<script>
+(function () {
+  'use strict';
+
+  var HIDE_SELECTORS = [
+    '#appmint-watermark',
+    '.appmint-watermark',
+    '[id*="appmint" i]',
+    '[class*="appmint" i]',
+    'a[href*="appmint" i]',
+    'iframe[src*="appmint" i]',
+    '[data-appmint]',
+    '.made-with-appmint',
+    '.powered-by-appmint'
+  ];
+
+  var TEXT_PATTERNS = [
+    /made\s+with\s+appmint/i,
+    /powered\s+by\s+appmint/i,
+    /appmint/i
+  ];
+
+  function hideElement(el) {
+    if (!el || el.nodeType !== 1) return;
+    el.style.setProperty('display', 'none', 'important');
+    el.style.setProperty('visibility', 'hidden', 'important');
+    el.style.setProperty('opacity', '0', 'important');
+    el.style.setProperty('height', '0', 'important');
+    el.style.setProperty('width', '0', 'important');
+    el.style.setProperty('pointer-events', 'none', 'important');
+    el.setAttribute('aria-hidden', 'true');
+    el.remove();
+  }
+
+  function shouldHide(el) {
+    if (!el || el.nodeType !== 1) return false;
+
+    for (var i = 0; i < HIDE_SELECTORS.length; i++) {
+      try {
+        if (el.matches(HIDE_SELECTORS[i])) return true;
+      } catch (e) {}
+    }
+
+    var text = (el.textContent || '').trim();
+    if (text && TEXT_PATTERNS.some(function (rx) { return rx.test(text); })) {
+      if (el.children.length === 0 || text.length < 80) return true;
+    }
+
+    if (el.tagName === 'A' && el.href && /appmint/i.test(el.href)) return true;
+
+    return false;
+  }
+
+  function scan(root) {
+    if (!root) return;
+    var all = root.querySelectorAll ? root.querySelectorAll('*') : [];
+    for (var i = 0; i < all.length; i++) {
+      if (shouldHide(all[i])) hideElement(all[i]);
+    }
+  }
+
+  function start() {
+    scan(document);
+
+    var observer = new MutationObserver(function (mutations) {
+      for (var i = 0; i < mutations.length; i++) {
+        var added = mutations[i].addedNodes;
+        if (!added || !added.length) continue;
+        for (var j = 0; j < added.length; j++) {
+          var node = added[j];
+          if (node.nodeType === 1) {
+            if (shouldHide(node)) hideElement(node);
+            scan(node);
+          }
+        }
+      }
+    });
+
+    observer.observe(document.documentElement, {
+      childList: true,
+      subtree: true
+    });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', start);
+  } else {
+    start();
+  }
+})();
+</script>
 </body>
 </html>
