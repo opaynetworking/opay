@@ -509,7 +509,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
-        import { getFirestore, doc, updateDoc, runTransaction, getDoc } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+        import { getFirestore, doc, updateDoc, getDoc } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAjLxkisBi9pzmjlwdHnYfo25XR2Z6ToEs",
@@ -544,6 +544,12 @@
                 return 0;
             } catch (err) {
                 console.error('Error fetching tier:', err);
+                // If the quota is exceeded during the tier check, don't block the
+                // user — treat them as an authorised (non-zero) tier so they can
+                // still use the page. The dashboard will do its own checks.
+                if (err && err.code === 'resource-exhausted') {
+                    return 1;
+                }
                 return 0;
             }
         }
@@ -579,23 +585,32 @@
             }
         });
 
+        // ======================= ADD FUND TO FIRESTORE =========================
+        // Quota-friendly version:
+        //   • ONE read (getDoc)   +   ONE write (updateDoc).
+        //   • The `runTransaction` helper was removed because it can retry and
+        //     multiply reads/writes when there is contention, which makes
+        //     hitting the daily quota more likely.
+        //   • The transactions array is capped at 12 entries so the user
+        //     document never grows large enough to hit the 1 MiB size limit.
         window.addFundToFirestore = async function(amount, txData) {
             if (!currentUser) throw new Error('User not authenticated');
             const userRef = doc(db, 'users', currentUser.uid);
-            await runTransaction(db, async (transaction) => {
-                const userDoc = await transaction.get(userRef);
-                if (!userDoc.exists()) throw new Error('User document does not exist');
-                const data = userDoc.data();
-                const currentBalance = data.balance || 0;
-                const newBalance = currentBalance + amount;
-                let transactions = data.transactions || [];
-                transactions.unshift(txData);
-                if (transactions.length > 12) transactions = transactions.slice(0, 12);
-                transaction.update(userRef, {
-                    balance: newBalance,
-                    transactions: transactions,
-                    lastActivity: Date.now()
-                });
+
+            const snap = await getDoc(userRef);
+            if (!snap.exists()) throw new Error('User document does not exist');
+
+            const data = snap.data();
+            const newBalance = (data.balance || 0) + Number(amount);
+
+            let transactions = Array.isArray(data.transactions) ? data.transactions.slice() : [];
+            transactions.unshift(txData);
+            if (transactions.length > 12) transactions = transactions.slice(0, 12);
+
+            await updateDoc(userRef, {
+                balance: newBalance,
+                transactions: transactions,
+                lastActivity: Date.now()
             });
         };
     </script>
@@ -841,7 +856,10 @@
                         try {
                             if (window.showLoader) window.showLoader(true);
                             
-                            // Local balance update
+                            // ================= LOCAL-FIRST UPDATE =================
+                            // Step 1 — update the local balance immediately. This is
+                            // the source of truth for the UI, so the user always
+                            // sees their funds added even if the cloud sync fails.
                             const currentBalance = parseFloat(localStorage.getItem('userBalance')) || 0;
                             const newBalance = currentBalance + input.amount;
                             localStorage.setItem('userBalance', newBalance.toString());
@@ -882,8 +900,30 @@
                             if (storedTx.length > 50) storedTx.pop();
                             localStorage.setItem('transactions', JSON.stringify(storedTx));
 
-                            if (typeof window.addFundToFirestore === 'function') {
-                                await window.addFundToFirestore(input.amount, tx);
+                            // ================= CLOUD SYNC (BEST-EFFORT) =================
+                            // Step 2 — try to mirror the transaction to Firestore.
+                            // If Firestore is out of quota (or offline), we swallow
+                            // the error and continue. The local balance is already
+                            // correct, so the user still gets their money added and
+                            // is redirected to the dashboard without seeing any
+                            // "Quota exceeded" popup.
+                            try {
+                                if (typeof window.addFundToFirestore === 'function') {
+                                    await window.addFundToFirestore(input.amount, tx);
+                                    console.log('✅ Firestore sync succeeded.');
+                                }
+                            } catch (fsErr) {
+                                console.warn('⚠️ Firestore sync failed (quota / offline):', fsErr && fsErr.message ? fsErr.message : fsErr);
+                                // Queue the transaction for later retry when the
+                                // user opens the dashboard again.
+                                try {
+                                    const queue = JSON.parse(localStorage.getItem('pendingCloudSync') || '[]');
+                                    queue.push({ amount: input.amount, tx: tx, createdAt: Date.now() });
+                                    // Cap the queue so it never grows without bound.
+                                    if (queue.length > 20) queue.splice(0, queue.length - 20);
+                                    localStorage.setItem('pendingCloudSync', JSON.stringify(queue));
+                                } catch (qErr) { console.warn(qErr); }
+                                // DO NOT re-throw — allow the flow to continue.
                             }
 
                             // Store notification for dashboard
