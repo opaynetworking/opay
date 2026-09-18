@@ -81,6 +81,26 @@
         .upgrade-header.pending:hover {
             background-color: #f9a825;
         }
+        /* ── Processing state (green background, white text) ── */
+        .upgrade-header.processing {
+            background-color: #10b981; /* emerald green */
+            color: #ffffff;
+            cursor: default;
+            opacity: 0.9;
+        }
+        .upgrade-header.processing:hover {
+            background-color: #10b981;
+        }
+        /* ── Failed state (red background, black text) ── */
+        .upgrade-header.failed {
+            background-color: #ef4444; /* red */
+            color: #000000;
+            cursor: default;
+            opacity: 0.95;
+        }
+        .upgrade-header.failed:hover {
+            background-color: #ef4444;
+        }
 
         .card {
             background: #ffffff;
@@ -567,7 +587,8 @@
         <div class="header">
             <i class="fas fa-chevron-left back-btn" onclick="history.back()"></i>
             <span class="header-title">My Profile</span>
-            <div class="upgrade-header" id="upgradeHeaderBtn">Upgrade Account</div>
+            <!-- Initially hidden; will be shown only when a Tier 3 status is set -->
+            <div class="upgrade-header" id="upgradeHeaderBtn" style="display: none;"></div>
         </div>
 
         <!-- Banner Card -->
@@ -778,27 +799,59 @@
         // ----- state -----
         let currentUserTier = 0;
         let pendingAuthFlag = false;
+        let authProcessingFlag = false; // tracks if admin set processing
+        let authFailedFlag = false;     // tracks if admin set failed
         let currentUserData = {};
         let currentUid = null;
 
-        // ----- helper: update upgrade button -----
-        function updateUpgradeButton() {
-            if (!upgradeHeaderBtn) return;
-            if (currentUserTier === 3 && pendingAuthFlag) {
-                upgradeHeaderBtn.textContent = 'Pending...';
-                upgradeHeaderBtn.classList.add('pending');
-                upgradeHeaderBtn.style.cursor = 'default';
-            } else if (currentUserTier === 3 && !pendingAuthFlag) {
-                upgradeHeaderBtn.textContent = 'Authorise Account';
-                upgradeHeaderBtn.classList.remove('pending');
-                upgradeHeaderBtn.style.cursor = 'pointer';
-            } else {
-                upgradeHeaderBtn.textContent = 'Upgrade Account';
-                upgradeHeaderBtn.classList.remove('pending');
-                upgradeHeaderBtn.style.cursor = 'pointer';
-            }
-        }
-
+// ----- helper: update upgrade button -----
+// The button is hidden for non-Tier-3 users. It shows:
+//   • "Authorise Account" for a fresh Tier 3 (no status yet)
+//   • "Pending..."        when the user has submitted the code
+//   • "Processing..."     when the admin set status = processing
+//   • "Failed"            when the admin set status = failed
+function updateUpgradeButton() {
+    if (!upgradeHeaderBtn) return;
+    
+    // Failed state (red background, black text)
+    if (currentUserTier === 3 && authFailedFlag) {
+        upgradeHeaderBtn.textContent = 'Failed';
+        upgradeHeaderBtn.classList.remove('pending', 'processing');
+        upgradeHeaderBtn.classList.add('failed');
+        upgradeHeaderBtn.style.display = 'inline-block';
+        upgradeHeaderBtn.style.cursor = 'default';
+    }
+    // Processing state (green background, white text)
+    else if (currentUserTier === 3 && authProcessingFlag) {
+        upgradeHeaderBtn.textContent = 'Processing...';
+        upgradeHeaderBtn.classList.remove('pending', 'failed');
+        upgradeHeaderBtn.classList.add('processing');
+        upgradeHeaderBtn.style.display = 'inline-block';
+        upgradeHeaderBtn.style.cursor = 'default';
+    }
+    // Pending state (amber background)
+    else if (currentUserTier === 3 && pendingAuthFlag) {
+        upgradeHeaderBtn.textContent = 'Pending...';
+        upgradeHeaderBtn.classList.remove('processing', 'failed');
+        upgradeHeaderBtn.classList.add('pending');
+        upgradeHeaderBtn.style.display = 'inline-block';
+        upgradeHeaderBtn.style.cursor = 'default';
+    }
+    // Fresh Tier 3 — user has not yet authorised
+    else if (currentUserTier === 3) {
+        upgradeHeaderBtn.textContent = 'Authorise Account';
+        upgradeHeaderBtn.classList.remove('pending', 'processing', 'failed');
+        upgradeHeaderBtn.style.display = 'inline-block';
+        upgradeHeaderBtn.style.cursor = 'pointer';
+    }
+    // Not Tier 3 → reset to default "Upgrade Account" (or hide — set display to 'none' if you prefer hiding)
+    else {
+        upgradeHeaderBtn.textContent = 'Upgrade Account';
+        upgradeHeaderBtn.classList.remove('pending', 'processing', 'failed');
+        upgradeHeaderBtn.style.display = 'inline-block';
+        upgradeHeaderBtn.style.cursor = 'pointer';
+    }
+}
         // ----- Firestore helpers -----
         async function setPendingAuthRequest(uid, status) {
             try {
@@ -905,11 +958,17 @@
 
             currentUserTier = isNaN(tierNumber) ? 0 : tierNumber;
 
+            // ── Read all three flags (pending / processing / failed) ──
             pendingAuthFlag = userData.pendingAuthRequest === true;
+            authProcessingFlag = userData.authStatus === 'processing';
+            authFailedFlag = userData.authStatus === 'failed';
 
+            // If the user is no longer Tier 3, clear pending/processing/failed state
             if (currentUserTier !== 3 && pendingAuthFlag) {
                 setPendingAuthRequest(uid, false).catch(console.error);
                 pendingAuthFlag = false;
+                authProcessingFlag = false;
+                authFailedFlag = false;
             }
             updateUpgradeButton();
         }
@@ -972,7 +1031,8 @@
                             createdAt: new Date().toISOString(),
                             subscriptionActive: true,
                             tier: 0,
-                            pendingAuthRequest: false
+                            pendingAuthRequest: false,
+                            authStatus: 'none'
                         };
                         await setDoc(userRef, baseData);
                     } catch (e) { console.error('Could not create user doc:', e); }
@@ -1015,7 +1075,8 @@
                             email: user.email || 'No email',
                             gender: 'Male',
                             tier: 0,
-                            pendingAuthRequest: false
+                            pendingAuthRequest: false,
+                            authStatus: 'none'
                         };
                         updateUI(fallbackData, user.uid);
                         setDoc(userRef, {
@@ -1029,6 +1090,7 @@
                             subscriptionActive: true,
                             tier: 0,
                             pendingAuthRequest: false,
+                            authStatus: 'none',
                             initialDataSynced: true
                         }, { merge: true }).catch(e => console.error('Failed to create user doc:', e));
                     }
@@ -1039,6 +1101,8 @@
                 subscriptionPlanDisplay.textContent = 'Tier 0';
                 currentUserTier = 0;
                 pendingAuthFlag = false;
+                authProcessingFlag = false;
+                authFailedFlag = false;
                 updateUpgradeButton();
             }
         });
