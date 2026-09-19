@@ -251,7 +251,7 @@
                     <div class="logo">
                         <img src="receipt/log.png" alt="OPay Logo">
                     </div>
-                    <div class="receipt-title">Transaction Receipt</div>
+                    <div class="receipt-title">Transaction Receipt-</div>
                 </div>
 
                 <div class="amount-section">
@@ -434,27 +434,36 @@
             populateAll(tx, userData);
         });
 
-        // --- NEW: read the transaction number for the file name ---
-        function getReceiptFileName(extension) {
+        // --- Read the transaction number for the file name AND share title/text ---
+        function getTransactionNo() {
             let txNo = '';
             try {
                 const el = document.getElementById('transactionNumber');
                 if (el) txNo = (el.textContent || '').trim();
             } catch (e) { /* ignore */ }
             if (!txNo) txNo = 'unknown';
-            return 'Transaction Receipt-' + txNo + extension;
+            return txNo;
+        }
+
+        function getReceiptFileName(extension) {
+            return 'Transaction Receipt-' + getTransactionNo() + extension;
         }
 
         // --- Sharing functions ---
         async function shareOrDownload(blob, fileName, mimeType) {
             const file = new File([blob], fileName, { type: mimeType });
 
+            // Build dynamic title & text using the transaction number
+            const txNo = getTransactionNo();
+            const shareTitle = 'Transaction Receipt-' + txNo;
+            const shareText  = 'Transaction Receipt-' + txNo;
+
             if (navigator.canShare && navigator.canShare({ files: [file] })) {
                 try {
                     await navigator.share({
                         files: [file],
-                        title: 'OPay Receipt',
-                        text: 'Transaction receipt from OPay'
+                        title: shareTitle,
+                        text:  shareText
                     });
                     return;
                 } catch (error) {
