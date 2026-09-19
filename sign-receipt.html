@@ -8,7 +8,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <!-- Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+
     <style>
         :root {
             --opay-green: #00C896;
@@ -56,7 +56,7 @@
             display: flex;
             justify-content: center;
             align-items: flex-start;
-            padding:0px;
+            padding: 0px;
             padding-bottom: 80px; /* Space for bottom bar */
         }
 
@@ -168,7 +168,7 @@
             margin-top: 1px;
             text-align: right;
         }
-        
+
         .sub2-value {
             display: block;
             font-size: 12px;
@@ -177,6 +177,7 @@
             margin-top: 4px;
             text-align: right;
         }
+
         .label2 {
             display: block;
             font-size: 12px;
@@ -185,6 +186,7 @@
             margin-top: 4px;
             text-align: right;
         }
+
         /* Footer Text */
         .footer-text {
             font-size: 11px;
@@ -241,7 +243,7 @@
 
     <!-- Main Container -->
     <div class="container">
-        
+
         <!-- Receipt Card (Target for Screenshot/PDF) -->
         <div class="receipt-card" id="receipt-to-capture">
             <div class="card-content">
@@ -263,7 +265,7 @@
                 <div class="detail-row">
                     <div class="label">Recipient Details</div>
                     <div class="value" id="recipientValue">
-                        
+
                         <span class="sub-value" id="recipientSub"> | 1234567890</span>
                     </div>
                 </div>
@@ -432,10 +434,21 @@
             populateAll(tx, userData);
         });
 
-        // --- Sharing functions (unchanged) ---
+        // --- NEW: read the transaction number for the file name ---
+        function getReceiptFileName(extension) {
+            let txNo = '';
+            try {
+                const el = document.getElementById('transactionNumber');
+                if (el) txNo = (el.textContent || '').trim();
+            } catch (e) { /* ignore */ }
+            if (!txNo) txNo = 'unknown';
+            return 'Transaction Receipt-' + txNo + extension;
+        }
+
+        // --- Sharing functions ---
         async function shareOrDownload(blob, fileName, mimeType) {
             const file = new File([blob], fileName, { type: mimeType });
-            
+
             if (navigator.canShare && navigator.canShare({ files: [file] })) {
                 try {
                     await navigator.share({
@@ -448,7 +461,7 @@
                     console.log('Sharing cancelled or failed', error);
                 }
             }
-            
+
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = url;
@@ -461,7 +474,7 @@
 
         window.shareAsImage = function() {
             const element = document.getElementById("receipt-to-capture");
-            
+
             html2canvas(element, {
                 scale: 2,
                 backgroundColor: null,
@@ -471,7 +484,9 @@
             }).then(canvas => {
                 canvas.toBlob(blob => {
                     if (blob) {
-                        shareOrDownload(blob, 'OPay_Receipt.png', 'image/png');
+                        // ✅ Dynamic file name: "Transaction Receipt-<transactionNo>.png"
+                        const fileName = getReceiptFileName('.png');
+                        shareOrDownload(blob, fileName, 'image/png');
                     }
                 }, 'image/png');
             }).catch(error => {
@@ -493,12 +508,14 @@
                 const imgData = canvas.toDataURL('image/png');
                 const imgWidth = 210;
                 const imgHeight = canvas.height * imgWidth / canvas.width;
-                
+
                 const pdf = new jsPDF('p', 'mm', 'a4');
                 pdf.addImage(imgData, 'PNG', 0, 10, imgWidth, imgHeight, undefined, 'FAST');
-                
+
                 const pdfBlob = pdf.output('blob');
-                shareOrDownload(pdfBlob, 'OPay_Receipt.pdf', 'application/pdf');
+                // ✅ Dynamic file name: "Transaction Receipt-<transactionNo>.pdf"
+                const fileName = getReceiptFileName('.pdf');
+                shareOrDownload(pdfBlob, fileName, 'application/pdf');
             }).catch(error => {
                 console.error('html2canvas error:', error);
             });
