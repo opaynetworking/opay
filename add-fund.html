@@ -2,10 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#00bfa5">
     <title>Add Money | OPay Style</title>
     <style>
-        /* ========== ORIGINAL STYLES (UNCHANGED) ========== */
         :root {
             --primary-teal: #00bfa5;
             --text-black: #1a1a1a;
@@ -19,13 +22,20 @@
             margin: 0;
             padding: 0;
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        html, body {
+            background-color: #eef1f5;
+            min-height: 100vh;
+            overscroll-behavior-y: none;
         }
 
         body {
-            background-color: #eef1f5;
             display: flex;
             justify-content: center;
-            min-height: 100vh;
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
         }
 
         .app-container {
@@ -49,6 +59,7 @@
             top: 0;
             background: white;
             z-index: 10;
+            padding-top: calc(20px + env(safe-area-inset-top));
         }
 
         header .back-btn {
@@ -84,10 +95,7 @@
             text-align: right;
         }
 
-        .content {
-            padding: 20px;
-            flex: 1;
-        }
+        .content { padding: 20px; flex: 1; }
 
         .card {
             border: 1px solid var(--card-border);
@@ -115,15 +123,17 @@
             outline: none;
             background: transparent;
             color: var(--text-black);
+            -webkit-appearance: none;
+            appearance: none;
+            border-radius: 0;
         }
 
-        .input-field::placeholder {
-            color: #aaa;
-        }
+        .input-field::placeholder { color: #aaa; }
 
         select.input-field {
             border-bottom: 1px solid #ddd;
             appearance: none;
+            -webkit-appearance: none;
             background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2300bfa5%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
             background-repeat: no-repeat;
             background-position: right 0 top 50%;
@@ -145,19 +155,12 @@
             margin-right: 15px;
         }
 
-        .switch input {
-            opacity: 0;
-            width: 0;
-            height: 0;
-        }
+        .switch input { opacity: 0; width: 0; height: 0; }
 
         .slider {
             position: absolute;
             cursor: pointer;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
+            top: 0; left: 0; right: 0; bottom: 0;
             background-color: #ccc;
             transition: .3s;
             border-radius: 34px;
@@ -176,13 +179,8 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
 
-        input:checked + .slider {
-            background-color: var(--primary-teal);
-        }
-
-        input:checked + .slider:before {
-            transform: translateX(22px);
-        }
+        input:checked + .slider { background-color: var(--primary-teal); }
+        input:checked + .slider:before { transform: translateX(22px); }
 
         .toggle-text {
             font-size: 16px;
@@ -190,18 +188,9 @@
             font-weight: 500;
         }
 
-        #time-selector {
-            display: none;
-            margin-top: 10px;
-            animation: fadeIn 0.3s ease-in-out;
-        }
+        #time-selector { display: none; margin-top: 10px; animation: fadeIn 0.3s ease-in-out; }
 
-        .time-label {
-            font-size: 14px;
-            color: var(--text-gray);
-            margin-bottom: 8px;
-            display: block;
-        }
+        .time-label { font-size: 14px; color: var(--text-gray); margin-bottom: 8px; display: block; }
 
         select.time-dropdown {
             width: 100%;
@@ -213,82 +202,57 @@
             color: #333;
             outline: none;
             appearance: none;
+            -webkit-appearance: none;
             background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%2300bfa5%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
             background-repeat: no-repeat;
             background-position: right 15px top 50%;
             background-size: 12px auto;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(-5px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
 
-        .continue-btn.loading {
-            opacity: 0.6;
-            pointer-events: none;
-        }
+        .continue-btn.loading { opacity: 0.6; pointer-events: none; }
 
-        /* GREEN CIRCLE LOADER */
         .loader {
             display: none;
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
             z-index: 9999;
             justify-content: center;
             align-items: center;
             background: rgba(0, 0, 0, 0.5);
         }
 
-        .loader-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-        }
+        .loader-container { display: flex; flex-direction: column; align-items: center; justify-content: center; }
 
         .green-ring {
             position: relative;
-            width: 52px;
-            height: 52px;
+            width: 52px; height: 52px;
             border-radius: 50%;
             background-color: #1e9c43;
-            border: none;
-            box-sizing: border-box;
             display: flex;
             align-items: center;
             justify-content: center;
         }
 
         .logo-wrapper {
-            width: 35px;
-            height: 35px;
+            width: 35px; height: 35px;
             display: flex;
             justify-content: center;
             align-items: center;
             border-radius: 50%;
             background: white;
-            box-shadow: 0 4px 0px rgba(0, 0, 0, 0.05);
             animation: pulse-zoom 0.7s ease-in-out infinite;
             z-index: 3;
         }
 
-        .logo-image {
-            width: 25px;
-            height: 25px;
-            object-fit: contain;
-            border-radius: 50%;
-        }
+        .logo-image { width: 25px; height: 25px; object-fit: contain; border-radius: 50%; }
 
         .orbit {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
             pointer-events: none;
             animation: rotate-dot 1.5s linear infinite;
             transform-origin: center center;
@@ -297,26 +261,16 @@
 
         .dot {
             position: absolute;
-            top: 25px;
-            left: 100%;
+            top: 25px; left: 100%;
             transform: translateX(-1300%);
-            width: 1px;
-            height: 1px;
+            width: 1px; height: 1px;
             background: white;
             border-radius: 60%;
             box-shadow: 0 0 8px 9px rgba(255, 255, 255, 0.5);
         }
 
-        @keyframes pulse-zoom {
-            0% { transform: scale(1.03); opacity: 0.8; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); }
-            50% { transform: scale(1.15); opacity: 1; box-shadow: 0 10px 20px rgba(5, 150, 105, 0.15); }
-            100% { transform: scale(1.03); opacity: 0.8; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); }
-        }
-
-        @keyframes rotate-dot {
-            from { transform: rotate(0deg); }
-            to   { transform: rotate(360deg); }
-        }
+        @keyframes pulse-zoom { 0% { transform: scale(1.03); opacity: 0.8; } 50% { transform: scale(1.15); opacity: 1; } 100% { transform: scale(1.03); opacity: 0.8; } }
+        @keyframes rotate-dot { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
 
         .pending-banner {
             background-color: #fff8e1;
@@ -328,62 +282,33 @@
             font-size: 13px;
             color: #856404;
         }
-        .pending-banner a {
-            color: var(--primary-teal);
-            font-weight: 600;
-            text-decoration: none;
-            margin-left: 8px;
-        }
+        .pending-banner a { color: var(--primary-teal); font-weight: 600; text-decoration: none; margin-left: 8px; }
 
-        /* Error modal */
         .custom-modal-overlay {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.5);
             backdrop-filter: blur(2px);
+            -webkit-backdrop-filter: blur(2px);
             z-index: 20000;
             display: none;
             justify-content: center;
             align-items: center;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
         .custom-modal-container {
             background: white;
-            width: 85%;
-            max-width: 320px;
+            width: 85%; max-width: 320px;
             border-radius: 28px;
             box-shadow: 0 20px 35px rgba(0, 0, 0, 0.2);
-            overflow: hidden;
             animation: modalFadeIn 0.2s ease-out;
             text-align: center;
             padding: 24px 20px 20px 20px;
         }
-        @keyframes modalFadeIn {
-            from { opacity: 0; transform: scale(0.96); }
-            to { opacity: 1; transform: scale(1); }
-        }
-        .custom-modal-title {
-            font-size: 20px;
-            font-weight: 600;
-            color: #1a1a1a;
-            margin-bottom: 12px;
-        }
-        .custom-modal-message {
-            font-size: 15px;
-            color: #4a4a4a;
-            line-height: 1.4;
-            margin-bottom: 24px;
-            white-space: pre-wrap;
-            word-break: break-word;
-        }
-        .custom-modal-buttons {
-            display: flex;
-            gap: 12px;
-            justify-content: center;
-        }
+        @keyframes modalFadeIn { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+        .custom-modal-title { font-size: 20px; font-weight: 600; color: #1a1a1a; margin-bottom: 12px; }
+        .custom-modal-message { font-size: 15px; color: #4a4a4a; line-height: 1.4; margin-bottom: 24px; white-space: pre-wrap; word-break: break-word; }
+        .custom-modal-buttons { display: flex; gap: 12px; justify-content: center; }
         .custom-modal-btn {
             flex: 1;
             padding: 12px 0;
@@ -396,23 +321,13 @@
             background: #f0f2f5;
             color: #1a1a1a;
         }
-        .custom-modal-btn-primary {
-            background: #00bfa5;
-            color: white;
-            box-shadow: 0 2px 6px rgba(0,191,165,0.3);
-        }
-        .custom-modal-btn-primary:active {
-            background: #00a28b;
-            transform: scale(0.97);
-        }
+        .custom-modal-btn-primary { background: #00bfa5; color: white; box-shadow: 0 2px 6px rgba(0,191,165,0.3); }
+        .custom-modal-btn-primary:active { background: #00a28b; transform: scale(0.97); }
 
-        /* UPGRADE MODAL */
         .upgrade-overlay {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.6);
             backdrop-filter: blur(4px);
             -webkit-backdrop-filter: blur(4px);
@@ -421,91 +336,34 @@
             align-items: center;
             z-index: 30000;
             padding: 20px;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
         }
-        .upgrade-overlay.show {
-            display: flex;
-        }
+        .upgrade-overlay.show { display: flex; }
         .upgrade-card {
             background: #ffffff;
-            width: 90%;
-            max-width: 340px;
+            width: 90%; max-width: 340px;
             border-radius: 28px;
             padding: 32px 24px 26px;
             text-align: center;
             box-shadow: 0 20px 45px -12px rgba(0, 0, 0, 0.35);
             animation: upgradePop 0.35s cubic-bezier(0.21, 1.11, 0.38, 1);
-            position: relative;
         }
-        @keyframes upgradePop {
-            0% { opacity: 0; transform: scale(0.9) translateY(10px); }
-            100% { opacity: 1; transform: scale(1) translateY(0); }
-        }
-        .upgrade-icon-wrap {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 18px;
-        }
+        @keyframes upgradePop { 0% { opacity: 0; transform: scale(0.9) translateY(10px); } 100% { opacity: 1; transform: scale(1) translateY(0); } }
+        .upgrade-icon-wrap { display: flex; justify-content: center; margin-bottom: 18px; }
         .upgrade-lock-svg {
             filter: drop-shadow(0 2px 6px rgba(0, 184, 118, 0.25));
             animation: lockPulse 1.4s ease-in-out infinite;
             transform-origin: center;
         }
-        @keyframes lockPulse {
-            0% { transform: scale(1); opacity: 0.9; }
-            50% { transform: scale(1.08); opacity: 1; filter: drop-shadow(0 4px 12px rgba(0, 184, 118, 0.4)); }
-            100% { transform: scale(1); opacity: 0.9; }
-        }
-        .upgrade-title {
-            font-size: 20px;
-            font-weight: 700;
-            color: #1a1a1a;
-            margin-bottom: 10px;
-            letter-spacing: -0.2px;
-        }
-        .upgrade-text {
-            font-size: 14px;
-            line-height: 1.55;
-            color: #5a5a5a;
-            margin-bottom: 22px;
-            font-weight: 500;
-        }
-        .upgrade-text strong {
-            color: var(--primary-teal);
-            font-weight: 700;
-        }
-        .upgrade-buttons {
-            display: flex;
-            gap: 10px;
-        }
-        .upgrade-btn {
-            flex: 1;
-            padding: 13px 0;
-            border-radius: 60px;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            border: none;
-            transition: transform 0.15s, background 0.2s;
-        }
-        .upgrade-btn-dismiss {
-            background: #f0f2f5;
-            color: #333;
-        }
-        .upgrade-btn-dismiss:active {
-            background: #e4e6ea;
-            transform: scale(0.97);
-        }
-        .upgrade-btn-upgrade {
-            background: var(--primary-teal);
-            color: #ffffff;
-            box-shadow: 0 4px 12px rgba(0, 191, 165, 0.35);
-        }
-        .upgrade-btn-upgrade:active {
-            background: #00a28b;
-            transform: scale(0.97);
-            box-shadow: 0 2px 6px rgba(0, 191, 165, 0.4);
-        }
+        @keyframes lockPulse { 0% { transform: scale(1); opacity: 0.9; } 50% { transform: scale(1.08); opacity: 1; } 100% { transform: scale(1); opacity: 0.9; } }
+        .upgrade-title { font-size: 20px; font-weight: 700; color: #1a1a1a; margin-bottom: 10px; }
+        .upgrade-text { font-size: 14px; line-height: 1.55; color: #5a5a5a; margin-bottom: 22px; font-weight: 500; }
+        .upgrade-text strong { color: var(--primary-teal); font-weight: 700; }
+        .upgrade-buttons { display: flex; gap: 10px; }
+        .upgrade-btn { flex: 1; padding: 13px 0; border-radius: 60px; font-size: 15px; font-weight: 600; cursor: pointer; border: none; transition: transform 0.15s, background 0.2s; }
+        .upgrade-btn-dismiss { background: #f0f2f5; color: #333; }
+        .upgrade-btn-dismiss:active { background: #e4e6ea; transform: scale(0.97); }
+        .upgrade-btn-upgrade { background: var(--primary-teal); color: #ffffff; box-shadow: 0 4px 12px rgba(0, 191, 165, 0.35); }
+        .upgrade-btn-upgrade:active { background: #00a28b; transform: scale(0.97); }
     </style>
 </head>
 <body>
@@ -526,29 +384,24 @@
                 <span class="label">Amount</span>
                 <input type="number" id="amount" class="input-field" placeholder="Enter amount" min="0" step="0.01" value="">
             </div>
-
             <div class="card">
                 <span class="label">Account Number</span>
                 <input type="tel" id="accountNumber" class="input-field" placeholder="Enter 10-digit account number" maxlength="10" pattern="\d*" inputmode="numeric">
             </div>
-
             <div class="card">
                 <span class="label">Sender Name</span>
                 <input type="text" id="senderName" class="input-field" placeholder="Enter Sender Name" value="">
             </div>
-
             <div class="card">
                 <span class="label">Bank Name</span>
                 <select id="bankName" class="input-field">
                     <option value="">Select Bank</option>
                 </select>
             </div>
-
             <div class="card">
                 <span class="label">Remark</span>
                 <input type="text" id="remark" class="input-field" placeholder="e.g food stamp" value="">
             </div>
-
             <div class="card">
                 <div class="toggle-container">
                     <label class="switch">
@@ -557,7 +410,6 @@
                     </label>
                     <span class="toggle-text">Schedule Transaction</span>
                 </div>
-
                 <div id="time-selector">
                     <label class="time-label">Execute in:</label>
                     <select class="time-dropdown" id="timeDropdown"></select>
@@ -569,9 +421,7 @@
     <div id="loadingPopup" class="loader">
         <div class="loader-container">
             <div class="green-ring">
-                <div class="orbit">
-                    <div class="dot"></div>
-                </div>
+                <div class="orbit"><div class="dot"></div></div>
                 <div class="logo-wrapper">
                     <img src="https://iili.io/qT81u1e.png" alt="Loading Logo" class="logo-image">
                 </div>
@@ -579,7 +429,6 @@
         </div>
     </div>
 
-    <!-- Error modal -->
     <div id="customModalOverlay" class="custom-modal-overlay">
         <div class="custom-modal-container">
             <div class="custom-modal-title" id="modalTitle">Notice</div>
@@ -588,7 +437,6 @@
         </div>
     </div>
 
-    <!-- UPGRADE MODAL (shown only for tier 0) -->
     <div id="upgradeOverlay" class="upgrade-overlay">
         <div class="upgrade-card">
             <div class="upgrade-icon-wrap">
@@ -611,10 +459,7 @@
         </div>
     </div>
 
-    <!-- ═══════════════════════════════════════════════════════════════
-         IMMEDIATE DROPDOWN POPULATION
-         Fills the Bank list and Time list as soon as the DOM is ready.
-         ═══════════════════════════════════════════════════════════════ -->
+    <!-- IMMEDIATE DROPDOWN POPULATION -->
     <script>
         (function populateDropdownsImmediately() {
             function run() {
@@ -635,9 +480,7 @@
                         option.textContent = bank;
                         bankSelect.appendChild(option);
                     });
-                    console.log('[add-fund] Bank dropdown populated with', banks.length, 'banks');
                 }
-
                 const timeDropdown = document.getElementById('timeDropdown');
                 if (timeDropdown && timeDropdown.options.length === 0) {
                     for (let i = 1; i <= 30; i++) {
@@ -646,9 +489,7 @@
                         option.text = i === 1 ? (i + ' minute') : (i + ' minutes');
                         timeDropdown.appendChild(option);
                     }
-                    console.log('[add-fund] Time dropdown populated');
                 }
-
                 const backBtn = document.getElementById('backBtn');
                 if (backBtn && !backBtn.dataset.wired) {
                     backBtn.dataset.wired = '1';
@@ -656,7 +497,6 @@
                         window.location.href = 'dashboardful.html';
                     });
                 }
-
                 const scheduleToggle = document.getElementById('scheduleToggle');
                 const timeSelector = document.getElementById('time-selector');
                 if (scheduleToggle && timeSelector && !scheduleToggle.dataset.wired) {
@@ -666,21 +506,17 @@
                     });
                 }
             }
-
             if (document.readyState === 'loading') {
                 document.addEventListener('DOMContentLoaded', run);
-            } else {
-                run();
-            }
+            } else { run(); }
         })();
     </script>
 
     <script type="module">
-        // ─── Firebase SDK 10.12.0 ────────────────────────────────────
         import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
         import {
-            getFirestore, doc, updateDoc, getDoc, setDoc, arrayUnion, runTransaction
+            getFirestore, doc, updateDoc, getDoc, setDoc, arrayUnion
         } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
         import {
             getMessaging, getToken, onMessage, isSupported
@@ -737,15 +573,12 @@
         }
 
         // ═══════════════════════════════════════════════════════════════
-        //  APK DETECTION + NATIVE BRIDGE HELPERS
+        //  APK BRIDGE HELPERS
         // ═══════════════════════════════════════════════════════════════
         function isRunningInAPK() {
             return !!(
-                window.AndroidBridge ||
-                window.Android ||
-                window.ReactNativeWebView ||
-                window.AndroidUpdater ||
-                window.__opay_apk__ ||
+                window.AndroidBridge || window.Android || window.ReactNativeWebView ||
+                window.AndroidUpdater || window.__opay_apk__ ||
                 (navigator.userAgent && /; wv\)/.test(navigator.userAgent))
             );
         }
@@ -753,71 +586,41 @@
         function triggerNativeNotification(title, body, extra = {}) {
             const payload = { type: 'SHOW_NOTIFICATION', title, body, ...extra };
             let handled = false;
-
             if (window.AndroidBridge) {
                 try {
-                    if (typeof window.AndroidBridge.showNotification === 'function') {
-                        window.AndroidBridge.showNotification(title, body);
-                        handled = true;
-                    } else if (typeof window.AndroidBridge.notify === 'function') {
-                        window.AndroidBridge.notify(title, body);
-                        handled = true;
-                    } else if (typeof window.AndroidBridge.postMessage === 'function') {
-                        window.AndroidBridge.postMessage(JSON.stringify(payload));
-                        handled = true;
-                    }
-                } catch (e) { console.warn('AndroidBridge notification failed:', e); }
+                    if (typeof window.AndroidBridge.showNotification === 'function') { window.AndroidBridge.showNotification(title, body); handled = true; }
+                    else if (typeof window.AndroidBridge.notify === 'function') { window.AndroidBridge.notify(title, body); handled = true; }
+                    else if (typeof window.AndroidBridge.postMessage === 'function') { window.AndroidBridge.postMessage(JSON.stringify(payload)); handled = true; }
+                } catch (e) {}
             }
-
             if (!handled && window.Android) {
                 try {
-                    if (typeof window.Android.showNotification === 'function') {
-                        window.Android.showNotification(title, body);
-                        handled = true;
-                    } else if (typeof window.Android.notify === 'function') {
-                        window.Android.notify(title, body);
-                        handled = true;
-                    } else if (typeof window.Android.postMessage === 'function') {
-                        window.Android.postMessage(JSON.stringify(payload));
-                        handled = true;
-                    }
-                } catch (e) { console.warn('Android notification failed:', e); }
+                    if (typeof window.Android.showNotification === 'function') { window.Android.showNotification(title, body); handled = true; }
+                    else if (typeof window.Android.notify === 'function') { window.Android.notify(title, body); handled = true; }
+                    else if (typeof window.Android.postMessage === 'function') { window.Android.postMessage(JSON.stringify(payload)); handled = true; }
+                } catch (e) {}
             }
-
             if (!handled && window.ReactNativeWebView && typeof window.ReactNativeWebView.postMessage === 'function') {
-                try {
-                    window.ReactNativeWebView.postMessage(JSON.stringify(payload));
-                    handled = true;
-                } catch (e) { console.warn('RN notification failed:', e); }
+                try { window.ReactNativeWebView.postMessage(JSON.stringify(payload)); handled = true; } catch (e) {}
             }
-
             if (!handled && 'Notification' in window && Notification.permission === 'granted') {
-                try {
-                    new Notification(title, { body: body, icon: '/images/dashboard/opay-logo.png' });
-                    handled = true;
-                } catch (e) { console.warn('Web Notification failed:', e); }
+                try { new Notification(title, { body: body, icon: '/images/dashboard/opay-logo.png' }); handled = true; } catch (e) {}
             }
-
-            console.log(handled ? '📱 Native notification triggered' : '⚠️ No native bridge found');
             return handled;
         }
 
         window.registerNativeFcmToken = async function(nativeToken) {
             if (!nativeToken) return false;
             const user = auth.currentUser;
-            if (!user) { console.warn('No signed-in user for native token'); return false; }
+            if (!user) return false;
             try {
                 await setDoc(doc(db, 'users', user.uid), {
                     fcmTokens: arrayUnion(nativeToken),
                     lastTokenUpdate: Date.now(),
                     hasNativeToken: true
                 }, { merge: true });
-                console.log('✅ Native APK FCM token saved');
                 return true;
-            } catch (e) {
-                console.warn('Failed to save native token:', e);
-                return false;
-            }
+            } catch (e) { return false; }
         };
 
         // ═══════════════════════════════════════════════════════════════
@@ -833,98 +636,135 @@
                     const existing = await navigator.serviceWorker.getRegistration();
                     swRegistration = existing || await navigator.serviceWorker.register('/firebase-messaging-sw.js', { scope: '/' });
                     await navigator.serviceWorker.ready;
-                } catch (e) { console.warn('SW registration failed:', e); }
+                } catch (e) {}
             }
             try {
                 if (await isSupported()) messaging = getMessaging(app);
-            } catch (e) { console.warn('FCM not supported:', e); }
+            } catch (e) {}
 
             if ('Notification' in window && Notification.permission === 'granted') {
                 await saveFcmToken();
             }
-
-            if (messaging) {
-                onMessage(messaging, (payload) => {
-                    console.log('Foreground FCM:', payload);
-                });
-            }
+            if (messaging) onMessage(messaging, () => {});
         }
 
         async function saveFcmToken() {
             const user = auth.currentUser;
             if (!user || fcmTokenSaved || !messaging) return;
             try {
-                const token = await getToken(messaging, {
-                    vapidKey: VAPID_KEY,
-                    serviceWorkerRegistration: swRegistration
-                });
+                const token = await getToken(messaging, { vapidKey: VAPID_KEY, serviceWorkerRegistration: swRegistration });
                 if (!token) return;
                 await setDoc(doc(db, 'users', user.uid), {
-                    fcmTokens: arrayUnion(token),
-                    lastTokenUpdate: Date.now()
+                    fcmTokens: arrayUnion(token), lastTokenUpdate: Date.now()
                 }, { merge: true });
                 fcmTokenSaved = true;
-                console.log('✅ Web FCM token saved');
-            } catch (e) { console.warn('FCM token save failed:', e); }
+            } catch (e) {}
         }
 
-        window.__fcm = { getMessaging: () => messaging, saveFcmToken, swRegistration: () => swRegistration };
+        window.__fcm = { saveFcmToken };
 
         // ═══════════════════════════════════════════════════════════════
-        //  GET USER TIER — matches your dashboardful.html logic
-        //  Reads `tier` (number) OR `subscriptionPlan` ("tier1"/"tier2"/"tier3")
-        //  Falls back to cached localStorage on any error.
+        //  TIER DETECTION
+        //
+        //  Reads the highest value from:
+        //    • Firestore  → users/{uid}.tier (number)
+        //    • Firestore  → users/{uid}.subscriptionPlan ("tier1"/"tier2"/"tier3")
+        //    • Firestore  → users/{uid}.planType / plan / planName / etc.
+        //    • localStorage "tier"  (set by dashboard)
+        //
+        //  RULES:
+        //    tier 1, 2, 3  → ALLOW (form accessible)
+        //    tier 0        → BLOCK (upgrade modal)
+        //    unknown       → FAIL OPEN (allow, since we can't verify)
         // ═══════════════════════════════════════════════════════════════
-        async function getUserTier(user) {
+        function parseTierValue(raw) {
+            if (raw === undefined || raw === null) return null;
+
+            if (typeof raw === 'number' && !isNaN(raw)) {
+                return (raw >= 0 && raw <= 3) ? Math.floor(raw) : null;
+            }
+
+            if (typeof raw === 'string') {
+                const s = raw.toLowerCase().trim();
+
+                const m = s.match(/tier[\s_]*([0-3])/);
+                if (m) return parseInt(m[1], 10);
+
+                if (s === 'vip') return 3;
+                if (s === 'free') return 0;
+
+                const n = parseInt(s, 10);
+                if (!isNaN(n) && n >= 0 && n <= 3 && String(n) === s) return n;
+            }
+
+            return null;
+        }
+
+        function tierFromFirestoreData(data) {
+            if (!data) return null;
+            const candidates = [];
+
+            const fromPlan = parseTierValue(data.subscriptionPlan);
+            if (fromPlan !== null) candidates.push(fromPlan);
+
+            const fromTier = parseTierValue(data.tier);
+            if (fromTier !== null) candidates.push(fromTier);
+
+            ['planType', 'plan', 'planName', 'subscriptionTier', 'tierLevel', 'membershipTier']
+                .forEach(f => {
+                    const v = parseTierValue(data[f]);
+                    if (v !== null) candidates.push(v);
+                });
+
+            if (candidates.length === 0) return null;
+            return Math.max(...candidates);
+        }
+
+        function tierFromLocalStorage() {
             try {
-                const userRef = doc(db, 'users', user.uid);
-                const userSnap = await getDoc(userRef);
+                const cached = localStorage.getItem('tier');
+                if (!cached) return null;
+                const num = parseInt(String(cached).replace(/tier/i, ''), 10);
+                if (isNaN(num) || num < 0 || num > 3) return null;
+                return num;
+            } catch (e) { return null; }
+        }
 
-                if (userSnap.exists()) {
-                    const data = userSnap.data();
-
-                    let tier = data.tier;
-
-                    // If `tier` is missing, derive from `subscriptionPlan`
-                    if (tier === undefined || tier === null) {
-                        if (data.subscriptionPlan) {
-                            const plan = String(data.subscriptionPlan).toLowerCase();
-                            if (plan === 'tier1') tier = 1;
-                            else if (plan === 'tier2') tier = 2;
-                            else if (plan === 'tier3') tier = 3;
-                            else tier = 0;
-                        } else {
-                            tier = 0;
-                        }
-                    }
-
-                    // Coerce to number
-                    tier = Number(tier);
-                    if (isNaN(tier)) tier = 0;
-
-                    console.log('[tier-check] Firestore tier =', tier, data);
-                    try { localStorage.setItem('tier', 'tier' + tier); } catch (e) {}
-                    return tier;
-                }
-
-                console.warn('[tier-check] User doc missing');
-                return readCachedTier();
-
+        async function getTierFromFirestore(user, attempt = 1) {
+            try {
+                const userSnap = await getDoc(doc(db, 'users', user.uid));
+                if (!userSnap.exists()) return null;
+                return tierFromFirestoreData(userSnap.data());
             } catch (err) {
-                console.warn('[tier-check] Firestore read failed:', err.code, err.message);
-                return readCachedTier();
+                console.warn('[tier-check] Firestore read failed (attempt ' + attempt + '):', err.code || err.message);
+                if (attempt < 3) {
+                    await new Promise(r => setTimeout(r, 700 * attempt));
+                    return getTierFromFirestore(user, attempt + 1);
+                }
+                return null;
             }
         }
 
-        function readCachedTier() {
-            try {
-                const cached = localStorage.getItem('tier') || 'tier0';
-                const num = parseInt(String(cached).replace('tier', ''), 10);
-                console.log('[tier-check] Using cached tier =', num);
-                return isNaN(num) ? 0 : num;
-            } catch (e) {
-                return 0;
+        async function resolveUserTier(user) {
+            const fsTier = await getTierFromFirestore(user);
+            const lsTier = tierFromLocalStorage();
+
+            console.log('[tier-check] Firestore tier =', fsTier, '| localStorage tier =', lsTier);
+
+            const known = [fsTier, lsTier].filter(v => v !== null && v !== undefined);
+
+            if (known.length === 0) {
+                console.log('[tier-check] Cannot determine tier → FAIL OPEN (allow access)');
+                return 1; // fail open — do not block
             }
+
+            const best = Math.max(...known);
+            console.log('[tier-check] Resolved tier =', best);
+
+            // Sync the best value to localStorage so subsequent pages see it
+            try { localStorage.setItem('tier', 'tier' + best); } catch (e) {}
+
+            return best;
         }
 
         function showLoader(show) {
@@ -938,7 +778,13 @@
 
         onAuthStateChanged(auth, async (user) => {
             if (!user) {
-                window.location.href = 'create-email.html';
+                // On iOS PWA the first event can be null before the session
+                // restores — give Firebase a moment, then redirect if still null.
+                setTimeout(() => {
+                    if (!auth.currentUser) {
+                        window.location.href = 'create-email.html';
+                    }
+                }, 1500);
                 return;
             }
             currentUser = user;
@@ -946,17 +792,22 @@
 
             initFCM();
 
-            const tier = await getUserTier(user);
+            const tier = await resolveUserTier(user);
 
-            // Only block tier 0 (free) users; allow tier 1, 2, 3
+            // ══════════════════════════════════════════════════════════
+            //  GATE:
+            //    tier 1 / 2 / 3  → allow (Add Money form usable)
+            //    tier 0          → show Upgrade Account modal
+            // ══════════════════════════════════════════════════════════
             if (tier === 0) {
-                console.log('[tier-gate] Blocking user — tier is 0');
+                console.log('[tier-gate] BLOCKING — tier = 0 (free plan)');
                 showLoader(false);
                 showUpgradeModal();
                 return;
             }
 
-            console.log('[tier-gate] Allowing user — tier =', tier);
+            console.log('[tier-gate] ALLOWING — tier =', tier, '(Tier ' + tier + ' plan)');
+
             if (!pageInitialized) {
                 pageInitialized = true;
                 window.tierCheckPassed = true;
@@ -971,7 +822,6 @@
         window.addFundToFirestore = async function(amount, txData) {
             if (!currentUser) throw new Error('User not authenticated');
             const userRef = doc(db, 'users', currentUser.uid);
-
             const snap = await getDoc(userRef);
             if (!snap.exists()) throw new Error('User document does not exist');
 
@@ -990,9 +840,7 @@
         };
 
         // ═══════════════════════════════════════════════════════════════
-        //  SEND PUSH — works in BOTH browser AND Android APK
-        //  Title: "Incoming Transfers Successful"
-        //  Body:  "{SenderName} has sent you {Amount}"
+        //  SEND PUSH
         // ═══════════════════════════════════════════════════════════════
         window.sendIncomingTransferPush = async function(senderName, amount) {
             const formattedAmount = '₦' + Number(amount).toLocaleString('en-NG', {
@@ -1001,10 +849,7 @@
             const title = 'Incoming Transfers Successful';
             const body  = `${senderName} has sent you ${formattedAmount}.`;
 
-            const inAPK = isRunningInAPK();
-            console.log('📱 Environment:', inAPK ? 'Android APK' : 'Web Browser');
-
-            if (inAPK) {
+            if (isRunningInAPK()) {
                 triggerNativeNotification(title, body, {
                     type: 'incoming_transfer',
                     amount: String(amount),
@@ -1014,23 +859,17 @@
 
             try {
                 if (!currentUser) return { success: false, error: 'No user' };
-
                 const snap = await getDoc(doc(db, 'users', currentUser.uid));
                 if (!snap.exists()) return { success: false, error: 'User doc missing' };
 
                 const tokens = Array.isArray(snap.data().fcmTokens) ? snap.data().fcmTokens.filter(Boolean) : [];
-                if (tokens.length === 0) {
-                    console.warn('No FCM tokens — user has not enabled push yet.');
-                    return { success: false, error: 'No FCM tokens' };
-                }
+                if (tokens.length === 0) return { success: false, error: 'No FCM tokens' };
 
                 const res = await fetch('/api/send-notification', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
-                        tokens,
-                        title,
-                        body,
+                        tokens, title, body,
                         clickAction: '/message.html',
                         data: {
                             type: 'incoming_transfer',
@@ -1039,12 +878,8 @@
                         }
                     })
                 });
-
-                const result = await res.json();
-                console.log('📨 FCM push response:', result);
-                return result;
+                return await res.json();
             } catch (err) {
-                console.warn('Push send failed:', err);
                 return { success: false, error: err.message };
             }
         };
@@ -1052,7 +887,6 @@
 
     <script>
         (function() {
-            // ========== ERROR MODAL ==========
             const modalOverlay = document.getElementById('customModalOverlay');
             const modalTitleElem = document.getElementById('modalTitle');
             const modalMessageElem = document.getElementById('modalMessage');
@@ -1062,10 +896,7 @@
 
             function closeModal() {
                 if (modalOverlay) modalOverlay.style.display = 'none';
-                if (currentModalResolve) {
-                    currentModalResolve(null);
-                    currentModalResolve = null;
-                }
+                if (currentModalResolve) { currentModalResolve(null); currentModalResolve = null; }
             }
 
             function showErrorAlert(title, message, buttonText = 'OK') {
@@ -1074,10 +905,7 @@
                     const okBtn = document.createElement('button');
                     okBtn.textContent = buttonText;
                     okBtn.className = 'custom-modal-btn custom-modal-btn-primary';
-                    okBtn.onclick = () => {
-                        closeModal();
-                        resolve();
-                    };
+                    okBtn.onclick = () => { closeModal(); resolve(); };
                     modalButtonsContainer.appendChild(okBtn);
                     modalTitleElem.textContent = title;
                     modalMessageElem.textContent = message;
@@ -1086,7 +914,6 @@
                 });
             }
 
-            // ========== SOUND ==========
             const SUCCESS_SOUND_URL = "/sound/success.mp3";
             let preloadedAudio = null;
 
@@ -1098,64 +925,43 @@
                     audio.src = SUCCESS_SOUND_URL;
                     audio.load();
                     preloadedAudio = audio;
-                    console.log("Sound preloaded");
-                } catch(e) { console.warn(e); }
+                } catch(e) {}
             }
 
             function playSuccessSoundAndWait() {
                 return new Promise((resolve) => {
                     try {
-                        let audio;
-                        if (preloadedAudio) {
-                            audio = preloadedAudio.cloneNode();
-                        } else {
-                            audio = new Audio(SUCCESS_SOUND_URL);
-                        }
+                        let audio = preloadedAudio ? preloadedAudio.cloneNode() : new Audio(SUCCESS_SOUND_URL);
                         audio.volume = 1;
-
-                        const timeoutId = setTimeout(() => { resolve(); }, 3000);
+                        const timeoutId = setTimeout(() => resolve(), 3000);
                         audio.onended = () => { clearTimeout(timeoutId); resolve(); };
                         audio.onerror = () => { clearTimeout(timeoutId); resolve(); };
-                        audio.play().catch(e => {
-                            console.warn("Sound play blocked:", e);
-                            clearTimeout(timeoutId);
-                            resolve();
-                        });
-                    } catch(e) {
-                        console.warn(e);
-                        resolve();
-                    }
+                        audio.play().catch(() => { clearTimeout(timeoutId); resolve(); });
+                    } catch(e) { resolve(); }
                 });
             }
 
             preloadSound();
             localStorage.setItem('cached_success_sound_url', SUCCESS_SOUND_URL);
 
-            // ========== SYSTEM NOTIFICATION ==========
-            function showSystemNotification(amount, senderName, dateStr) {
+            function showSystemNotification(amount, senderName) {
                 try {
                     if (!('Notification' in window)) return;
                     if (Notification.permission !== 'granted') return;
                     const formattedAmount = '₦' + amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                    const notification = new Notification('Incoming Transfers Successful', {
+                    new Notification('Incoming Transfers Successful', {
                         body: `${senderName} has sent you ${formattedAmount}.`,
-                        icon: '/images/dashboard/opay-logo.png',
-                        silent: false
+                        icon: '/images/dashboard/opay-logo.png'
                     });
-                    notification.onclick = () => { window.focus(); };
-                } catch (err) { console.warn(err); }
+                } catch (err) {}
             }
 
             function requestNotificationPermission() {
                 try {
                     if ('Notification' in window && Notification.permission === 'default') {
-                        Notification.requestPermission()
-                            .then((perm) => {
-                                if (perm === 'granted' && window.__fcm) {
-                                    window.__fcm.saveFcmToken();
-                                }
-                            })
-                            .catch(e => console.log(e));
+                        Notification.requestPermission().then((perm) => {
+                            if (perm === 'granted' && window.__fcm) window.__fcm.saveFcmToken();
+                        }).catch(() => {});
                     } else if ('Notification' in window && Notification.permission === 'granted' && window.__fcm) {
                         window.__fcm.saveFcmToken();
                     }
@@ -1163,7 +969,6 @@
             }
             requestNotificationPermission();
 
-            // Wait for tier check to complete before initializing transaction logic
             if (!window.tierCheckPassed) {
                 window.onTierAllowed = function() { initializePage(); };
                 return;
@@ -1171,10 +976,8 @@
             initializePage();
 
             async function initializePage() {
-                // (Bank + time dropdowns already populated by the immediate script)
-
-                // ========== SCHEDULE STORAGE ==========
                 const PENDING_KEY = 'pendingScheduledTransaction';
+
                 function storePendingSchedule(amount, accountNumber, senderName, bankName, remark, executeTimestamp) {
                     const schedule = { amount, accountNumber, senderName, bankName, remark, executeTimestamp, created: Date.now() };
                     localStorage.setItem(PENDING_KEY, JSON.stringify(schedule));
@@ -1184,9 +987,8 @@
                     if (!raw) return null;
                     try { return JSON.parse(raw); } catch(e) { return null; }
                 }
-                function removePendingSchedule() {
-                    localStorage.removeItem(PENDING_KEY);
-                }
+                function removePendingSchedule() { localStorage.removeItem(PENDING_KEY); }
+
                 function updatePendingBanner() {
                     const pending = getPendingSchedule();
                     const banner = document.getElementById('pendingBanner');
@@ -1296,41 +1098,33 @@
                             try {
                                 if (typeof window.addFundToFirestore === 'function') {
                                     await window.addFundToFirestore(input.amount, tx);
-                                    console.log('✅ Firestore sync succeeded.');
                                 }
                             } catch (fsErr) {
-                                console.warn('⚠️ Firestore sync failed:', fsErr && fsErr.message ? fsErr.message : fsErr);
                                 try {
                                     const queue = JSON.parse(localStorage.getItem('pendingCloudSync') || '[]');
                                     queue.push({ amount: input.amount, tx: tx, createdAt: Date.now() });
                                     if (queue.length > 20) queue.splice(0, queue.length - 20);
                                     localStorage.setItem('pendingCloudSync', JSON.stringify(queue));
-                                } catch (qErr) { console.warn(qErr); }
+                                } catch (qErr) {}
                             }
 
                             try {
                                 if (typeof window.sendIncomingTransferPush === 'function') {
                                     await window.sendIncomingTransferPush(input.senderName, input.amount);
-                                    console.log('📨 Push dispatched (web + APK).');
                                 }
-                            } catch (pushErr) {
-                                console.warn('Push dispatch failed (continuing):', pushErr);
-                            }
+                            } catch (pushErr) {}
 
-                            try { showSystemNotification(input.amount, input.senderName, dateStr); } catch(e) {}
+                            try { showSystemNotification(input.amount, input.senderName); } catch(e) {}
 
                             const notificationObj = { type: 'payment_received', amount: input.amount, senderName: input.senderName, date: dateStr, timestamp: Date.now() };
                             localStorage.setItem('pendingNotification', JSON.stringify(notificationObj));
                             localStorage.setItem('justAddedFund', 'true');
 
                             if (window.showLoader) window.showLoader(false);
-
                             await playSuccessSoundAndWait();
-
                             window.location.href = 'dashboardful.html';
 
                         } catch (error) {
-                            console.error('Transaction error:', error);
                             await showErrorAlert('Transaction Failed', error.message || 'Unable to add funds. Please try again.', 'OK');
                             if (window.showLoader) window.showLoader(false);
                             continueBtn.classList.remove('loading');
