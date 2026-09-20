@@ -9,25 +9,23 @@ export async function GET() {
         credential: cert({
           projectId: process.env.FIREBASE_PROJECT_ID,
           clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-          privateKey: key.replace(/\\n/g, "\n"),
+          privateKey: key.replace(/\\n/g, "\n"), // Converts literal \n to real newlines
         }),
       });
     }
 
     return Response.json({
-      projectId: !!process.env.FIREBASE_PROJECT_ID,
-      email: !!process.env.FIREBASE_CLIENT_EMAIL,
-      keyStartsWithHeader: key.startsWith("-----BEGIN PRIVATE KEY-----"),
-      keyEndsWithFooter: key.trim().endsWith("-----END PRIVATE KEY-----"),
-      keyHasLiteralBackslashN: key.includes("\\n"),
-      adminInit: "SUCCESS ✅ — Firebase Admin is configured correctly",
+      success: true,
+      message: "✅ Firebase Admin initialized successfully!",
     });
   } catch (err) {
+    // This will show you the real error in the response
     return Response.json(
       {
-        adminInit: "FAILED ❌",
+        success: false,
         error: err.message,
         code: err.code,
+        hint: "Check that FIREBASE_PRIVATE_KEY is on a single line with literal \\n sequences and is not wrapped in quotes.",
       },
       { status: 500 }
     );
