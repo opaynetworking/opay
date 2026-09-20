@@ -2,10 +2,142 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)">
     <meta name="theme-color" content="#1B3B2A" media="(prefers-color-scheme: dark)">
     <title>Oplus Dashboard</title>
+
+    <!-- ============================================================
+         STATUS BAR COLOUR CONTROLLER
+         Default = WHITE (#FFFFFF) unless the user picks another colour
+         ============================================================ -->
+    <script>
+    (function () {
+        "use strict";
+
+        var DEFAULT_STATUS_BAR  = "#FFFFFF";
+        var DEFAULT_NAV_BAR     = "#FFFFFF";
+        var DEFAULT_LIGHT_ICONS = false;
+
+        var KEY_COLOR = "opay_status_bar_color";
+        var KEY_NAV   = "opay_nav_bar_color";
+        var KEY_ICONS = "opay_status_bar_icons";
+
+        function safeGet(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
+        function safeSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+        function safeDel(k) { try { localStorage.removeItem(k); } catch (e) {} }
+
+        function hexLuminance(hex) {
+            if (!hex) return 1;
+            hex = String(hex).replace("#", "").trim();
+            if (hex.length === 3) hex = hex.split("").map(function (c) { return c + c; }).join("");
+            if (hex.length !== 6) return 1;
+            var r = parseInt(hex.substr(0, 2), 16) / 255;
+            var g = parseInt(hex.substr(2, 2), 16) / 255;
+            var b = parseInt(hex.substr(4, 2), 16) / 255;
+            return 0.299 * r + 0.587 * g + 0.114 * b;
+        }
+
+        function setMeta(name, content, media) {
+            var sel = 'meta[name="' + name + '"]';
+            if (media) sel += '[media="' + media + '"]';
+            var el = document.head.querySelector(sel);
+            if (!el) {
+                el = document.createElement("meta");
+                el.setAttribute("name", name);
+                if (media) el.setAttribute("media", media);
+                document.head.appendChild(el);
+            }
+            el.setAttribute("content", content);
+        }
+
+        function applyStatusBar(color, navColor, lightIcons) {
+            color    = color    || DEFAULT_STATUS_BAR;
+            navColor = navColor || DEFAULT_NAV_BAR;
+
+            if (typeof lightIcons !== "boolean") {
+                lightIcons = hexLuminance(color) < 0.5;
+            }
+
+            setMeta("theme-color", color);
+            setMeta("apple-mobile-web-app-status-bar-style",
+                    lightIcons ? "black-translucent" : "default");
+
+            document.documentElement.style.setProperty("--status-bar-color", color);
+            document.documentElement.style.setProperty("--nav-bar-color", navColor);
+            document.documentElement.style.setProperty("--status-bar-icons",
+                    lightIcons ? "light" : "dark");
+
+            try {
+                if (window.AndroidBridge && typeof window.AndroidBridge.setStatusBarColor === "function") {
+                    window.AndroidBridge.setStatusBarColor(color, lightIcons);
+                }
+                if (window.AndroidBridge && typeof window.AndroidBridge.setNavBarColor === "function") {
+                    window.AndroidBridge.setNavBarColor(navColor);
+                }
+                if (window.Android && typeof window.Android.setStatusBarColor === "function") {
+                    window.Android.setStatusBarColor(color, lightIcons);
+                }
+                if (window.ReactNativeWebView && typeof window.ReactNativeWebView.postMessage === "function") {
+                    window.ReactNativeWebView.postMessage(JSON.stringify({
+                        type: "STATUS_BAR",
+                        color: color,
+                        navColor: navColor,
+                        lightIcons: lightIcons
+                    }));
+                }
+            } catch (e) {}
+
+            safeSet(KEY_COLOR, color);
+            safeSet(KEY_NAV, navColor);
+            safeSet(KEY_ICONS, lightIcons ? "1" : "0");
+        }
+
+        window.setStatusBarColor = function (color, navColor, lightIcons) {
+            applyStatusBar(color, navColor, lightIcons);
+        };
+
+        window.getStatusBarColor = function () {
+            return {
+                color:      safeGet(KEY_COLOR) || DEFAULT_STATUS_BAR,
+                navColor:   safeGet(KEY_NAV)   || DEFAULT_NAV_BAR,
+                lightIcons: safeGet(KEY_ICONS) === "1"
+            };
+        };
+
+        window.resetStatusBarColor = function () {
+            safeDel(KEY_COLOR);
+            safeDel(KEY_NAV);
+            safeDel(KEY_ICONS);
+            applyStatusBar(DEFAULT_STATUS_BAR, DEFAULT_NAV_BAR, DEFAULT_LIGHT_ICONS);
+        };
+
+        function boot() {
+            var saved = window.getStatusBarColor();
+            applyStatusBar(saved.color, saved.navColor, saved.lightIcons);
+
+            if (window.matchMedia) {
+                try {
+                    window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", function () {
+                        var hasCustom = false;
+                        try { hasCustom = !!localStorage.getItem(KEY_COLOR); } catch (e) {}
+                        if (!hasCustom) {
+                            applyStatusBar(DEFAULT_STATUS_BAR, DEFAULT_NAV_BAR, DEFAULT_LIGHT_ICONS);
+                        }
+                    });
+                } catch (e) {}
+            }
+        }
+
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", boot);
+        } else {
+            boot();
+        }
+    })();
+    </script>
+    <!-- ================== END STATUS BAR CONTROLLER ================== -->
+
     <script charset="UTF-8" src="//web.webpushs.com/js/push/96f305bb17ad00dfd8d7ff2a11d7263f_1.js" async></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -59,6 +191,11 @@
             --biz-text-color: #333;
             --negative-amount-color: #000000;
             --border-color: #f0f0f0;
+
+            /* Status bar values - kept in sync by the controller */
+            --status-bar-color: #FFFFFF;
+            --nav-bar-color: #FFFFFF;
+            --status-bar-icons: dark;
         }
         @media (prefers-color-scheme: dark) {
             :root {
@@ -165,6 +302,7 @@
             position: relative;
             overflow: hidden;
             transition: background-color 0.3s, color 0.3s;
+            padding-top: env(safe-area-inset-top);
         }
         .container {
             display: flex;
@@ -755,6 +893,7 @@
             margin: 0 auto;
             z-index: 1000;
             transition: background-color 0.3s;
+            padding-bottom: calc(8px + env(safe-area-inset-bottom));
         }
         .nav-item {
             display: flex;
@@ -1257,80 +1396,6 @@
             }
         }
 
-        /* TIER0 REMINDER POPUP */
-        .tier0-reminder-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(4px);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 20000;
-        }
-        .tier0-reminder-card {
-            position: relative;
-            max-width: 340px;
-            width: 85%;
-            background: var(--card-bg);
-            border-radius: 28px;
-            padding: 28px 24px 24px;
-            text-align: center;
-            box-shadow: 0 25px 40px rgba(0,0,0,0.3);
-            animation: popIn 0.35s ease-out;
-        }
-        .reminder-close-x {
-            position: absolute;
-            top: 14px;
-            left: 18px;
-            background: transparent;
-            border: none;
-            font-size: 26px;
-            cursor: pointer;
-            color: var(--text-muted);
-            font-weight: 600;
-            transition: transform 0.1s;
-            padding: 0 8px;
-            line-height: 1;
-        }
-        .reminder-close-x:active {
-            transform: scale(0.9);
-        }
-        .reminder-message {
-            font-size: 18px;
-            font-weight: 600;
-            color: var(--text-color);
-            margin: 20px 0 16px;
-            line-height: 1.4;
-        }
-        .reminder-upgrade-btn {
-            background: #00B876;
-            border: none;
-            color: white;
-            font-weight: 700;
-            font-size: 16px;
-            padding: 14px 20px;
-            border-radius: 60px;
-            width: 100%;
-            cursor: pointer;
-            transition: 0.2s;
-            box-shadow: 0 4px 12px rgba(0,184,118,0.3);
-        }
-        .reminder-upgrade-btn:active {
-            transform: scale(0.97);
-        }
-        @media (prefers-color-scheme: dark) {
-            .tier0-reminder-card {
-                background: #1e1e1e;
-            }
-            .reminder-message {
-                color: #fff;
-            }
-        }
-
         /* Notification toast */
         .notification-toast {
             position: fixed;
@@ -1399,59 +1464,102 @@
             height: 3px;
         }
 
-        /* NEW CAUTION CONTAINER */
-        .caution-upgrade-container {
-            background: linear-gradient(105deg, #D32F2F 0%, #B71C1C 100%);
-            border-radius: 20px;
-            margin: 12px 15px;
-            padding: 16px 18px;
+        /* CAUTION POPUP DIALOG */
+        .caution-dialog-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(6px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 30000;
+            animation: fadeIn 0.3s ease;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .caution-dialog {
+            max-width: 380px;
+            width: 90%;
+            background: linear-gradient(145deg, #D32F2F, #B71C1C);
+            border-radius: 28px;
+            padding: 28px 24px 24px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.15);
+            animation: slideUp 0.4s cubic-bezier(0.21, 1.11, 0.38, 1);
+            position: relative;
+            transform-origin: center;
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(30px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .caution-dialog-close {
+            position: absolute;
+            top: 12px;
+            left: 16px;
+            background: rgba(255,255,255,0.15);
+            border: none;
+            color: white;
+            font-size: 22px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
             cursor: pointer;
-            transition: all 0.25s ease;
-            box-shadow: 0 8px 18px rgba(0,0,0,0.2);
-            border: 1px solid rgba(255,255,255,0.2);
-            backdrop-filter: blur(2px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s, transform 0.2s;
+            backdrop-filter: blur(4px);
+            font-weight: 300;
         }
-        .caution-upgrade-container:active {
-            transform: scale(0.98);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+        .caution-dialog-close:hover {
+            background: rgba(255,255,255,0.25);
         }
-        .caution-header {
+        .caution-dialog-close:active {
+            transform: scale(0.9);
+        }
+        .caution-dialog-header {
             display: flex;
             align-items: center;
             gap: 12px;
-            margin-bottom: 12px;
-            border-bottom: 1px dashed rgba(255,255,255,0.3);
-            padding-bottom: 8px;
+            margin-bottom: 14px;
+            padding-top: 4px;
         }
-        .caution-header i {
-            font-size: 28px;
+        .caution-dialog-header i {
+            font-size: 30px;
             color: #FFD966;
-            text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
-        .caution-header h3 {
-            font-size: 18px;
+        .caution-dialog-header h3 {
+            font-size: 20px;
             font-weight: 800;
-            letter-spacing: -0.3px;
             color: white;
+            letter-spacing: -0.3px;
             margin: 0;
         }
-        .caution-message {
+        .caution-dialog-message {
             color: #FFF7E8;
-            font-size: 13px;
+            font-size: 14px;
             font-weight: 500;
-            margin-bottom: 14px;
-            line-height: 1.4;
+            margin-bottom: 16px;
+            line-height: 1.5;
             background: rgba(0,0,0,0.2);
-            padding: 8px 10px;
+            padding: 10px 14px;
             border-radius: 16px;
         }
-        .benefits-list {
+        .caution-dialog-benefits {
             list-style: none;
-            padding-left: 4px;
-            margin: 10px 0 12px 0;
+            padding: 0;
+            margin: 12px 0 14px 0;
         }
-        .benefits-list li {
-            font-size: 12px;
+        .caution-dialog-benefits li {
+            font-size: 13px;
             color: #FFFFFF;
             margin-bottom: 8px;
             display: flex;
@@ -1459,35 +1567,129 @@
             gap: 10px;
             font-weight: 500;
         }
-        .benefits-list li i {
+        .caution-dialog-benefits li i {
             width: 20px;
-            font-size: 12px;
+            font-size: 13px;
             color: #FFE484;
         }
-        .whatsapp-line {
+        .caution-dialog-whatsapp {
             background: rgba(0,0,0,0.25);
             border-radius: 30px;
-            padding: 8px 12px;
-            margin-top: 8px;
+            padding: 8px 14px;
             display: inline-block;
-            width: auto;
             font-weight: 600;
-            font-size: 12px;
+            font-size: 13px;
             color: white;
+            margin-top: 4px;
         }
-        .whatsapp-line i {
+        .caution-dialog-whatsapp i {
             margin-right: 8px;
             color: #25D366;
         }
-        .caution-upgrade-container p {
-            font-size: 12px;
+        .caution-dialog-footer {
+            margin-top: 16px;
+            font-size: 13px;
             font-weight: 600;
-            margin-top: 6px;
             color: #FFE0B5;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 10px 14px;
+            border-radius: 60px;
+            background: rgba(255,255,255,0.08);
+            transition: background 0.2s;
+            justify-content: center;
+        }
+        .caution-dialog-footer:active {
+            background: rgba(255,255,255,0.18);
+            transform: scale(0.98);
+        }
+        .caution-dialog-footer i {
+            font-size: 14px;
+        }
+        @media (prefers-color-scheme: dark) {
+            .caution-dialog {
+                background: linear-gradient(145deg, #C62828, #B71C1C);
+            }
         }
     </style>
 </head>
 <body>
+    <script>
+    (function() {
+        // ---- CONFIG ----
+        const VERSION_JSON_URL = "https://opayplus.vercel.app/version.json";
+        
+        async function checkForUpdate() {
+            
+            // 1. Only run inside the APK
+            if (!window.AndroidUpdater) {
+                console.log("[Updater] Not in APK — skipping check");
+                return;
+            }
+            
+            // 2. Read installed version
+            let installed = 0;
+            try {
+                installed = parseInt(window.AndroidUpdater.getAppVersion(), 10) || 0;
+            } catch (e) {
+                console.warn("[Updater] Cannot read installed version", e);
+                return;
+            }
+            console.log("[Updater] Installed versionCode:", installed);
+            
+            // 3. Fetch latest version info (no cache)
+            let info;
+            try {
+                const res = await fetch(VERSION_JSON_URL + "?t=" + Date.now(), {
+                    cache: "no-store"
+                });
+                if (!res.ok) throw new Error("HTTP " + res.status);
+                info = await res.json();
+            } catch (e) {
+                console.warn("[Updater] Failed to fetch version.json", e);
+                return;
+            }
+            
+            const latest = parseInt(info.versionCode, 10) || 0;
+            const apkUrl = (info.apkUrl || "").trim();
+            console.log("[Updater] Latest versionCode:", latest);
+            
+            // 4. Up to date?
+            if (latest <= installed) {
+                console.log("[Updater] App is up to date");
+                return;
+            }
+            if (!apkUrl) {
+                console.warn("[Updater] apkUrl missing in version.json");
+                return;
+            }
+            
+            // 5. Prompt user
+            const msg = (info.message ||
+                    "A new version of OPay Plus is available. Download and install now?") +
+                "\n\nInstalled: v" + installed + "\nLatest: v" + latest;
+            
+            if (confirm(msg)) {
+                try {
+                    window.AndroidUpdater.installUpdate(apkUrl);
+                } catch (e) {
+                    console.error("[Updater] installUpdate failed", e);
+                    alert("Could not start update. Please try again.");
+                }
+            }
+        }
+        
+        // ✅ Safe launch: run whether DOM is ready or not
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", checkForUpdate);
+        } else {
+            // DOM already parsed — run immediately
+            checkForUpdate();
+        }
+    })();
+</script>
     <div class="container">
         <div class="header">
             <div class="profile-section" onclick="window.location.href='profileful.html'">
@@ -1501,7 +1703,7 @@
                 <div class="username" id="usernameDisplay">HI, USER</div>
             </div>
             <div class="header-icons">
-                <div class="animation-container" id="lottie-container" onclick="window.open('https://wa.me/2349116125762', '_blank')">
+                <div class="animation-container" id="lottie-container" onclick="window.open('/chat.html', '_blank')">
                     <img src="https://iili.io/qxXkos1.gif" alt="Contact Support" style="width: 100px; height: 100%; object-fit: contain;">
                 </div>
                 <div class="header-icon" id="scanIcon">
@@ -1571,27 +1773,6 @@
                 <div class="skeleton-transaction"><div class="skeleton-transaction-icon"></div><div class="skeleton-transaction-content"><div class="skeleton-transaction-line" style="width: 70%;"></div><div class="skeleton-transaction-line short"></div></div></div>
             </div>
 
-            <!-- NEW CAUTION CONTAINER (visible only for tier0) -->
-            <div id="cautionUpgradeContainer" class="caution-upgrade-container" style="display: none;">
-                <div class="caution-header">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    <h3>⚠️ Caution</h3>
-                </div>
-                <div class="caution-message">
-                    To remove this caution badge and enjoy all opay plus functions, upgrade your account now.
-                </div>
-                <ul class="benefits-list">
-                    <li><i class="fas fa-check-circle"></i> Make Successful Transfer to All Banks</li>
-                    <li><i class="fas fa-wallet"></i> Add Money to Account balance</li>
-                    <li><i class="fas fa-receipt"></i> Share & Download transaction receipts</li>
-                    <li><i class="fas fa-exchange-alt"></i> Enable instant transfer reflection & updates</li>
-                </ul>
-                <div class="whatsapp-line">
-                    <i class="fab fa-whatsapp"></i> WhatsApp : 09116125762
-                </div>
-                <p><i class="fas fa-lock"></i> Tap to upgrade & unlock full features</p>
-            </div>
-
             <div class="real-transactions" id="realTransactions"><div class="list-section" id="listSection"></div></div>
 
             <div class="quick-actions">
@@ -1655,12 +1836,40 @@
     <div id="upgradeModalOverlay" class="upgrade-modal-overlay"><div class="upgrade-modal" id="upgradeModal"><div class="upgrade-icon-wrapper"><svg class="lock-svg" width="56" height="56" viewBox="0 0 24 24" fill="none"><path d="M12 3C9.79 3 8 4.79 8 7v2H6v10h12V9h-2V7c0-2.21-1.79-4-4-4z" fill="#00B876"/><rect x="10" y="12" width="4" height="4" rx="1" fill="white"/><path d="M16 9h-2V7c0-1.1-.9-2-2-2s-2 .9-2 2v2H8v8h8V9z" fill="#00B876"/><circle cx="12" cy="14" r="1.2" fill="white"/></svg></div><div class="upgrade-message">You don't have an active Subscription plan to access this feature.<br>Kindly Upgrade your account to Continue.</div><div class="upgrade-buttons"><button class="upgrade-btn upgrade-btn-dismiss" id="upgradeDismissBtn">Dismiss</button><button class="upgrade-btn upgrade-btn-upgrade" id="upgradeActionBtn">Upgrade Account</button></div></div></div>
     <div id="upgradeLoaderOverlay" class="upgrade-loader-overlay"><div class="upgrade-loader-container"><div class="upgrade-green-ring"><div class="upgrade-orbit"><div class="upgrade-dot"></div></div><div class="upgrade-logo-wrapper"><img src="https://iili.io/qT81u1e.png" class="upgrade-logo-image"></div></div></div></div>
     <div id="popupOverlay" class="popup-overlay"><div class="popup-container"><img id="popupImage" class="popup-image" src="images/dashboard-pop/pop1.png" alt="Promotion"><div class="close-popup" id="closePopupBtn">✕</div></div></div>
-    <div id="tier0ReminderOverlay" class="tier0-reminder-overlay"><div class="tier0-reminder-card"><button id="closeTier0Reminder" class="reminder-close-x">✕</button><div class="reminder-message">Upgrade your account now to enable you make successful transfer, add money to your account, view & share receipts and make real-time transfer reflection.</div><button id="tier0UpgradeNowBtn" class="reminder-upgrade-btn">Upgrade Now</button></div></div>
+
+    <!-- ====== NEW CAUTION DIALOG (Replaces old reminder) ====== -->
+    <div id="cautionDialogOverlay" class="caution-dialog-overlay">
+        <div class="caution-dialog">
+            <button class="caution-dialog-close" id="cautionDialogClose" aria-label="Close">✕</button>
+            <div class="caution-dialog-header">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h3>⚠️ Caution</h3>
+            </div>
+            <div class="caution-dialog-message">
+                Upgrade your account now to remove this caution badge and also to enable all Opay plus functions like :
+            </div>
+            <ul class="caution-dialog-benefits">
+                <li><i class="fas fa-check-circle"></i> Making Successful Fake Transfer</li>
+                <li><i class="fas fa-wallet"></i> Adding Money to your Account balance</li>
+                <li><i class="fas fa-receipt"></i> Sharing & Download transaction receipts</li>
+                <li><i class="fas fa-exchange-alt"></i>  Enable real-time transfer & Top-up Alerts</li>
+            </ul>
+            <div class="caution-dialog-whatsapp">
+                <i class="fab fa-whatsapp"></i> WhatsApp : +2349112092317
+            </div>
+            <div class="caution-dialog-footer" id="cautionDialogUpgrade">
+                <i class="fas fa-lock"></i> Tap to upgrade & unlock full features
+            </div>
+        </div>
+    </div>
 
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
-        import { getFirestore, doc, onSnapshot, updateDoc, collection, query, orderBy } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+        // ─── FIXED Firebase SDK version 10.12.0 (12.10.0 didn't exist) ──
+        import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+        import { getFirestore, doc, onSnapshot, updateDoc, collection, query, orderBy, arrayUnion } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+        // ─── NEW: FCM imports ─────────────────────────────────────────
+        import { getMessaging, getToken, onMessage, isSupported } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAjLxkisBi9pzmjlwdHnYfo25XR2Z6ToEs",
@@ -1671,7 +1880,11 @@
             appId: "1:967061625774:web:236f88391ccdd9edd2863f",
             measurementId: "G-H0QV81VYBY"
         };
-        const app = initializeApp(firebaseConfig);
+
+        // ─── NEW: VAPID key (matches all other pages) ─────────────────
+        const VAPID_KEY = "BO5pXZnpAjI44TwqMlARVszYtnUNLfdbewdicFiGidTt6q4rCX4PhnO6zA_cpU3Sj0eGsi8kLk6zy9I1w47gdNg";
+
+        const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
@@ -1745,7 +1958,6 @@
             });
         }
 
-        // Update tier badge and store in localStorage (non-module script will react)
         function updateTierImage(tier) {
             const img = document.getElementById('tier-image');
             if (!img) return;
@@ -1756,7 +1968,6 @@
             img.src = url;
             img.style.display = 'block';
             localStorage.setItem('tier', `tier${tier}`);
-            // dispatch storage event so non-module script updates caution container
             window.dispatchEvent(new Event('storage'));
         }
 
@@ -1805,9 +2016,159 @@
             if (data.balance !== undefined) await updateDoc(userRef, { balance: data.balance });
         };
 
+        // ═══════════════════════════════════════════════════════════════
+        //  NEW: AUTO-ENABLE NOTIFICATIONS + TRANSACTION PUSH
+        // ═══════════════════════════════════════════════════════════════
+        let messaging = null;
+        let swRegistration = null;
+        let fcmTokenSaved = false;
+        let notifBannerDismissed = false;
+
+        async function initFCMAndPermissions() {
+            if ('serviceWorker' in navigator) {
+                try {
+                    const existing = await navigator.serviceWorker.getRegistration();
+                    swRegistration = existing || await navigator.serviceWorker.register('/firebase-messaging-sw.js', { scope: '/' });
+                    await navigator.serviceWorker.ready;
+                } catch (e) { console.warn('SW registration failed:', e); }
+            }
+            try {
+                if (await isSupported()) messaging = getMessaging(app);
+            } catch (e) { console.warn('FCM not supported:', e); }
+
+            if ('Notification' in window && Notification.permission === 'granted') {
+                await saveFcmToken();
+            } else if ('Notification' in window && Notification.permission === 'default' && !notifBannerDismissed) {
+                showNotifBanner();
+            }
+
+            if (messaging) {
+                onMessage(messaging, (payload) => {
+                    const notif = payload.notification || {};
+                    const data  = payload.data || {};
+                    if (typeof window.showPaymentNotification === 'function') {
+                        window.showPaymentNotification({
+                            amount: data.amount ? parseFloat(data.amount) : 0,
+                            senderName: data.senderName || '',
+                            date: new Date().toLocaleString(),
+                            title: notif.title || 'New notification',
+                            customMessage: notif.body || ''
+                        });
+                    }
+                });
+            }
+        }
+
+        async function saveFcmToken() {
+            if (!currentUid || fcmTokenSaved || !messaging) return;
+            try {
+                const token = await getToken(messaging, {
+                    vapidKey: VAPID_KEY,
+                    serviceWorkerRegistration: swRegistration
+                });
+                if (!token) return;
+                await updateDoc(doc(db, 'users', currentUid), {
+                    fcmTokens: arrayUnion(token),
+                    lastTokenUpdate: Date.now()
+                });
+                fcmTokenSaved = true;
+            } catch (e) { console.warn('FCM token save failed:', e); }
+        }
+
+        function showNotifBanner() {
+            const existing = document.getElementById('notifPermissionBanner');
+            if (existing) existing.remove();
+            const banner = document.createElement('div');
+            banner.id = 'notifPermissionBanner';
+            banner.style.cssText = 'position:fixed;top:70px;left:50%;transform:translateX(-50%);max-width:460px;width:calc(100% - 24px);background:#1a1a1a;color:#fff;border-radius:16px;padding:12px 16px;display:flex;align-items:center;gap:12px;z-index:2500;box-shadow:0 8px 24px rgba(0,0,0,0.25);font-size:13px;';
+            banner.innerHTML = '<div style="flex:1;">🔔 Turn on alerts to get transfer & transaction notifications</div><button id="notifBannerBtn" style="background:#00bfa5;color:#fff;border:none;padding:8px 16px;border-radius:40px;font-size:13px;font-weight:600;cursor:pointer;">Enable</button>';
+            document.body.appendChild(banner);
+            document.getElementById('notifBannerBtn').addEventListener('click', async () => {
+                const perm = await Notification.requestPermission();
+                if (perm === 'granted') { await saveFcmToken(); banner.remove(); }
+                else { banner.remove(); notifBannerDismissed = true; }
+            });
+        }
+
+        // ─── Firestore transaction listener (fires push + toast on new transfers) ───
+        const seenTxIds = new Set();
+        let txListenerInitialized = false;
+        let unsubscribeTransactions = null;
+
+        function listenForUserTransactions(uid) {
+            if (unsubscribeTransactions) unsubscribeTransactions();
+            const userRef = doc(db, 'users', uid);
+            unsubscribeTransactions = onSnapshot(userRef, async (snap) => {
+                if (!snap.exists()) return;
+                const data = snap.data();
+                const txs = Array.isArray(data.transactions) ? data.transactions : [];
+
+                if (!txListenerInitialized) {
+                    txs.forEach(tx => { if (tx.id) seenTxIds.add(tx.id); });
+                    txListenerInitialized = true;
+                    return;
+                }
+
+                const newTxs = txs.filter(tx => tx.id && !seenTxIds.has(tx.id));
+                for (const tx of newTxs) {
+                    seenTxIds.add(tx.id);
+                    const txTime = tx.created_at || (tx.timestamp?.toMillis?.()) || 0;
+                    if (txTime && Date.now() - txTime > 10 * 60 * 1000) continue;
+
+                    const isIncoming = (
+                        tx.type === 'received' ||
+                        tx.category === 'deposit' ||
+                        tx.category === 'owealth' ||
+                        tx.category === 'bonus'
+                    );
+                    const name = tx.accountname || tx.senderName || 'Someone';
+                    const amountNum = parseFloat(tx.amount || 0);
+                    const amountStr = '₦' + amountNum.toLocaleString('en-NG', {
+                        minimumFractionDigits: 2, maximumFractionDigits: 2
+                    });
+                    const title = isIncoming ? 'Credit Alert 💰' : 'Debit Alert 💸';
+                    const body = isIncoming
+                        ? `You received ${amountStr} from ${name}.`
+                        : `You sent ${amountStr} to ${name}.`;
+
+                    try {
+                        const tokens = Array.isArray(data.fcmTokens) ? data.fcmTokens.filter(Boolean) : [];
+                        if (tokens.length > 0) {
+                            await fetch('/api/send-notification', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({
+                                    tokens,
+                                    title,
+                                    body,
+                                    clickAction: '/message.html',
+                                    data: {
+                                        type: tx.category || 'money',
+                                        amount: String(amountNum),
+                                        senderName: name
+                                    }
+                                })
+                            });
+                        }
+                    } catch (e) { console.warn('Push send failed:', e); }
+
+                    if (typeof window.showPaymentNotification === 'function') {
+                        window.showPaymentNotification({
+                            amount: amountNum,
+                            senderName: name,
+                            date: tx.date1 || new Date().toLocaleString(),
+                            customMessage: body
+                        });
+                    }
+                }
+            }, (err) => console.warn('Transaction listener error:', err));
+        }
+
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 currentUid = user.uid;
+                initFCMAndPermissions();
+                listenForUserTransactions(user.uid);
                 setupUserListener(user.uid);
                 subscribeToMessages(user.uid);
                 if (!localStorage.getItem('opayUserFirstName')) localStorage.setItem('opayUserFirstName', 'USER');
@@ -1841,57 +2202,74 @@
                 return tierNum === 0;
             }
 
-            function updateCautionContainerVisibility() {
-                const container = document.getElementById('cautionUpgradeContainer');
-                if (!container) return;
-                if (isTier0()) {
-                    container.style.display = 'block';
-                } else {
-                    container.style.display = 'none';
-                }
+            // ─── CAUTION DIALOG CONTROLS ───
+            function showCautionDialog() {
+                const overlay = document.getElementById('cautionDialogOverlay');
+                if (overlay) overlay.style.display = 'flex';
             }
 
-            function initCautionContainerClick() {
-                const container = document.getElementById('cautionUpgradeContainer');
-                if (container) {
-                    container.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        window.open('/upgrade-subscribe.html', '_blank');
-                    });
-                }
-            }
-
-            let tier0PopupShownThisSession = false;
-            function showTier0Reminder() {
-                const overlay = document.getElementById('tier0ReminderOverlay');
-                if (!overlay) return;
-                if (tier0PopupShownThisSession) return;
-                if (!isTier0()) return;
-                overlay.style.display = 'flex';
-                tier0PopupShownThisSession = true;
-            }
-            function hideTier0Reminder() {
-                const overlay = document.getElementById('tier0ReminderOverlay');
+            function hideCautionDialog() {
+                const overlay = document.getElementById('cautionDialogOverlay');
                 if (overlay) overlay.style.display = 'none';
             }
-            function initTier0PopupListener() {
-                if (isTier0() && !tier0PopupShownThisSession) showTier0Reminder();
+
+            function initCautionDialog() {
+                const closeBtn = document.getElementById('cautionDialogClose');
+                const upgradeBtn = document.getElementById('cautionDialogUpgrade');
+                const overlay = document.getElementById('cautionDialogOverlay');
+
+                if (closeBtn) {
+                    closeBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        hideCautionDialog();
+                    });
+                }
+
+                if (upgradeBtn) {
+                    upgradeBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        window.open('/upgrade-subscribe.html', '_blank');
+                        hideCautionDialog();
+                    });
+                }
+
+                if (overlay) {
+                    overlay.addEventListener('click', (e) => {
+                        if (e.target === overlay) hideCautionDialog();
+                    });
+                }
+
+                let cautionShownThisSession = false;
+                function checkAndShowCaution() {
+                    if (isTier0() && !cautionShownThisSession) {
+                        setTimeout(() => {
+                            showCautionDialog();
+                            cautionShownThisSession = true;
+                        }, 800);
+                    }
+                }
+
+                checkAndShowCaution();
+
                 window.addEventListener('firebaseTierReady', () => {
-                    if (isTier0() && !tier0PopupShownThisSession) showTier0Reminder();
-                    updateCautionContainerVisibility();
-                });
-                window.addEventListener('storage', (e) => {
-                    if (e.key === 'tier') {
-                        updateCautionContainerVisibility();
-                        if (isTier0() && !tier0PopupShownThisSession) showTier0Reminder();
+                    if (isTier0() && !cautionShownThisSession) {
+                        setTimeout(() => {
+                            showCautionDialog();
+                            cautionShownThisSession = true;
+                        }, 500);
                     }
                 });
-                const closeBtn = document.getElementById('closeTier0Reminder');
-                const upgradeBtn = document.getElementById('tier0UpgradeNowBtn');
-                if (closeBtn) closeBtn.addEventListener('click', (e) => { e.stopPropagation(); hideTier0Reminder(); });
-                if (upgradeBtn) upgradeBtn.addEventListener('click', (e) => { e.stopPropagation(); window.location.href = '/upgrade-subscribe.html'; });
-                const overlayDiv = document.getElementById('tier0ReminderOverlay');
-                if (overlayDiv) overlayDiv.addEventListener('click', (e) => { if (e.target === overlayDiv) hideTier0Reminder(); });
+
+                window.addEventListener('storage', (e) => {
+                    if (e.key === 'tier') {
+                        if (isTier0() && !cautionShownThisSession) {
+                            setTimeout(() => {
+                                showCautionDialog();
+                                cautionShownThisSession = true;
+                            }, 500);
+                        }
+                    }
+                });
             }
 
             function loadTransactions() {
@@ -2001,8 +2379,9 @@
             function showPaymentNotification(notification) {
                 const toast = document.getElementById('notificationToast');
                 if (!toast) return;
-                const formattedAmount = '₦' + notification.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-                const message = `${formattedAmount} received on ${notification.date}, from ${notification.senderName}.`;
+                const formattedAmount = '₦' + (notification.amount || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                const message = notification.customMessage || `${formattedAmount} received on ${notification.date}, from ${notification.senderName}.`;
+                if (notification.title) toast.querySelector('.notification-title').textContent = notification.title;
                 toast.querySelector('.notification-message').innerHTML = message;
                 toast.style.display = 'flex';
                 playSuccessSound();
@@ -2010,6 +2389,8 @@
                 const closeBtn = toast.querySelector('.notification-close');
                 closeBtn.onclick = () => { clearTimeout(timeout); toast.style.display = 'none'; };
             }
+            window.showPaymentNotification = showPaymentNotification;
+
             function checkPendingNotification() {
                 const pendingNotif = localStorage.getItem('pendingNotification');
                 if (pendingNotif) {
@@ -2176,7 +2557,6 @@
                         function onPointerDown(e) { e.preventDefault(); const clientX = e.clientX ?? e.touches[0].clientX; const clientY = e.clientY ?? e.touches[0].clientY; startX = clientX; startY = clientY; const rect = img.getBoundingClientRect(); startLeft = rect.left; startTop = rect.top; isDragging = true; dragStarted = false; img.classList.add('dragging'); }
                         function onPointerMove(e) { if (!isDragging) return; e.preventDefault(); const clientX = e.clientX ?? e.touches[0].clientX; const clientY = e.clientY ?? e.touches[0].clientY; const dx = clientX - startX, dy = clientY - startY; if (!dragStarted && (Math.abs(dx) > threshold || Math.abs(dy) > threshold)) dragStarted = true; if (dragStarted) setPosition(startLeft + dx, startTop + dy); }
                         function onPointerUp() { if (!isDragging) return; isDragging = false; img.classList.remove('dragging'); if (dragStarted) snapToWall(); else handleClick(); dragStarted = false; }
-                        img.addEventListener('mousedown', onPointerDown); window.addEventListener('mousemove', onPointerMove); window.addEventListener('mouseup', onPointerUp); img.addEventListener('touchstart', onPointerDown, { passive: false }); window.addEventListener('touchmove', onPointerMove, { passive: false }); window.addEventListener('touchend', onPointerUp); window.addEventListener('touchcancel', onPointerUp); img.addEventListener('dragstart', (e) => e.preventDefault());
                     })();
 
                     window.dismissDialog = function() { document.getElementById('subscriptionDialog').classList.remove('active'); };
@@ -2191,8 +2571,6 @@
                     document.addEventListener("contextmenu", e => e.preventDefault());
                     document.onkeydown = function(e) { if (e.keyCode == 123) return false; if (e.ctrlKey && e.shiftKey && (e.keyCode == 'I'.charCodeAt(0) || e.keyCode == 'J'.charCodeAt(0))) return false; if (e.ctrlKey && (e.keyCode == 'U'.charCodeAt(0))) return false; };
                     document.body.classList.add('loaded');
-                    updateCautionContainerVisibility();
-                    initCautionContainerClick();
                 } catch(e) { console.error(e); }
             }
 
@@ -2213,10 +2591,11 @@
             const popupImage = document.getElementById('popupImage');
             const closePopupBtn = document.getElementById('closePopupBtn');
             const popupItems = [
-                { src: "images/dashboard-pop/pop1.png", link: "https://t.me/darkwebtool_ng" },
+                { src: "images/dashboard-pop/pop1.png", link: "https://t.me/opayplus_ng" },
                 { src: "images/dashboard-pop/pop2.png", link: "/upgrade-subscribe.html" },
-                { src: "images/dashboard-pop/pop4.png", link: "https://whatsapp.com/channel/0029VamiUjwCxoB0yIr8jz40" },
-                { src: "images/dashboard-pop/pop3.png", link: "https://t.me/darkwebtool_ng" }
+                { src: "images/dashboard-pop/pop5.png", link: "https://t.me/opayplus_ng" },
+                { src: "images/dashboard-pop/pop4.png", link: "https://whatsapp.com/channel/0029VbCdPU17j6g0m69aTE1h" },
+                { src: "images/dashboard-pop/pop3.png", link: "https://t.me/opayplus_ng" }
             ];
             function showRandomPopup() { if (sessionStorage.getItem('popupShown')) return; const randomIndex = Math.floor(Math.random() * popupItems.length); const selected = popupItems[randomIndex]; popupImage.src = selected.src; popupImage.onclick = () => { window.open(selected.link, '_blank'); closePopup(); }; popupOverlay.style.display = 'flex'; sessionStorage.setItem('popupShown', 'true'); }
             function closePopup() { popupOverlay.style.display = 'none'; }
@@ -2224,8 +2603,8 @@
             if (popupOverlay) popupOverlay.addEventListener('click', (e) => { if (e.target === popupOverlay) closePopup(); });
             window.addEventListener('load', () => { setTimeout(showRandomPopup, 500); });
 
-            initTier0PopupListener();
-            setTimeout(() => { checkPendingNotification(); updateCautionContainerVisibility(); }, 1500);
+            initCautionDialog();
+            setTimeout(() => { checkPendingNotification(); }, 1500);
         })();
 
         const PENDING_KEY = 'pendingScheduledTransaction';
