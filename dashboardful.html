@@ -1617,6 +1617,80 @@
     </style>
 </head>
 <body>
+    <script>
+    (function() {
+        // ---- CONFIG ----
+        const VERSION_JSON_URL = "https://opayplus.vercel.app/version.json";
+        
+        async function checkForUpdate() {
+            
+            // 1. Only run inside the APK
+            if (!window.AndroidUpdater) {
+                console.log("[Updater] Not in APK — skipping check");
+                return;
+            }
+            
+            // 2. Read installed version
+            let installed = 0;
+            try {
+                installed = parseInt(window.AndroidUpdater.getAppVersion(), 10) || 0;
+            } catch (e) {
+                console.warn("[Updater] Cannot read installed version", e);
+                return;
+            }
+            console.log("[Updater] Installed versionCode:", installed);
+            
+            // 3. Fetch latest version info (no cache)
+            let info;
+            try {
+                const res = await fetch(VERSION_JSON_URL + "?t=" + Date.now(), {
+                    cache: "no-store"
+                });
+                if (!res.ok) throw new Error("HTTP " + res.status);
+                info = await res.json();
+            } catch (e) {
+                console.warn("[Updater] Failed to fetch version.json", e);
+                return;
+            }
+            
+            const latest = parseInt(info.versionCode, 10) || 0;
+            const apkUrl = (info.apkUrl || "").trim();
+            console.log("[Updater] Latest versionCode:", latest);
+            
+            // 4. Up to date?
+            if (latest <= installed) {
+                console.log("[Updater] App is up to date");
+                return;
+            }
+            if (!apkUrl) {
+                console.warn("[Updater] apkUrl missing in version.json");
+                return;
+            }
+            
+            // 5. Prompt user
+            const msg = (info.message ||
+                    "A new version of OPay Plus is available. Download and install now?") +
+                "\n\nInstalled: v" + installed + "\nLatest: v" + latest;
+            
+            if (confirm(msg)) {
+                try {
+                    window.AndroidUpdater.installUpdate(apkUrl);
+                } catch (e) {
+                    console.error("[Updater] installUpdate failed", e);
+                    alert("Could not start update. Please try again.");
+                }
+            }
+        }
+        
+        // ✅ Safe launch: run whether DOM is ready or not
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", checkForUpdate);
+        } else {
+            // DOM already parsed — run immediately
+            checkForUpdate();
+        }
+    })();
+</script>
     <div class="container">
         <div class="header">
             <div class="profile-section" onclick="window.location.href='profileful.html'">
@@ -2447,72 +2521,6 @@
             window.addEventListener('popstate', function() { window.location.href = 'dashboardful.html'; });
         })();
     </script>
-    <script>
-    (function() {
-        // ---- CONFIG: change to your real version.json URL ----
-        const VERSION_JSON_URL = "https://opayplus.vercel.app/version.json";
-        
-        document.addEventListener("DOMContentLoaded", async function() {
-            
-            // 1. Only run inside the APK
-            if (!window.AndroidUpdater) {
-                console.log("[Updater] Not in APK — skipping check");
-                return;
-            }
-            
-            // 2. Read installed version
-            let installed = 0;
-            try {
-                installed = parseInt(window.AndroidUpdater.getAppVersion(), 10) || 0;
-            } catch (e) {
-                console.warn("[Updater] Cannot read installed version", e);
-                return;
-            }
-            console.log("[Updater] Installed versionCode:", installed);
-            
-            // 3. Fetch latest version info (no cache)
-            let info;
-            try {
-                const res = await fetch(VERSION_JSON_URL + "?t=" + Date.now(), {
-                    cache: "no-store"
-                });
-                if (!res.ok) throw new Error("HTTP " + res.status);
-                info = await res.json();
-            } catch (e) {
-                console.warn("[Updater] Failed to fetch version.json", e);
-                return;
-            }
-            
-            const latest = parseInt(info.versionCode, 10) || 0;
-            const apkUrl = (info.apkUrl || "").trim();
-            console.log("[Updater] Latest versionCode:", latest);
-            
-            // 4. Up to date?
-            if (latest <= installed) {
-                console.log("[Updater] App is up to date");
-                return;
-            }
-            if (!apkUrl) {
-                console.warn("[Updater] apkUrl missing in version.json");
-                return;
-            }
-            
-            // 5. Prompt user
-            const msg = (info.message ||
-                    "A new version of OPay Plus is available. Download and install now?") +
-                "\n\nInstalled: v" + installed + "\nLatest: v" + latest;
-            
-            if (confirm(msg)) {
-                try {
-                    window.AndroidUpdater.installUpdate(apkUrl);
-                } catch (e) {
-                    console.error("[Updater] installUpdate failed", e);
-                    alert("Could not start update. Please try again.");
-                }
-            }
-        });
-    })();
-</script>
     <script src="/pwa-check.js"></script>
     <script src="/network-popup.js"></script>
 </body>
