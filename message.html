@@ -6,9 +6,13 @@
     <title>Notifications - OPay</title>
     <!-- Firebase SDKs -->
     <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
-        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
-        import { getFirestore, collection, query, orderBy, onSnapshot, doc, updateDoc, getDoc, addDoc, serverTimestamp, getDocs } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+        import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+        import {
+            getFirestore, collection, query, orderBy, onSnapshot, doc, updateDoc, getDoc,
+            addDoc, serverTimestamp, getDocs, setDoc, arrayUnion
+        } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+        import { getMessaging, getToken, onMessage } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyAjLxkisBi9pzmjlwdHnYfo25XR2Z6ToEs",
@@ -20,9 +24,20 @@
             measurementId: "G-H0QV81VYBY"
         };
 
-        const app = initializeApp(firebaseConfig);
+        // Guard against duplicate app init
+        const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+
+        const VAPID_KEY = "BO5pXZnpAjI44TwqMlARVszYtnUNLfdbewdicFiGidTt6q4rCX4PhnO6zA_cpU3Sj0eGsi8kLk6zy9I1w47gdNg";
+
+        // Safe messaging init (may fail on unsupported browsers)
+        let messaging = null;
+        try {
+            messaging = getMessaging(app);
+        } catch (e) {
+            console.warn('FCM not supported in this browser:', e.message);
+        }
 
         // DOM Elements
         const activitiesTab = document.getElementById('activitiesTab');
@@ -32,93 +47,59 @@
         const activitiesBadge = document.getElementById('activitiesBadge');
         const transactionsBadge = document.getElementById('transactionsBadge');
         const menuBtn = document.querySelector('.menu-btn');
-        
+
         let currentUserId = null;
         let unsubscribeMessages = null;
-        let allMessages = [];           // admin messages (activities)
-        let transactionList = [];       // transaction history from Firestore
-        let currentUserTier = 0;        // 0 = tier0, 1-3 = paid
-        let defaultMessageAdded = false; // prevent double addition
-        
+        let allMessages = [];
+        let transactionList = [];
+        let currentUserTier = 0;
+        let defaultMessageAdded = false;
+
         // ========================================================================
         //  DEVICE NOTIFICATION SUPPORT
-        //  ────────────────────────────────────────────────────────────────────────
-        //  Why this is complex:
-        //    • iOS Safari only supports Service Worker notifications, NOT the
-        //      classic `new Notification()` constructor.
-        //    • iOS requires the user to have ADDED the PWA to the home screen
-        //      (running in standalone mode) — a normal Safari tab can't show
-        //      notifications at all.
-        //    • iOS requires `Notification.requestPermission()` to be called
-        //      directly from a user gesture (tap/click), not automatically.
-        //    • Android Chrome prefers SW notifications and can drop raw
-        //      `new Notification()` calls when the tab is backgrounded.
-        //
-        //  Strategy:
-        //    1. Register / obtain a Service Worker.
-        //    2. Show an "Enable notifications" banner if permission is missing
-        //       OR if we're on iOS but not yet installed as a PWA.
-        //    3. When permission is granted, use `swReg.showNotification()` as
-        //       the primary path and fall back to `new Notification()` only on
-        //       browsers that support it.
-        //    4. Always show an in-app toast so the user sees something even
-        //       when device notifications are unavailable.
         // ========================================================================
-        
         let swRegistration = null;
         let notificationPermissionGranted = false;
         let shownNotificationIds = new Set();
         let lastSeenMessageTime = 0;
         let initialSnapshotDone = false;
-        
-        // Detect iOS
+        let fcmTokenSaved = false;
+
         function isIOS() {
             return /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
         }
-        
-        // Detect if the app is running as an installed PWA (standalone mode)
+
         function isStandalonePWA() {
             if (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) return true;
-            if (window.navigator.standalone === true) return true; // iOS Safari legacy
+            if (window.navigator.standalone === true) return true;
             return false;
         }
-        
-        // Register (or fetch) the Service Worker. We try /firebase-messaging-sw.js
-        // because it's already used by the admin panel; if that file is missing,
-        // we fall back to /sw.js; and if neither exists, we skip SW notifications
-        // and use the legacy constructor where possible.
+
+        // Register the FCM service worker. Only one file exists in the project:
+        // /firebase-messaging-sw.js (root of the repo, next to index.html).
         async function initServiceWorker() {
             if (!('serviceWorker' in navigator)) {
                 console.warn('⚠️ Service Workers not supported in this browser.');
                 return null;
             }
-            const candidates = ['/firebase-messaging-sw.js', '/sw.js', '/service-worker.js'];
-            for (const url of candidates) {
-                try {
-                    // Try to get an existing registration first
-                    const existing = await navigator.serviceWorker.getRegistration();
-                    if (existing) {
-                        console.log('✅ Using existing Service Worker:', existing.scope);
-                        swRegistration = existing;
-                        return existing;
-                    }
-                    // Otherwise try to register this candidate
-                    const reg = await navigator.serviceWorker.register(url);
-                    console.log('✅ Service Worker registered from', url, ':', reg);
-                    swRegistration = reg;
-                    // Wait until it's active so showNotification works right away
-                    await navigator.serviceWorker.ready;
-                    return reg;
-                } catch (err) {
-                    console.warn('Service Worker candidate failed:', url, err.message);
+            try {
+                const existing = await navigator.serviceWorker.getRegistration();
+                if (existing) {
+                    swRegistration = existing;
+                    console.log('✅ Using existing Service Worker:', existing.scope);
+                    return existing;
                 }
+                const reg = await navigator.serviceWorker.register('/firebase-messaging-sw.js', { scope: '/' });
+                console.log('✅ Service Worker registered:', reg.scope);
+                swRegistration = reg;
+                await navigator.serviceWorker.ready;
+                return reg;
+            } catch (err) {
+                console.warn('Service Worker registration failed:', err.message);
+                return null;
             }
-            console.warn('⚠️ No Service Worker could be registered. Falling back to new Notification().');
-            return null;
         }
-        
-        // Ask the user for permission. This MUST be triggered from a user gesture
-        // on iOS. We wire it up to a visible "Enable" button.
+
         async function requestNotificationPermission() {
             if (!('Notification' in window)) {
                 console.warn('⚠️ This browser does not support notifications.');
@@ -142,14 +123,38 @@
                 return false;
             }
         }
-        
-        // Show a native device notification.
-        // Uses ServiceWorkerRegistration.showNotification() first (works on iOS PWA
-        // and Android), falls back to new Notification() only if no SW is available.
+
+        // Save FCM token to the user's Firestore document so the admin panel
+        // (using firebase-admin on Vercel) can push to this device later.
+        async function saveFcmTokenToFirestore(uid) {
+            if (!messaging || fcmTokenSaved) return;
+            if (Notification.permission !== 'granted') return;
+            try {
+                const reg = swRegistration || await navigator.serviceWorker.ready;
+                const token = await getToken(messaging, {
+                    vapidKey: VAPID_KEY,
+                    serviceWorkerRegistration: reg
+                });
+                if (!token) {
+                    console.warn('No FCM token returned.');
+                    return;
+                }
+                console.log('📱 FCM Token obtained:', token);
+                await setDoc(doc(db, 'users', uid), {
+                    fcmTokens: arrayUnion(token),
+                    lastTokenUpdate: Date.now()
+                }, { merge: true });
+                fcmTokenSaved = true;
+                console.log('✅ FCM token saved to Firestore for user:', uid);
+            } catch (err) {
+                console.error('Failed to get/save FCM token:', err);
+            }
+        }
+
         async function showDeviceNotification(message) {
             if (shownNotificationIds.has(message.id)) return;
             shownNotificationIds.add(message.id);
-            
+
             const title = message.subject || 'New message from Opay Plus';
             const bodyPreview = (message.body || '').substring(0, 140) + ((message.body || '').length > 140 ? '...' : '');
             const notifOptions = {
@@ -162,23 +167,19 @@
                 requireInteraction: false,
                 data: { messageId: message.id, url: '/message.html' }
             };
-            
-            // Always show an in-app toast too — this guarantees the user sees
-            // something even if the OS-level notification is blocked.
+
             showInAppToast(title, bodyPreview);
-            
+
             if (Notification.permission !== 'granted') {
                 console.warn('Cannot show device notification — permission not granted.');
                 return;
             }
-            
+
             try {
                 if (swRegistration && 'showNotification' in swRegistration) {
-                    // Preferred path — works on Android + iOS PWA (iOS 16.4+)
                     await swRegistration.showNotification(title, notifOptions);
                     console.log('🔔 SW notification shown for message:', message.id);
                 } else if ('Notification' in window) {
-                    // Fallback for browsers where SW isn't available
                     const notification = new Notification(title, notifOptions);
                     notification.onclick = function(event) {
                         event.preventDefault();
@@ -191,20 +192,17 @@
                     };
                     setTimeout(() => { try { notification.close(); } catch(e) {} }, 8000);
                     console.log('🔔 Legacy Notification shown for message:', message.id);
-                } else {
-                    console.warn('No notification API available.');
                 }
             } catch (err) {
                 console.warn('Failed to show device notification:', err);
             }
         }
-        
-        // Simple in-app toast that always works, regardless of platform
+
         function showInAppToast(title, body) {
             try {
                 const existing = document.querySelector('.in-app-notification-toast');
                 if (existing) existing.remove();
-                
+
                 const toast = document.createElement('div');
                 toast.className = 'in-app-notification-toast';
                 toast.innerHTML = `
@@ -225,22 +223,20 @@
                 setTimeout(() => { try { toast.remove(); } catch(e) {} }, 8000);
             } catch(e) { console.warn(e); }
         }
-        
-        // Banner shown at the top of the page when permission is missing OR when
-        // we're on iOS but the app isn't installed as a PWA.
+
         function renderNotificationBanner() {
             const existing = document.getElementById('notifPermissionBanner');
             if (existing) existing.remove();
-            
+
             const needsPermission = ('Notification' in window) && Notification.permission !== 'granted';
             const needsInstall = isIOS() && !isStandalonePWA();
-            
+
             if (!needsPermission && !needsInstall) return;
-            
+
             let message = '';
             let buttonLabel = '';
             let actionType = '';
-            
+
             if (needsInstall) {
                 message = '📲 Add this app to your Home Screen to receive notifications on iPhone. Tap Share → "Add to Home Screen".';
                 buttonLabel = 'Got it';
@@ -250,7 +246,7 @@
                 buttonLabel = 'Enable';
                 actionType = 'request';
             }
-            
+
             const banner = document.createElement('div');
             banner.id = 'notifPermissionBanner';
             banner.className = 'notif-permission-banner';
@@ -259,28 +255,26 @@
                 <button class="notif-banner-btn" id="notifBannerBtn">${buttonLabel}</button>
             `;
             document.body.appendChild(banner);
-            
+
             const btn = document.getElementById('notifBannerBtn');
             if (btn) {
                 btn.addEventListener('click', async () => {
                     if (actionType === 'dismiss') {
                         banner.remove();
                     } else if (actionType === 'request') {
-                        // MUST be called from a user gesture for iOS
                         const granted = await requestNotificationPermission();
+                        if (granted && currentUserId) {
+                            await saveFcmTokenToFirestore(currentUserId);
+                        }
+                        banner.remove();
                         if (granted) {
-                            banner.remove();
                             showInAppToast('Notifications enabled', 'You will now receive alerts for new messages.');
-                        } else {
-                            banner.remove();
                         }
                     }
                 });
             }
         }
-        
-        // Helper: safely extract a millisecond timestamp from a message.
-        // Firestore timestamps come as either `{seconds, nanoseconds}` or `{toDate()}`.
+
         function getMessageTimeMs(msg) {
             if (!msg || !msg.timestamp) return 0;
             const ts = msg.timestamp;
@@ -291,15 +285,14 @@
             return 0;
         }
         // =======================================================================
-        
-        // Helper: format date like "Jun 01,2026 15:34"
+
         function formatNotificationDate(timestamp) {
             if (!timestamp) return 'Unknown';
             let date;
             if (timestamp.toDate) date = timestamp.toDate();
             else if (timestamp.seconds) date = new Date(timestamp.seconds * 1000);
             else date = new Date(timestamp);
-            
+
             const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
             const month = months[date.getMonth()];
             const day = date.getDate().toString().padStart(2, '0');
@@ -310,7 +303,7 @@
             hours = hours % 12 || 12;
             return `${month} ${day},${year} ${hours}:${minutes} ${ampm}`;
         }
-        
+
         function formatTransactionDate(timestamp) {
             if (!timestamp) return 'Unknown';
             const date = new Date(timestamp);
@@ -322,8 +315,7 @@
             const min = String(date.getMinutes()).padStart(2, '0');
             return `${month} ${day}${suffix}, ${hh}:${min}`;
         }
-        
-        // Escape HTML
+
         function escapeHtml(str) {
             if (!str) return '';
             return str.replace(/[&<>]/g, function(m) {
@@ -333,7 +325,7 @@
                 return m;
             });
         }
-        
+
         // ======================== DEFAULT WELCOME MESSAGE ========================
         async function ensureDefaultWelcomeMessage(uid) {
             if (defaultMessageAdded) return;
@@ -357,7 +349,7 @@
                 console.error("Error adding default message:", err);
             }
         }
-        
+
         // ======================== UPGRADE MODAL ========================
         function showUpgradeModal() {
             const overlay = document.getElementById('upgradeModalOverlay');
@@ -365,7 +357,7 @@
             const modal = document.getElementById('upgradeModal');
             if (modal) modal.classList.remove('upgrade-modal-exit');
         }
-        
+
         function hideUpgradeModal() {
             const modal = document.getElementById('upgradeModal');
             const overlay = document.getElementById('upgradeModalOverlay');
@@ -377,17 +369,17 @@
                 if (modal) modal.classList.remove('upgrade-modal-exit');
             });
         }
-        
+
         function showLoader() {
             const loader = document.getElementById('upgradeLoaderOverlay');
             if (loader) loader.style.display = 'flex';
         }
-        
+
         function hideLoader() {
             const loader = document.getElementById('upgradeLoaderOverlay');
             if (loader) loader.style.display = 'none';
         }
-        
+
         function initUpgradeModal() {
             const dismissBtn = document.getElementById('upgradeDismissBtn');
             const upgradeBtn = document.getElementById('upgradeActionBtn');
@@ -405,7 +397,7 @@
             }
             if (overlay) overlay.addEventListener('click', (e) => { if (e.target === overlay) hideUpgradeModal(); });
         }
-        
+
         // ======================== USER TIER FETCH ========================
         async function fetchUserTier(uid) {
             try {
@@ -431,15 +423,15 @@
                 return 0;
             }
         }
-        
-        // ======================== ADMIN MESSAGES (Activities) with Link Support ========================
+
+        // ======================== ADMIN MESSAGES ========================
         function cacheAdminMessages(messages) {
             try {
                 localStorage.setItem('cached_admin_messages', JSON.stringify(messages));
                 localStorage.setItem('cached_admin_messages_time', Date.now().toString());
             } catch(e) { console.warn(e); }
         }
-        
+
         function loadCachedAdminMessages() {
             try {
                 const cached = localStorage.getItem('cached_admin_messages');
@@ -453,7 +445,7 @@
             } catch(e) {}
             return null;
         }
-        
+
         async function markMessageAsRead(messageId) {
             if (!currentUserId) return;
             try {
@@ -463,12 +455,11 @@
                 console.error("Mark read error:", err);
             }
         }
-        
-        // MODIFIED: Display modal with optional link button
+
         function showMessageModal(message) {
             const existingModal = document.querySelector('.message-modal');
             if (existingModal) existingModal.remove();
-            
+
             const hasLink = message.link && message.link.trim() !== '';
             const linkHtml = hasLink ? `
                 <div class="modal-link-wrapper">
@@ -477,7 +468,7 @@
                     </a>
                 </div>
             ` : '';
-            
+
             const modal = document.createElement('div');
             modal.className = 'message-modal';
             modal.innerHTML = `
@@ -501,12 +492,12 @@
                 </div>
             `;
             document.body.appendChild(modal);
-            
+
             const closeModal = () => modal.remove();
             modal.querySelectorAll('.modal-close-btn, .modal-close-footer, .modal-overlay').forEach(el => {
                 el.addEventListener('click', closeModal);
             });
-            
+
             if (!message.read) {
                 markMessageAsRead(message.id);
                 message.read = true;
@@ -516,11 +507,10 @@
                 updateUnreadBadge();
             }
         }
-        
-        // MODIFIED: Add link indicator in notification card preview
+
         function renderActivitiesMessages(messages) {
             if (!notificationsList) return;
-            
+
             if (!messages || messages.length === 0) {
                 notificationsList.innerHTML = `
                     <div style="text-align: center; padding: 40px 20px; background: #fff; border-radius: 16px; margin-top: 20px;">
@@ -531,7 +521,7 @@
                 `;
                 return;
             }
-            
+
             let html = '';
             messages.forEach(msg => {
                 const isUnread = !msg.read;
@@ -542,7 +532,7 @@
                 const displayBody = bodyPreview + (hasMore ? '...' : '');
                 const hasLink = msg.link && msg.link.trim() !== '';
                 const linkIcon = hasLink ? '<i class="fas fa-link" style="margin-left: 6px; font-size: 12px; color: #0AA83F;"></i>' : '';
-                
+
                 html += `
                     <div class="notification-card" data-msg-id="${msg.id}" data-unread="${isUnread}">
                         <div class="notification-header">
@@ -562,19 +552,19 @@
                     </div>
                 `;
             });
-            
+
             notificationsList.innerHTML = html;
-            
+
             document.querySelectorAll('.notification-card').forEach(card => {
                 const msgId = card.getAttribute('data-msg-id');
                 const message = messages.find(m => m.id === msgId);
                 if (!message) return;
-                
+
                 card.addEventListener('click', (e) => {
                     if (e.target.closest('.view-link')) return;
                     showMessageModal(message);
                 });
-                
+
                 const viewBtn = card.querySelector('.view-link');
                 if (viewBtn) {
                     viewBtn.addEventListener('click', (e) => {
@@ -584,7 +574,7 @@
                 }
             });
         }
-        
+
         function updateUnreadBadge() {
             if (!activitiesBadge) return;
             const unreadCount = allMessages.filter(m => !m.read).length;
@@ -595,17 +585,15 @@
                 activitiesBadge.style.display = 'none';
             }
         }
-        
+
         function subscribeToUserMessages(uid) {
             if (unsubscribeMessages) unsubscribeMessages();
             const messagesRef = collection(db, 'users', uid, 'messages');
             const q = query(messagesRef, orderBy('timestamp', 'desc'));
-            
+
             const cached = loadCachedAdminMessages();
             if (cached) {
                 allMessages = cached;
-                // Seed the "last seen" time from cache so we don't notify for
-                // messages that already existed before this page load.
                 if (cached.length > 0) {
                     const newest = cached.reduce((max, m) => {
                         const t = getMessageTimeMs(m);
@@ -618,7 +606,7 @@
                     renderActivitiesMessages(allMessages);
                 }
             }
-            
+
             unsubscribeMessages = onSnapshot(q, (snapshot) => {
                 const messages = [];
                 snapshot.forEach(docSnap => {
@@ -627,42 +615,31 @@
                         ...docSnap.data()
                     });
                 });
-                
-                // ─── DEVICE NOTIFICATION LOGIC ───
-                // Find the newest message time in this snapshot
+
                 let newestTimeInSnapshot = 0;
                 messages.forEach(m => {
                     const t = getMessageTimeMs(m);
                     if (t > newestTimeInSnapshot) newestTimeInSnapshot = t;
                 });
-                
-                // Only show device notifications AFTER the first snapshot has
-                // been processed — this prevents a flood of notifications for
-                // all the old messages when the page first opens.
+
                 if (initialSnapshotDone) {
                     messages.forEach(m => {
                         const t = getMessageTimeMs(m);
-                        // Only notify for messages strictly newer than what we've seen
-                        // AND that haven't already been notified.
                         if (t > lastSeenMessageTime && !shownNotificationIds.has(m.id)) {
-                            // Fire and forget — showDeviceNotification is async
                             showDeviceNotification(m);
                         }
                     });
                 } else {
-                    // Mark all messages currently in the first snapshot as "seen"
-                    // so we don't fire notifications for them.
                     messages.forEach(m => {
                         shownNotificationIds.add(m.id);
                     });
                     initialSnapshotDone = true;
                 }
-                
-                // Update the last seen time to the newest message we've processed
+
                 if (newestTimeInSnapshot > lastSeenMessageTime) {
                     lastSeenMessageTime = newestTimeInSnapshot;
                 }
-                
+
                 allMessages = messages;
                 cacheAdminMessages(messages);
                 updateUnreadBadge();
@@ -679,20 +656,20 @@
                 }
             });
         }
-        
-        // ======================== TRANSACTION HISTORY (Transactions Tab) with Tier Check ========================
+
+        // ======================== TRANSACTION HISTORY ========================
         function getTransactionIcon(tx) {
             const isIncoming = (tx.type === 'received' || tx.category === 'deposit' || tx.category === 'owealth' || tx.category === 'bonus');
             return isIncoming ? 'images/history/downtrs.png' : 'images/history/uptrs.png';
         }
-        
+
         function cacheTransactions(transactions) {
             try {
                 localStorage.setItem('cached_transactions', JSON.stringify(transactions));
                 localStorage.setItem('cached_transactions_time', Date.now().toString());
             } catch(e) {}
         }
-        
+
         function loadCachedTransactions() {
             try {
                 const cached = localStorage.getItem('cached_transactions');
@@ -706,7 +683,7 @@
             } catch(e) {}
             return null;
         }
-        
+
         function navigateToTransactionDetail(tx) {
             if (!tx) return;
             localStorage.setItem('viewTransaction', JSON.stringify(tx));
@@ -722,10 +699,10 @@
                 window.location.href = 'receipt-view.html';
             }
         }
-        
+
         function renderTransactionsTabContent(transactions) {
             if (!notificationsList) return;
-            
+
             if (!transactions || transactions.length === 0) {
                 notificationsList.innerHTML = `
                     <div style="text-align: center; padding: 40px 20px; background: #fff; border-radius: 16px; margin-top: 20px;">
@@ -736,7 +713,7 @@
                 `;
                 return;
             }
-            
+
             let html = '';
             let totalIn = 0, totalOut = 0;
             transactions.forEach(tx => {
@@ -745,7 +722,7 @@
                 if (isIncoming) totalIn += amount;
                 else totalOut += amount;
             });
-            
+
             html += `
                 <div class="tx-summary" style="background: #f8f9fa; border-radius: 12px; padding: 12px 16px; margin-bottom: 16px;">
                     <div style="display: flex; justify-content: space-between;">
@@ -754,7 +731,7 @@
                     </div>
                 </div>
             `;
-            
+
             transactions.forEach((tx, idx) => {
                 const iconImg = getTransactionIcon(tx);
                 const dateStr = tx.date1 || formatTransactionDate(tx.created_at || Date.now());
@@ -762,7 +739,7 @@
                 const isIncoming = (tx.type === 'received' || tx.category === 'deposit' || tx.category === 'owealth' || tx.category === 'bonus');
                 const amountClass = isIncoming ? 'amount-positive' : 'amount-negative';
                 const displayAmount = (isIncoming ? '+' : '-') + '₦' + amount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-                
+
                 let title = '';
                 if (tx.category === 'money') {
                     title = (isIncoming ? 'Transfer from ' : 'Transfer to ') + (tx.accountname || 'Unknown');
@@ -779,7 +756,7 @@
                 } else {
                     title = tx.accountname || 'Transaction';
                 }
-                
+
                 html += `
                     <div class="notification-card tx-card" data-tx-index="${idx}">
                         <div class="notification-header">
@@ -801,14 +778,14 @@
                     </div>
                 `;
             });
-            
+
             notificationsList.innerHTML = html;
-            
+
             document.querySelectorAll('.tx-card').forEach(card => {
                 const idx = card.getAttribute('data-tx-index');
                 const tx = transactions[parseInt(idx)];
                 if (!tx) return;
-                
+
                 const handleView = (e) => {
                     e.stopPropagation();
                     if (currentUserTier === 0) {
@@ -817,19 +794,19 @@
                         navigateToTransactionDetail(tx);
                     }
                 };
-                
+
                 card.addEventListener('click', (e) => {
                     if (e.target.closest('.tx-view-btn')) return;
                     handleView(e);
                 });
-                
+
                 const viewBtn = card.querySelector('.tx-view-btn');
                 if (viewBtn) {
                     viewBtn.addEventListener('click', handleView);
                 }
             });
         }
-        
+
         async function loadTransactionsFromFirestore(uid) {
             try {
                 const userRef = doc(db, 'users', uid);
@@ -839,7 +816,7 @@
                     const lastActivity = data.lastActivity || Date.now();
                     const now = Date.now();
                     const twoWeeks = 14 * 24 * 60 * 60 * 1000;
-                    
+
                     let txs = data.transactions || [];
                     if (now - lastActivity > twoWeeks) {
                         await updateDoc(userRef, { transactions: [], lastActivity: now });
@@ -875,7 +852,7 @@
                 }
             }
         }
-        
+
         function updateTransactionsBadge() {
             if (!transactionsBadge) return;
             const count = transactionList.length;
@@ -886,7 +863,7 @@
                 transactionsBadge.style.display = 'none';
             }
         }
-        
+
         // ======================== Services Tab ========================
         function renderServicesTabContent() {
             notificationsList.innerHTML = `
@@ -922,14 +899,14 @@
                 </div>
             `;
         }
-        
-        // ======================== Tab Switching Logic ========================
+
+        // ======================== Tab Switching ========================
         async function switchTab(selectedTab) {
             document.querySelectorAll('.tab').forEach(tab => {
                 tab.classList.remove('active');
             });
             selectedTab.classList.add('active');
-            
+
             if (selectedTab.id === 'activitiesTab') {
                 renderActivitiesMessages(allMessages);
             } else if (selectedTab.id === 'transactionsTab') {
@@ -950,20 +927,20 @@
                 renderServicesTabContent();
             }
         }
-        
+
         window.switchTab = switchTab;
         window.goBack = () => window.history.length > 1 ? window.history.back() : window.location.href = 'index.html';
         window.signOutUser = async () => {
             await signOut(auth);
             window.location.href = 'create-email.html';
         };
-        
+
         if (menuBtn) {
             menuBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const existingMenu = document.querySelector('.signout-popup');
                 if (existingMenu) existingMenu.remove();
-                
+
                 const popup = document.createElement('div');
                 popup.className = 'signout-popup';
                 popup.innerHTML = `
@@ -973,7 +950,7 @@
                     </div>
                 `;
                 document.body.appendChild(popup);
-                
+
                 popup.querySelector('.signout-btn').addEventListener('click', async () => {
                     await signOut(auth);
                     window.location.href = 'create-email.html';
@@ -987,21 +964,21 @@
                 });
             });
         }
-        
+
         // Auth state listener
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 currentUserId = user.uid;
-                
-                // ── NEW: initialise the Service Worker and notification layer ──
-                // We do this BEFORE subscribing so notifications are ready.
-                initServiceWorker().then(() => {
+
+                // Init SW, then (if permission already granted) auto-register FCM token
+                initServiceWorker().then(async () => {
                     if ('Notification' in window && Notification.permission === 'granted') {
                         notificationPermissionGranted = true;
+                        await saveFcmTokenToFirestore(currentUserId);
                     }
                     renderNotificationBanner();
                 });
-                
+
                 await fetchUserTier(currentUserId);
                 await ensureDefaultWelcomeMessage(currentUserId);
                 subscribeToUserMessages(currentUserId);
@@ -1013,8 +990,21 @@
                 window.location.href = 'create-email.html';
             }
         });
-        
-        // ========== ADDITIONAL STYLES (including link button + notif banner + toast) ==========
+
+        // Foreground FCM messages (tab is open, page is on this route)
+        if (messaging) {
+            onMessage(messaging, (payload) => {
+                console.log('📨 Foreground FCM message:', payload);
+                const notif = payload.notification || {};
+                const data  = payload.data || {};
+                showInAppToast(
+                    notif.title || data.title || 'New notification',
+                    notif.body  || data.body  || ''
+                );
+            });
+        }
+
+        // ========== ADDITIONAL STYLES ==========
         const style = document.createElement('style');
         style.textContent = `
             .notification-icon {
@@ -1085,7 +1075,8 @@
                 border-radius: 28px;
                 overflow: hidden;
                 box-shadow: 0 20px 35px rgba(0,0,0,0.2);
-                animation: fadeInUp 0.2s ease;
+                animation: fadeInUp 0.;
+2s ease;
                 z-index: 1001;
             }
             @keyframes fadeInUp {
@@ -1130,7 +1121,7 @@
             }
             .modal-content-text {
                 font-size: 16px;
-                line-height: 1.5;
+                line-height: 1               .5;
                 color: #1a1a1a;
                 white-space: pre-wrap;
                 margin-bottom: 16px;
@@ -1161,8 +1152,7 @@
             }
             .modal-close-footer {
                 background: #f0f0f0;
-                border: none;
-                padding: 8px 20px;
+                border: none padding: 8px 20px;
                 border-radius: 40px;
                 font-size: 14px;
                 font-weight: 500;
@@ -1227,7 +1217,6 @@
             .tx-summary {
                 font-size: 14px;
             }
-            /* ========== NEW: Notification permission banner ========== */
             .notif-permission-banner {
                 position: fixed;
                 top: 12px;
@@ -1271,7 +1260,6 @@
                 transform: scale(0.97);
                 background: #00a28b;
             }
-            /* ========== NEW: In-app toast fallback ========== */
             .in-app-notification-toast {
                 position: fixed;
                 top: 70px;
@@ -1321,7 +1309,6 @@
                 -webkit-box-orient: vertical;
                 overflow: hidden;
             }
-            /* Upgrade Modal Styles */
             .upgrade-modal-overlay {
                 position: fixed;
                 top: 0;
@@ -1445,7 +1432,7 @@
         `;
         document.head.appendChild(style);
     </script>
-    
+
     <style>
         * {
             margin: 0;
@@ -1701,7 +1688,7 @@
     </div>
 </div>
 
-<!-- Upgrade Modal (copied from dashboardful) -->
+<!-- Upgrade Modal -->
 <div id="upgradeModalOverlay" class="upgrade-modal-overlay">
     <div class="upgrade-modal" id="upgradeModal">
         <div class="upgrade-icon-wrapper">
@@ -1738,7 +1725,6 @@
 </style>
 
 <script>
-    // Fallback for any missing global references
     window.goBack = window.goBack || function() { window.history.back(); };
 </script>
 </body>
