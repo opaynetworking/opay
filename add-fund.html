@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Add Money | OPay Style</title>
     <style>
-        /* ========== ORIGINAL STYLES (COMPLETELY UNCHANGED) ========== */
+        /* ========== ORIGINAL STYLES (UNCHANGED) ========== */
         :root {
             --primary-teal: #00bfa5;
             --text-black: #1a1a1a;
@@ -95,7 +95,7 @@
             padding: 20px;
             margin-bottom: 16px;
             background: white;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.02); 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.02);
         }
 
         .label {
@@ -145,7 +145,7 @@
             margin-right: 15px;
         }
 
-        .switch input { 
+        .switch input {
             opacity: 0;
             width: 0;
             height: 0;
@@ -308,21 +308,9 @@
         }
 
         @keyframes pulse-zoom {
-            0% {
-                transform: scale(1.03);
-                opacity: 0.8;
-                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-            }
-            50% {
-                transform: scale(1.15);
-                opacity: 1;
-                box-shadow: 0 10px 20px rgba(5, 150, 105, 0.15);
-            }
-            100% {
-                transform: scale(1.03);
-                opacity: 0.8;
-                box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
-            }
+            0% { transform: scale(1.03); opacity: 0.8; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); }
+            50% { transform: scale(1.15); opacity: 1; box-shadow: 0 10px 20px rgba(5, 150, 105, 0.15); }
+            100% { transform: scale(1.03); opacity: 0.8; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05); }
         }
 
         @keyframes rotate-dot {
@@ -426,8 +414,7 @@
         }
 
         /* ═══════════════════════════════════════════════════════════════
-           NEW: UPGRADE MODAL STYLES (shown only for tier 0 users)
-           Matches the teal theme of the app.
+           UPGRADE MODAL (shown for tier 0 users only)
            ═══════════════════════════════════════════════════════════════ */
         .upgrade-overlay {
             position: fixed;
@@ -601,7 +588,7 @@
         </div>
     </div>
 
-    <!-- Error modal only (no success popups) -->
+    <!-- Error modal only -->
     <div id="customModalOverlay" class="custom-modal-overlay">
         <div class="custom-modal-container">
             <div class="custom-modal-title" id="modalTitle">Notice</div>
@@ -610,9 +597,7 @@
         </div>
     </div>
 
-    <!-- ═══════════════════════════════════════════════════════════════
-         NEW: UPGRADE MODAL (shown for tier 0 users)
-         ═══════════════════════════════════════════════════════════════ -->
+    <!-- UPGRADE MODAL (shown for tier 0) -->
     <div id="upgradeOverlay" class="upgrade-overlay">
         <div class="upgrade-card">
             <div class="upgrade-icon-wrap">
@@ -636,7 +621,7 @@
     </div>
 
     <script type="module">
-        // ─── FIXED SDK version 10.12.0 ────────────────────────────────
+        // ─── Firebase SDK 10.12.0 ────────────────────────────────────
         import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
         import {
@@ -648,7 +633,8 @@
 
         const firebaseConfig = {
             apiKey: "AIzaSyAjLxkisBi9pzmjlwdHnYfo25XR2Z6ToEs",
-            authDomain: "opay-plus-5802c.firebaseapp.com",
+            authDomain: "op)
+ay-plus-5802c.fire       baseapp.com",
             projectId: "opay-plus-5802c",
             storageBucket: "opay-plus-5802c.firebasestorage.app",
             messagingSenderId: "967061625774",
@@ -679,7 +665,6 @@
         if (upgradeDismissBtn) {
             upgradeDismissBtn.addEventListener('click', () => {
                 hideUpgradeModal();
-                // After dismissing, take user back to dashboard
                 window.location.href = 'dashboardful.html';
             });
         }
@@ -688,7 +673,6 @@
                 window.open('/upgrade-subscribe.html', '_blank');
             });
         }
-        // Tapping the backdrop also dismisses (same as dismiss button)
         if (upgradeOverlay) {
             upgradeOverlay.addEventListener('click', (e) => {
                 if (e.target === upgradeOverlay) {
@@ -833,20 +817,25 @@
         window.__fcm = { getMessaging: () => messaging, saveFcmToken, swRegistration: () => swRegistration };
 
         // ═══════════════════════════════════════════════════════════════
-        //  getUserTier — no auto-redirect; caller decides what to do
+        //  GET USER TIER
+        //   1. Read from Firestore (users/{uid}.tier or subscriptionPlan)
+        //   2. Cache the result in localStorage (as "tier0"/"tier1"/... //   3. On any error, fall back to the cached localStorage value
+        //  Returns a number: 0, 1, 2, or 3
         // ═══════════════════════════════════════════════════════════════
         async function getUserTier(user) {
+            // 1. Try Firestore
             try {
                 const userRef = doc(db, 'users', user.uid);
                 const userSnap = await getDoc(userRef);
+
                 if (userSnap.exists()) {
                     const data = userSnap.data();
 
                     let tier;
                     if (data.tier !== undefined && data.tier !== null) {
-                        tier = data.tier;
+                        tier = Number(data.tier);
                     } else if (data.subscriptionPlan) {
-                        const plan = data.subscriptionPlan;
+                        const plan = String(data.subscriptionPlan).toLowerCase();
                         if (plan === 'tier1') tier = 1;
                         else if (plan === 'tier2') tier = 2;
                         else if (plan === 'tier3') tier = 3;
@@ -861,17 +850,23 @@
                 }
 
                 console.warn('[tier-check] User doc missing');
-                return 0;
+                return readCachedTier();
 
             } catch (err) {
                 console.warn('[tier-check] Firestore read failed:', err.code, err.message);
+                // 2. Fallback to cached localStorage value
+                return readCachedTier();
+            }
+        }
 
-                // Fall back to locally cached tier on any error
+        function readCachedTier() {
+            try {
                 const cached = localStorage.getItem('tier') || 'tier0';
-                const cachedNum = parseInt(cached.replace('tier', ''), 10) || 0;
-                console.log('[tier-check] Using cached tier =', cachedNum);
-
-                return cachedNum;
+                const num = parseInt(cached.replace('tier', ''), 10);
+                console.log('[tier-check] Using cached tier =', num);
+                return isNaN(num) ? 0 : num;
+            } catch (e) {
+                return 0;
             }
         }
 
@@ -884,6 +879,11 @@
         let currentUser = null;
         let pageInitialized = false;
 
+        // ═══════════════════════════════════════════════════════════════
+        //  AUTH + TIER GATE
+        //    tier 1, 2, 3 → allow access
+        //    tier 0       → show Upgrade Account modal (no redirect)
+        // ═══════════════════════════════════════════════════════════════
         onAuthStateChanged(auth, async (user) => {
             if (!user) {
                 window.location.href = 'create-email.html';
@@ -892,23 +892,18 @@
             currentUser = user;
             showLoader(true);
 
-            // Init FCM + register SW in the background
+            // Init FCM in the background (doesn't block tier check)
             initFCM();
 
             const tier = await getUserTier(user);
 
-            // ═══════════════════════════════════════════════════════════════
-            //  TIER GATE:
-            //    tier 1, 2, 3 → allow access
-            //    tier 0       → show Upgrade Account modal (no redirect)
-            // ═══════════════════════════════════════════════════════════════
             if (tier === 0) {
                 showLoader(false);
                 showUpgradeModal();
                 return;
             }
 
-            // tier 1, 2, or 3 → allow the page to initialize
+            // tier 1, 2, or 3 → allow the page
             if (!pageInitialized) {
                 pageInitialized = true;
                 window.tierCheckPassed = true;
@@ -956,7 +951,7 @@
             const inAPK = isRunningInAPK();
             console.log('📱 Environment:', inAPK ? 'Android APK' : 'Web Browser');
 
-            // ── 1. If in APK → fire the native notification immediately ──
+            // ── 1. If in APK → fire native notification immediately ──
             if (inAPK) {
                 triggerNativeNotification(title, body, {
                     type: 'incoming_transfer',
@@ -965,7 +960,7 @@
                 });
             }
 
-            // ── 2. Always send the FCM push to all registered tokens ──
+            // ── 2. Send FCM push to all registered tokens ──
             try {
                 if (!currentUser) return { success: false, error: 'No user' };
 
@@ -1011,7 +1006,7 @@
             const modalTitleElem = document.getElementById('modalTitle');
             const modalMessageElem = document.getElementById('modalMessage');
             const modalButtonsContainer = document.getElementById('modalButtons');
-            
+
             let currentModalResolve = null;
 
             function closeModal() {
@@ -1040,10 +1035,10 @@
                 });
             }
 
-            // ========== SOUND HANDLING WITH FULL PLAYBACK ==========
+            // ========== SOUND HANDLING ==========
             const SUCCESS_SOUND_URL = "/sound/success.mp3";
             let preloadedAudio = null;
-            
+
             function preloadSound() {
                 if (preloadedAudio) return;
                 try {
@@ -1055,7 +1050,7 @@
                     console.log("Sound preloaded");
                 } catch(e) { console.warn(e); }
             }
-            
+
             function playSuccessSoundAndWait() {
                 return new Promise((resolve) => {
                     try {
@@ -1066,21 +1061,21 @@
                             audio = new Audio(SUCCESS_SOUND_URL);
                         }
                         audio.volume = 1;
-                        
+
                         const timeoutId = setTimeout(() => {
                             resolve();
                         }, 3000);
-                        
+
                         audio.onended = () => {
                             clearTimeout(timeoutId);
                             resolve();
                         };
-                        
+
                         audio.onerror = () => {
                             clearTimeout(timeoutId);
                             resolve();
                         };
-                        
+
                         audio.play().catch(e => {
                             console.warn("Sound play blocked:", e);
                             clearTimeout(timeoutId);
@@ -1092,10 +1087,10 @@
                     }
                 });
             }
-            
+
             preloadSound();
             localStorage.setItem('cached_success_sound_url', SUCCESS_SOUND_URL);
-            
+
             // ========== SYSTEM NOTIFICATION FALLBACK ==========
             function showSystemNotification(amount, senderName, dateStr) {
                 try {
@@ -1110,7 +1105,7 @@
                     notification.onclick = () => { window.focus(); };
                 } catch (err) { console.warn(err); }
             }
-            
+
             function requestNotificationPermission() {
                 try {
                     if ('Notification' in window && Notification.permission === 'default') {
@@ -1127,8 +1122,8 @@
                 } catch(e) {}
             }
             requestNotificationPermission();
-            
-            // Wait for tier check
+
+            // Wait for tier check to complete before initializing the form
             if (!window.tierCheckPassed) {
                 window.onTierAllowed = function() { initializePage(); };
                 return;
@@ -1206,7 +1201,7 @@
                 });
 
                 const continueBtn = document.getElementById('continueBtn');
-                
+
                 function getInputValues() {
                     const amount = parseFloat(document.getElementById('amount').value);
                     if (isNaN(amount) || amount <= 0) {
@@ -1233,7 +1228,7 @@
                     const input = getInputValues();
                     if (!input) return;
                     const isScheduled = scheduleToggle.checked;
-                    
+
                     if (isScheduled) {
                         const minutes = parseInt(timeDropdown.value, 10);
                         if (isNaN(minutes) || minutes < 1) {
@@ -1245,13 +1240,13 @@
                         updatePendingBanner();
                         window.location.href = 'dashboardful.html';
                     } else {
-                        // Immediate transaction: process, play sound fully, then redirect
+                        // Immediate transaction
                         continueBtn.classList.add('loading');
                         continueBtn.textContent = 'Processing...';
                         try {
                             if (window.showLoader) window.showLoader(true);
-                            
-                            // ================= LOCAL-FIRST UPDATE =================
+
+                            // LOCAL-FIRST UPDATE
                             const currentBalance = parseFloat(localStorage.getItem('userBalance')) || 0;
                             const newBalance = currentBalance + input.amount;
                             localStorage.setItem('userBalance', newBalance.toString());
@@ -1292,7 +1287,7 @@
                             if (storedTx.length > 50) storedTx.pop();
                             localStorage.setItem('transactions', JSON.stringify(storedTx));
 
-                            // ================= CLOUD SYNC (BEST-EFFORT) =================
+                            // CLOUD SYNC (best-effort)
                             try {
                                 if (typeof window.addFundToFirestore === 'function') {
                                     await window.addFundToFirestore(input.amount, tx);
@@ -1308,7 +1303,7 @@
                                 } catch (qErr) { console.warn(qErr); }
                             }
 
-                            // ================= SEND PUSH (browser + APK) =================
+                            // SEND PUSH (browser + APK)
                             try {
                                 if (typeof window.sendIncomingTransferPush === 'function') {
                                     await window.sendIncomingTransferPush(input.senderName, input.amount);
@@ -1318,23 +1313,22 @@
                                 console.warn('Push dispatch failed (continuing):', pushErr);
                             }
 
-                            // Foreground fallback — browser notification when tab is open
+                            // Foreground fallback
                             try { showSystemNotification(input.amount, input.senderName, dateStr); } catch(e) {}
 
-                            // Store notification for dashboard
+                            // Notification for dashboard
                             const notificationObj = { type: 'payment_received', amount: input.amount, senderName: input.senderName, date: dateStr, timestamp: Date.now() };
                             localStorage.setItem('pendingNotification', JSON.stringify(notificationObj));
                             localStorage.setItem('justAddedFund', 'true');
-                            
-                            // Hide regular loader
+
                             if (window.showLoader) window.showLoader(false);
-                            
-                            // ========== PLAY SUCCESS SOUND AND WAIT FOR FULL PLAYBACK ==========
+
+                            // Play sound and wait
                             await playSuccessSoundAndWait();
-                            
-                            // After sound finishes, redirect to dashboard
+
+                            // Redirect to dashboard
                             window.location.href = 'dashboardful.html';
-                            
+
                         } catch (error) {
                             console.error('Transaction error:', error);
                             await showErrorAlert('Transaction Failed', error.message || 'Unable to add funds. Please try again.', 'OK');
@@ -1346,7 +1340,7 @@
                 });
 
                 updatePendingBanner();
-                
+
                 // Disable devtools and right-click
                 document.addEventListener("contextmenu", e => e.preventDefault());
                 document.onkeydown = function(e) {
