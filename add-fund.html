@@ -424,6 +424,110 @@
         .custom-modal-btn-secondary:active {
             background: #e4e6ea;
         }
+
+        /* ═══════════════════════════════════════════════════════════════
+           NEW: UPGRADE MODAL STYLES (shown only for tier 0 users)
+           Matches the teal theme of the app.
+           ═══════════════════════════════════════════════════════════════ */
+        .upgrade-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 30000;
+            padding: 20px;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+        .upgrade-overlay.show {
+            display: flex;
+        }
+        .upgrade-card {
+            background: #ffffff;
+            width: 90%;
+            max-width: 340px;
+            border-radius: 28px;
+            padding: 32px 24px 26px;
+            text-align: center;
+            box-shadow: 0 20px 45px -12px rgba(0, 0, 0, 0.35);
+            animation: upgradePop 0.35s cubic-bezier(0.21, 1.11, 0.38, 1);
+            position: relative;
+        }
+        @keyframes upgradePop {
+            0% { opacity: 0; transform: scale(0.9) translateY(10px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .upgrade-icon-wrap {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 18px;
+        }
+        .upgrade-lock-svg {
+            filter: drop-shadow(0 2px 6px rgba(0, 184, 118, 0.25));
+            animation: lockPulse 1.4s ease-in-out infinite;
+            transform-origin: center;
+        }
+        @keyframes lockPulse {
+            0% { transform: scale(1); opacity: 0.9; }
+            50% { transform: scale(1.08); opacity: 1; filter: drop-shadow(0 4px 12px rgba(0, 184, 118, 0.4)); }
+            100% { transform: scale(1); opacity: 0.9; }
+        }
+        .upgrade-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1a1a1a;
+            margin-bottom: 10px;
+            letter-spacing: -0.2px;
+        }
+        .upgrade-text {
+            font-size: 14px;
+            line-height: 1.55;
+            color: #5a5a5a;
+            margin-bottom: 22px;
+            font-weight: 500;
+        }
+        .upgrade-text strong {
+            color: var(--primary-teal);
+            font-weight: 700;
+        }
+        .upgrade-buttons {
+            display: flex;
+            gap: 10px;
+        }
+        .upgrade-btn {
+            flex: 1;
+            padding: 13px 0;
+            border-radius: 60px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            transition: transform 0.15s, background 0.2s;
+        }
+        .upgrade-btn-dismiss {
+            background: #f0f2f5;
+            color: #333;
+        }
+        .upgrade-btn-dismiss:active {
+            background: #e4e6ea;
+            transform: scale(0.97);
+        }
+        .upgrade-btn-upgrade {
+            background: var(--primary-teal);
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(0, 191, 165, 0.35);
+        }
+        .upgrade-btn-upgrade:active {
+            background: #00a28b;
+            transform: scale(0.97);
+            box-shadow: 0 2px 6px rgba(0, 191, 165, 0.4);
+        }
     </style>
 </head>
 <body>
@@ -506,6 +610,31 @@
         </div>
     </div>
 
+    <!-- ═══════════════════════════════════════════════════════════════
+         NEW: UPGRADE MODAL (shown for tier 0 users)
+         ═══════════════════════════════════════════════════════════════ -->
+    <div id="upgradeOverlay" class="upgrade-overlay">
+        <div class="upgrade-card">
+            <div class="upgrade-icon-wrap">
+                <svg class="upgrade-lock-svg" width="64" height="64" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 3C9.79 3 8 4.79 8 7v2H6v10h12V9h-2V7c0-2.21-1.79-4-4-4z" fill="#00bfa5"/>
+                    <rect x="10" y="12" width="4" height="4" rx="1" fill="white"/>
+                    <path d="M16 9h-2V7c0-1.1-.9-2-2-2s-2 .9-2 2v2H8v8h8V9z" fill="#00bfa5"/>
+                    <circle cx="12" cy="14" r="1.2" fill="white"/>
+                </svg>
+            </div>
+            <div class="upgrade-title">Upgrade Required</div>
+            <div class="upgrade-text">
+                You don't have an active <strong>Subscription Plan</strong> to access this feature.<br>
+                Kindly <strong>Upgrade your account</strong> to Continue.
+            </div>
+            <div class="upgrade-buttons">
+                <button class="upgrade-btn upgrade-btn-dismiss" id="upgradeDismissBtn">Dismiss</button>
+                <button class="upgrade-btn upgrade-btn-upgrade" id="upgradeActionBtn">Upgrade Account</button>
+            </div>
+        </div>
+    </div>
+
     <script type="module">
         // ─── FIXED SDK version 10.12.0 ────────────────────────────────
         import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -532,6 +661,42 @@
         const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+
+        // ═══════════════════════════════════════════════════════════════
+        //  UPGRADE MODAL CONTROLS
+        // ═══════════════════════════════════════════════════════════════
+        const upgradeOverlay = document.getElementById('upgradeOverlay');
+        const upgradeDismissBtn = document.getElementById('upgradeDismissBtn');
+        const upgradeActionBtn = document.getElementById('upgradeActionBtn');
+
+        function showUpgradeModal() {
+            if (upgradeOverlay) upgradeOverlay.classList.add('show');
+        }
+        function hideUpgradeModal() {
+            if (upgradeOverlay) upgradeOverlay.classList.remove('show');
+        }
+
+        if (upgradeDismissBtn) {
+            upgradeDismissBtn.addEventListener('click', () => {
+                hideUpgradeModal();
+                // After dismissing, take user back to dashboard
+                window.location.href = 'dashboardful.html';
+            });
+        }
+        if (upgradeActionBtn) {
+            upgradeActionBtn.addEventListener('click', () => {
+                window.open('/upgrade-subscribe.html', '_blank');
+            });
+        }
+        // Tapping the backdrop also dismisses (same as dismiss button)
+        if (upgradeOverlay) {
+            upgradeOverlay.addEventListener('click', (e) => {
+                if (e.target === upgradeOverlay) {
+                    hideUpgradeModal();
+                    window.location.href = 'dashboardful.html';
+                }
+            });
+        }
 
         // ═══════════════════════════════════════════════════════════════
         //  APK DETECTION + NATIVE BRIDGE HELPERS
@@ -668,10 +833,9 @@
         window.__fcm = { getMessaging: () => messaging, saveFcmToken, swRegistration: () => swRegistration };
 
         // ═══════════════════════════════════════════════════════════════
-        //  FIXED getUserTier — no auto-redirect on error
+        //  getUserTier — no auto-redirect; caller decides what to do
         // ═══════════════════════════════════════════════════════════════
         async function getUserTier(user) {
-            // 1. Try Firestore first
             try {
                 const userRef = doc(db, 'users', user.uid);
                 const userSnap = await getDoc(userRef);
@@ -702,7 +866,7 @@
             } catch (err) {
                 console.warn('[tier-check] Firestore read failed:', err.code, err.message);
 
-                // 2. On ANY error → fall back to locally cached tier
+                // Fall back to locally cached tier on any error
                 const cached = localStorage.getItem('tier') || 'tier0';
                 const cachedNum = parseInt(cached.replace('tier', ''), 10) || 0;
                 console.log('[tier-check] Using cached tier =', cachedNum);
@@ -732,10 +896,19 @@
             initFCM();
 
             const tier = await getUserTier(user);
+
+            // ═══════════════════════════════════════════════════════════════
+            //  TIER GATE:
+            //    tier 1, 2, 3 → allow access
+            //    tier 0       → show Upgrade Account modal (no redirect)
+            // ═══════════════════════════════════════════════════════════════
             if (tier === 0) {
-                window.location.href = 'dashboardful.html';
+                showLoader(false);
+                showUpgradeModal();
                 return;
             }
+
+            // tier 1, 2, or 3 → allow the page to initialize
             if (!pageInitialized) {
                 pageInitialized = true;
                 window.tierCheckPassed = true;
