@@ -335,7 +335,7 @@
             margin-left: 8px;
         }
 
-        /* Error modal only (no success popups) */
+        /* Error modal */
         .custom-modal-overlay {
             position: fixed;
             top: 0;
@@ -405,17 +405,8 @@
             background: #00a28b;
             transform: scale(0.97);
         }
-        .custom-modal-btn-secondary {
-            background: #f0f2f5;
-            color: #333;
-        }
-        .custom-modal-btn-secondary:active {
-            background: #e4e6ea;
-        }
 
-        /* ═══════════════════════════════════════════════════════════════
-           UPGRADE MODAL (shown for tier 0 users only)
-           ═══════════════════════════════════════════════════════════════ */
+        /* UPGRADE MODAL */
         .upgrade-overlay {
             position: fixed;
             top: 0;
@@ -588,7 +579,7 @@
         </div>
     </div>
 
-    <!-- Error modal only -->
+    <!-- Error modal -->
     <div id="customModalOverlay" class="custom-modal-overlay">
         <div class="custom-modal-container">
             <div class="custom-modal-title" id="modalTitle">Notice</div>
@@ -620,6 +611,75 @@
         </div>
     </div>
 
+    <!-- ═══════════════════════════════════════════════════════════════
+         IMMEDIATE POPULATION SCRIPT
+         Runs as soon as the DOM is parsed so the bank + time dropdowns
+         are always filled, regardless of the tier check timing.
+         ═══════════════════════════════════════════════════════════════ -->
+    <script>
+        (function populateDropdownsImmediately() {
+            function run() {
+                // ── Fill Bank dropdown ──
+                const bankSelect = document.getElementById('bankName');
+                if (bankSelect && bankSelect.options.length <= 1) {
+                    const banks = [
+                        "Access Bank", "Fidelity Bank", "First Bank", "First City Monument Bank (FCMB)",
+                        "Globus Bank", "Guaranty Trust Bank (GTB)", "Heritage Bank", "Keystone Bank",
+                        "Kuda Bank", "OPay", "Paga", "PalmPay", "Parallex Bank", "Polaris Bank",
+                        "PremiumTrust Bank", "Providus Bank", "Rubies Bank", "Sparkle Bank",
+                        "Stanbic IBTC Bank", "Standard Chartered Bank", "Sterling Bank", "Suntrust Bank",
+                        "Taj Bank", "Titan Trust Bank", "Union Bank", "United Bank for Africa (UBA)",
+                        "Unity Bank", "VFD Microfinance Bank", "Wema Bank", "Zenith Bank"
+                    ];
+                    banks.forEach(function (bank) {
+                        const option = document.createElement('option');
+                        option.value = bank;
+                        option.textContent = bank;
+                        bankSelect.appendChild(option);
+                    });
+                    console.log('[add-fund] Bank dropdown populated with', banks.length, 'banks');
+                }
+
+                // ── Fill Schedule dropdown ──
+                const timeDropdown = document.getElementById('timeDropdown');
+                if (timeDropdown && timeDropdown.options.length === 0) {
+                    for (let i = 1; i <= 30; i++) {
+                        const option = document.createElement('option');
+                        option.value = i;
+                        option.text = i === 1 ? (i + ' minute') : (i + ' minutes');
+                        timeDropdown.appendChild(option);
+                    }
+                    console.log('[add-fund] Time dropdown populated');
+                }
+
+                // ── Wire up Back button immediately ──
+                const backBtn = document.getElementById('backBtn');
+                if (backBtn && !backBtn.dataset.wired) {
+                    backBtn.dataset.wired = '1';
+                    backBtn.addEventListener('click', function () {
+                        window.location.href = 'dashboardful.html';
+                    });
+                }
+
+                // ── Wire up Schedule toggle immediately ──
+                const scheduleToggle = document.getElementById('scheduleToggle');
+                const timeSelector = document.getElementById('time-selector');
+                if (scheduleToggle && timeSelector && !scheduleToggle.dataset.wired) {
+                    scheduleToggle.dataset.wired = '1';
+                    scheduleToggle.addEventListener('change', function () {
+                        timeSelector.style.display = this.checked ? 'block' : 'none';
+                    });
+                }
+            }
+
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', run);
+            } else {
+                run();
+            }
+        })();
+    </script>
+
     <script type="module">
         // ─── Firebase SDK 10.12.0 ────────────────────────────────────
         import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
@@ -633,8 +693,7 @@
 
         const firebaseConfig = {
             apiKey: "AIzaSyAjLxkisBi9pzmjlwdHnYfo25XR2Z6ToEs",
-            authDomain: "op)
-ay-plus-5802c.fire       baseapp.com",
+            authDomain: "opay-plus-5802c.firebaseapp.com",
             projectId: "opay-plus-5802c",
             storageBucket: "opay-plus-5802c.firebasestorage.app",
             messagingSenderId: "967061625774",
@@ -817,13 +876,9 @@ ay-plus-5802c.fire       baseapp.com",
         window.__fcm = { getMessaging: () => messaging, saveFcmToken, swRegistration: () => swRegistration };
 
         // ═══════════════════════════════════════════════════════════════
-        //  GET USER TIER
-        //   1. Read from Firestore (users/{uid}.tier or subscriptionPlan)
-        //   2. Cache the result in localStorage (as "tier0"/"tier1"/... //   3. On any error, fall back to the cached localStorage value
-        //  Returns a number: 0, 1, 2, or 3
+        //  GET USER TIER (Firestore → localStorage fallback)
         // ═══════════════════════════════════════════════════════════════
         async function getUserTier(user) {
-            // 1. Try Firestore
             try {
                 const userRef = doc(db, 'users', user.uid);
                 const userSnap = await getDoc(userRef);
@@ -854,7 +909,6 @@ ay-plus-5802c.fire       baseapp.com",
 
             } catch (err) {
                 console.warn('[tier-check] Firestore read failed:', err.code, err.message);
-                // 2. Fallback to cached localStorage value
                 return readCachedTier();
             }
         }
@@ -879,11 +933,6 @@ ay-plus-5802c.fire       baseapp.com",
         let currentUser = null;
         let pageInitialized = false;
 
-        // ═══════════════════════════════════════════════════════════════
-        //  AUTH + TIER GATE
-        //    tier 1, 2, 3 → allow access
-        //    tier 0       → show Upgrade Account modal (no redirect)
-        // ═══════════════════════════════════════════════════════════════
         onAuthStateChanged(auth, async (user) => {
             if (!user) {
                 window.location.href = 'create-email.html';
@@ -892,7 +941,6 @@ ay-plus-5802c.fire       baseapp.com",
             currentUser = user;
             showLoader(true);
 
-            // Init FCM in the background (doesn't block tier check)
             initFCM();
 
             const tier = await getUserTier(user);
@@ -903,7 +951,6 @@ ay-plus-5802c.fire       baseapp.com",
                 return;
             }
 
-            // tier 1, 2, or 3 → allow the page
             if (!pageInitialized) {
                 pageInitialized = true;
                 window.tierCheckPassed = true;
@@ -938,8 +985,6 @@ ay-plus-5802c.fire       baseapp.com",
 
         // ═══════════════════════════════════════════════════════════════
         //  SEND PUSH — works in BOTH browser AND Android APK
-        //  Title: "Incoming Transfers Successful"
-        //  Body:  "{SenderName} has sent you {Amount}"
         // ═══════════════════════════════════════════════════════════════
         window.sendIncomingTransferPush = async function(senderName, amount) {
             const formattedAmount = '₦' + Number(amount).toLocaleString('en-NG', {
@@ -951,7 +996,6 @@ ay-plus-5802c.fire       baseapp.com",
             const inAPK = isRunningInAPK();
             console.log('📱 Environment:', inAPK ? 'Android APK' : 'Web Browser');
 
-            // ── 1. If in APK → fire native notification immediately ──
             if (inAPK) {
                 triggerNativeNotification(title, body, {
                     type: 'incoming_transfer',
@@ -960,7 +1004,6 @@ ay-plus-5802c.fire       baseapp.com",
                 });
             }
 
-            // ── 2. Send FCM push to all registered tokens ──
             try {
                 if (!currentUser) return { success: false, error: 'No user' };
 
@@ -1001,7 +1044,7 @@ ay-plus-5802c.fire       baseapp.com",
 
     <script>
         (function() {
-            // ========== ERROR MODAL ONLY ==========
+            // ========== ERROR MODAL ==========
             const modalOverlay = document.getElementById('customModalOverlay');
             const modalTitleElem = document.getElementById('modalTitle');
             const modalMessageElem = document.getElementById('modalMessage');
@@ -1035,7 +1078,7 @@ ay-plus-5802c.fire       baseapp.com",
                 });
             }
 
-            // ========== SOUND HANDLING ==========
+            // ========== SOUND ==========
             const SUCCESS_SOUND_URL = "/sound/success.mp3";
             let preloadedAudio = null;
 
@@ -1062,20 +1105,9 @@ ay-plus-5802c.fire       baseapp.com",
                         }
                         audio.volume = 1;
 
-                        const timeoutId = setTimeout(() => {
-                            resolve();
-                        }, 3000);
-
-                        audio.onended = () => {
-                            clearTimeout(timeoutId);
-                            resolve();
-                        };
-
-                        audio.onerror = () => {
-                            clearTimeout(timeoutId);
-                            resolve();
-                        };
-
+                        const timeoutId = setTimeout(() => { resolve(); }, 3000);
+                        audio.onended = () => { clearTimeout(timeoutId); resolve(); };
+                        audio.onerror = () => { clearTimeout(timeoutId); resolve(); };
                         audio.play().catch(e => {
                             console.warn("Sound play blocked:", e);
                             clearTimeout(timeoutId);
@@ -1091,7 +1123,7 @@ ay-plus-5802c.fire       baseapp.com",
             preloadSound();
             localStorage.setItem('cached_success_sound_url', SUCCESS_SOUND_URL);
 
-            // ========== SYSTEM NOTIFICATION FALLBACK ==========
+            // ========== SYSTEM NOTIFICATION ==========
             function showSystemNotification(amount, senderName, dateStr) {
                 try {
                     if (!('Notification' in window)) return;
@@ -1123,7 +1155,7 @@ ay-plus-5802c.fire       baseapp.com",
             }
             requestNotificationPermission();
 
-            // Wait for tier check to complete before initializing the form
+            // Wait for tier check to complete before initializing the transaction logic
             if (!window.tierCheckPassed) {
                 window.onTierAllowed = function() { initializePage(); };
                 return;
@@ -1131,41 +1163,7 @@ ay-plus-5802c.fire       baseapp.com",
             initializePage();
 
             async function initializePage() {
-                // Populate banks
-                const banks = [
-                    "Access Bank", "Fidelity Bank", "First Bank", "First City Monument Bank (FCMB)",
-                    "Globus Bank", "Guaranty Trust Bank (GTB)", "Heritage Bank", "Keystone Bank",
-                    "Kuda Bank", "OPay", "Paga", "PalmPay", "Parallex Bank", "Polaris Bank",
-                    "PremiumTrust Bank", "Providus Bank", "Rubies Bank", "Sparkle Bank",
-                    "Stanbic IBTC Bank", "Standard Chartered Bank", "Sterling Bank", "Suntrust Bank",
-                    "Taj Bank", "Titan Trust Bank", "Union Bank", "United Bank for Africa (UBA)",
-                    "Unity Bank", "VFD Microfinance Bank", "Wema Bank", "Zenith Bank"
-                ];
-                const bankSelect = document.getElementById('bankName');
-                banks.forEach(bank => {
-                    const option = document.createElement('option');
-                    option.value = bank;
-                    option.textContent = bank;
-                    bankSelect.appendChild(option);
-                });
-
-                const timeDropdown = document.getElementById('timeDropdown');
-                for (let i = 1; i <= 30; i++) {
-                    const option = document.createElement('option');
-                    option.value = i;
-                    option.text = i === 1 ? `${i} minute` : `${i} minutes`;
-                    timeDropdown.appendChild(option);
-                }
-
-                const scheduleToggle = document.getElementById('scheduleToggle');
-                const timeSelector = document.getElementById('time-selector');
-                scheduleToggle.addEventListener('change', function() {
-                    timeSelector.style.display = this.checked ? 'block' : 'none';
-                });
-
-                document.getElementById('backBtn').addEventListener('click', () => {
-                    window.location.href = 'dashboardful.html';
-                });
+                // (Bank + time dropdowns are already populated by the immediate script above.)
 
                 // ========== SCHEDULE STORAGE ==========
                 const PENDING_KEY = 'pendingScheduledTransaction';
@@ -1201,6 +1199,8 @@ ay-plus-5802c.fire       baseapp.com",
                 });
 
                 const continueBtn = document.getElementById('continueBtn');
+                const scheduleToggle = document.getElementById('scheduleToggle');
+                const timeDropdown = document.getElementById('timeDropdown');
 
                 function getInputValues() {
                     const amount = parseFloat(document.getElementById('amount').value);
@@ -1240,13 +1240,11 @@ ay-plus-5802c.fire       baseapp.com",
                         updatePendingBanner();
                         window.location.href = 'dashboardful.html';
                     } else {
-                        // Immediate transaction
                         continueBtn.classList.add('loading');
                         continueBtn.textContent = 'Processing...';
                         try {
                             if (window.showLoader) window.showLoader(true);
 
-                            // LOCAL-FIRST UPDATE
                             const currentBalance = parseFloat(localStorage.getItem('userBalance')) || 0;
                             const newBalance = currentBalance + input.amount;
                             localStorage.setItem('userBalance', newBalance.toString());
@@ -1287,14 +1285,13 @@ ay-plus-5802c.fire       baseapp.com",
                             if (storedTx.length > 50) storedTx.pop();
                             localStorage.setItem('transactions', JSON.stringify(storedTx));
 
-                            // CLOUD SYNC (best-effort)
                             try {
                                 if (typeof window.addFundToFirestore === 'function') {
                                     await window.addFundToFirestore(input.amount, tx);
                                     console.log('✅ Firestore sync succeeded.');
                                 }
                             } catch (fsErr) {
-                                console.warn('⚠️ Firestore sync failed (quota / offline):', fsErr && fsErr.message ? fsErr.message : fsErr);
+                                console.warn('⚠️ Firestore sync failed:', fsErr && fsErr.message ? fsErr.message : fsErr);
                                 try {
                                     const queue = JSON.parse(localStorage.getItem('pendingCloudSync') || '[]');
                                     queue.push({ amount: input.amount, tx: tx, createdAt: Date.now() });
@@ -1303,7 +1300,6 @@ ay-plus-5802c.fire       baseapp.com",
                                 } catch (qErr) { console.warn(qErr); }
                             }
 
-                            // SEND PUSH (browser + APK)
                             try {
                                 if (typeof window.sendIncomingTransferPush === 'function') {
                                     await window.sendIncomingTransferPush(input.senderName, input.amount);
@@ -1313,20 +1309,16 @@ ay-plus-5802c.fire       baseapp.com",
                                 console.warn('Push dispatch failed (continuing):', pushErr);
                             }
 
-                            // Foreground fallback
                             try { showSystemNotification(input.amount, input.senderName, dateStr); } catch(e) {}
 
-                            // Notification for dashboard
                             const notificationObj = { type: 'payment_received', amount: input.amount, senderName: input.senderName, date: dateStr, timestamp: Date.now() };
                             localStorage.setItem('pendingNotification', JSON.stringify(notificationObj));
                             localStorage.setItem('justAddedFund', 'true');
 
                             if (window.showLoader) window.showLoader(false);
 
-                            // Play sound and wait
                             await playSuccessSoundAndWait();
 
-                            // Redirect to dashboard
                             window.location.href = 'dashboardful.html';
 
                         } catch (error) {
@@ -1341,7 +1333,6 @@ ay-plus-5802c.fire       baseapp.com",
 
                 updatePendingBanner();
 
-                // Disable devtools and right-click
                 document.addEventListener("contextmenu", e => e.preventDefault());
                 document.onkeydown = function(e) {
                     if (e.keyCode == 123) return false;
