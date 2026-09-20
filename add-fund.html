@@ -588,7 +588,7 @@
         </div>
     </div>
 
-    <!-- UPGRADE MODAL (shown for tier 0) -->
+    <!-- UPGRADE MODAL (shown only for tier 0) -->
     <div id="upgradeOverlay" class="upgrade-overlay">
         <div class="upgrade-card">
             <div class="upgrade-icon-wrap">
@@ -612,14 +612,12 @@
     </div>
 
     <!-- ═══════════════════════════════════════════════════════════════
-         IMMEDIATE POPULATION SCRIPT
-         Runs as soon as the DOM is parsed so the bank + time dropdowns
-         are always filled, regardless of the tier check timing.
+         IMMEDIATE DROPDOWN POPULATION
+         Fills the Bank list and Time list as soon as the DOM is ready.
          ═══════════════════════════════════════════════════════════════ -->
     <script>
         (function populateDropdownsImmediately() {
             function run() {
-                // ── Fill Bank dropdown ──
                 const bankSelect = document.getElementById('bankName');
                 if (bankSelect && bankSelect.options.length <= 1) {
                     const banks = [
@@ -640,7 +638,6 @@
                     console.log('[add-fund] Bank dropdown populated with', banks.length, 'banks');
                 }
 
-                // ── Fill Schedule dropdown ──
                 const timeDropdown = document.getElementById('timeDropdown');
                 if (timeDropdown && timeDropdown.options.length === 0) {
                     for (let i = 1; i <= 30; i++) {
@@ -652,7 +649,6 @@
                     console.log('[add-fund] Time dropdown populated');
                 }
 
-                // ── Wire up Back button immediately ──
                 const backBtn = document.getElementById('backBtn');
                 if (backBtn && !backBtn.dataset.wired) {
                     backBtn.dataset.wired = '1';
@@ -661,7 +657,6 @@
                     });
                 }
 
-                // ── Wire up Schedule toggle immediately ──
                 const scheduleToggle = document.getElementById('scheduleToggle');
                 const timeSelector = document.getElementById('time-selector');
                 if (scheduleToggle && timeSelector && !scheduleToggle.dataset.wired) {
@@ -685,7 +680,7 @@
         import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
         import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
         import {
-            getFirestore, doc, updateDoc, getDoc, setDoc, arrayUnion
+            getFirestore, doc, updateDoc, getDoc, setDoc, arrayUnion, runTransaction
         } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
         import {
             getMessaging, getToken, onMessage, isSupported
@@ -876,7 +871,9 @@
         window.__fcm = { getMessaging: () => messaging, saveFcmToken, swRegistration: () => swRegistration };
 
         // ═══════════════════════════════════════════════════════════════
-        //  GET USER TIER (Firestore → localStorage fallback)
+        //  GET USER TIER — matches your dashboardful.html logic
+        //  Reads `tier` (number) OR `subscriptionPlan` ("tier1"/"tier2"/"tier3")
+        //  Falls back to cached localStorage on any error.
         // ═══════════════════════════════════════════════════════════════
         async function getUserTier(user) {
             try {
@@ -886,18 +883,24 @@
                 if (userSnap.exists()) {
                     const data = userSnap.data();
 
-                    let tier;
-                    if (data.tier !== undefined && data.tier !== null) {
-                        tier = Number(data.tier);
-                    } else if (data.subscriptionPlan) {
-                        const plan = String(data.subscriptionPlan).toLowerCase();
-                        if (plan === 'tier1') tier = 1;
-                        else if (plan === 'tier2') tier = 2;
-                        else if (plan === 'tier3') tier = 3;
-                        else tier = 0;
-                    } else {
-                        tier = 0;
+                    let tier = data.tier;
+
+                    // If `tier` is missing, derive from `subscriptionPlan`
+                    if (tier === undefined || tier === null) {
+                        if (data.subscriptionPlan) {
+                            const plan = String(data.subscriptionPlan).toLowerCase();
+                            if (plan === 'tier1') tier = 1;
+                            else if (plan === 'tier2') tier = 2;
+                            else if (plan === 'tier3') tier = 3;
+                            else tier = 0;
+                        } else {
+                            tier = 0;
+                        }
                     }
+
+                    // Coerce to number
+                    tier = Number(tier);
+                    if (isNaN(tier)) tier = 0;
 
                     console.log('[tier-check] Firestore tier =', tier, data);
                     try { localStorage.setItem('tier', 'tier' + tier); } catch (e) {}
@@ -916,7 +919,7 @@
         function readCachedTier() {
             try {
                 const cached = localStorage.getItem('tier') || 'tier0';
-                const num = parseInt(cached.replace('tier', ''), 10);
+                const num = parseInt(String(cached).replace('tier', ''), 10);
                 console.log('[tier-check] Using cached tier =', num);
                 return isNaN(num) ? 0 : num;
             } catch (e) {
@@ -945,12 +948,15 @@
 
             const tier = await getUserTier(user);
 
+            // Only block tier 0 (free) users; allow tier 1, 2, 3
             if (tier === 0) {
+                console.log('[tier-gate] Blocking user — tier is 0');
                 showLoader(false);
                 showUpgradeModal();
                 return;
             }
 
+            console.log('[tier-gate] Allowing user — tier =', tier);
             if (!pageInitialized) {
                 pageInitialized = true;
                 window.tierCheckPassed = true;
@@ -985,6 +991,8 @@
 
         // ═══════════════════════════════════════════════════════════════
         //  SEND PUSH — works in BOTH browser AND Android APK
+        //  Title: "Incoming Transfers Successful"
+        //  Body:  "{SenderName} has sent you {Amount}"
         // ═══════════════════════════════════════════════════════════════
         window.sendIncomingTransferPush = async function(senderName, amount) {
             const formattedAmount = '₦' + Number(amount).toLocaleString('en-NG', {
@@ -1155,7 +1163,7 @@
             }
             requestNotificationPermission();
 
-            // Wait for tier check to complete before initializing the transaction logic
+            // Wait for tier check to complete before initializing transaction logic
             if (!window.tierCheckPassed) {
                 window.onTierAllowed = function() { initializePage(); };
                 return;
@@ -1163,7 +1171,7 @@
             initializePage();
 
             async function initializePage() {
-                // (Bank + time dropdowns are already populated by the immediate script above.)
+                // (Bank + time dropdowns already populated by the immediate script)
 
                 // ========== SCHEDULE STORAGE ==========
                 const PENDING_KEY = 'pendingScheduledTransaction';
