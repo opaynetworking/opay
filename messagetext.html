@@ -1,0 +1,1344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Notifications - OPay</title>
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-auth.js";
+        import { getFirestore, collection, query, orderBy, onSnapshot, doc, updateDoc, getDoc, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAjLxkisBi9pzmjlwdHnYfo25XR2Z6ToEs",
+            authDomain: "opay-plus-5802c.firebaseapp.com",
+            projectId: "opay-plus-5802c",
+            storageBucket: "opay-plus-5802c.firebasestorage.app",
+            messagingSenderId: "967061625774",
+            appId: "1:967061625774:web:236f88391ccdd9edd2863f",
+            measurementId: "G-H0QV81VYBY"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // DOM Elements
+        const activitiesTab = document.getElementById('activitiesTab');
+        const transactionsTab = document.getElementById('transactionsTab');
+        const servicesTab = document.getElementById('servicesTab');
+        const notificationsList = document.querySelector('.notifications-list');
+        const activitiesBadge = document.getElementById('activitiesBadge');
+        const transactionsBadge = document.getElementById('transactionsBadge');
+        const menuBtn = document.querySelector('.menu-btn');
+        
+        let currentUserId = null;
+        let unsubscribeMessages = null;
+        let allMessages = [];           // admin messages (activities)
+        let transactionList = [];       // transaction history from Firestore
+        let currentUserTier = 0;        // 0 = tier0, 1-3 = paid
+        let defaultMessageAdded = false; // prevent double addition
+        
+        // Helper: format date like "Jun 01,2026 15:34"
+        function formatNotificationDate(timestamp) {
+            if (!timestamp) return 'Unknown';
+            let date;
+            if (timestamp.toDate) date = timestamp.toDate();
+            else if (timestamp.seconds) date = new Date(timestamp.seconds * 1000);
+            else date = new Date(timestamp);
+            
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const month = months[date.getMonth()];
+            const day = date.getDate().toString().padStart(2, '0');
+            const year = date.getFullYear();
+            let hours = date.getHours();
+            const minutes = date.getMinutes().toString().padStart(2, '0');
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12 || 12;
+            return `${month} ${day},${year} ${hours}:${minutes} ${ampm}`;
+        }
+        
+        function formatTransactionDate(timestamp) {
+            if (!timestamp) return 'Unknown';
+            const date = new Date(timestamp);
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const month = months[date.getMonth()];
+            const day = date.getDate();
+            const suffix = (day % 10 === 1 && day !== 11) ? 'st' : (day % 10 === 2 && day !== 12) ? 'nd' : (day % 10 === 3 && day !== 13) ? 'rd' : 'th';
+            const hh = String(date.getHours()).padStart(2, '0');
+            const min = String(date.getMinutes()).padStart(2, '0');
+            return `${month} ${day}${suffix}, ${hh}:${min}`;
+        }
+        
+        // Escape HTML
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
+        }
+        
+        // ======================== DEFAULT WELCOME MESSAGE ========================
+        async function ensureDefaultWelcomeMessage(uid) {
+            if (defaultMessageAdded) return;
+            try {
+                const messagesRef = collection(db, 'users', uid, 'messages');
+                const q = query(messagesRef, orderBy('timestamp', 'desc'));
+                const snapshot = await getDocs(q);
+                if (snapshot.empty) {
+                    await addDoc(messagesRef, {
+                        subject: "Welcome to Opay Plus",
+                        body: "Welcome to Opay Plus Tools, No.1 Fake transfer Opay clone app, with advance server protocol to complete and Verify transaction using Opay Backend validation. \n\nTo Enjoy 😊 Full package of opay plus App and to successful complete transfer to local banks and POS machine, Upgrade your account. \n\nOpay Plus.",
+                        from: "Opay Plus",
+                        fromUid: "system",
+                        timestamp: serverTimestamp(),
+                        read: false
+                    });
+                    defaultMessageAdded = true;
+                    console.log("Default welcome message added for user:", uid);
+                }
+            } catch (err) {
+                console.error("Error adding default message:", err);
+            }
+        }
+        
+        // ======================== UPGRADE MODAL ========================
+        function showUpgradeModal() {
+            const overlay = document.getElementById('upgradeModalOverlay');
+            if (overlay) overlay.style.display = 'flex';
+            const modal = document.getElementById('upgradeModal');
+            if (modal) modal.classList.remove('upgrade-modal-exit');
+        }
+        
+        function hideUpgradeModal() {
+            const modal = document.getElementById('upgradeModal');
+            const overlay = document.getElementById('upgradeModalOverlay');
+            if (!modal) return;
+            modal.classList.add('upgrade-modal-exit');
+            modal.addEventListener('animationend', function handler() {
+                modal.removeEventListener('animationend', handler);
+                if (overlay) overlay.style.display = 'none';
+                if (modal) modal.classList.remove('upgrade-modal-exit');
+            });
+        }
+        
+        function showLoader() {
+            const loader = document.getElementById('upgradeLoaderOverlay');
+            if (loader) loader.style.display = 'flex';
+        }
+        
+        function hideLoader() {
+            const loader = document.getElementById('upgradeLoaderOverlay');
+            if (loader) loader.style.display = 'none';
+        }
+        
+        function initUpgradeModal() {
+            const dismissBtn = document.getElementById('upgradeDismissBtn');
+            const upgradeBtn = document.getElementById('upgradeActionBtn');
+            const overlay = document.getElementById('upgradeModalOverlay');
+            if (dismissBtn) dismissBtn.addEventListener('click', () => hideUpgradeModal());
+            if (upgradeBtn) {
+                upgradeBtn.addEventListener('click', () => {
+                    showLoader();
+                    setTimeout(() => {
+                        window.open('/upgrade-subscribe.html', '_blank');
+                        hideLoader();
+                        hideUpgradeModal();
+                    }, 800);
+                });
+            }
+            if (overlay) overlay.addEventListener('click', (e) => { if (e.target === overlay) hideUpgradeModal(); });
+        }
+        
+        // ======================== USER TIER FETCH ========================
+        async function fetchUserTier(uid) {
+            try {
+                const userRef = doc(db, 'users', uid);
+                const userSnap = await getDoc(userRef);
+                if (userSnap.exists()) {
+                    const data = userSnap.data();
+                    let tier = data.tier;
+                    if (tier === undefined && data.subscriptionPlan) {
+                        const plan = data.subscriptionPlan;
+                        if (plan === 'tier1') tier = 1;
+                        else if (plan === 'tier2') tier = 2;
+                        else if (plan === 'tier3') tier = 3;
+                        else tier = 0;
+                    } else if (tier === undefined) tier = 0;
+                    currentUserTier = tier;
+                    localStorage.setItem('tier', `tier${tier}`);
+                    return tier;
+                }
+                return 0;
+            } catch (err) {
+                console.error("Error fetching tier:", err);
+                return 0;
+            }
+        }
+        
+        // ======================== ADMIN MESSAGES (Activities) with Link Support ========================
+        function cacheAdminMessages(messages) {
+            try {
+                localStorage.setItem('cached_admin_messages', JSON.stringify(messages));
+                localStorage.setItem('cached_admin_messages_time', Date.now().toString());
+            } catch(e) { console.warn(e); }
+        }
+        
+        function loadCachedAdminMessages() {
+            try {
+                const cached = localStorage.getItem('cached_admin_messages');
+                const cachedTime = localStorage.getItem('cached_admin_messages_time');
+                if (cached && cachedTime) {
+                    const age = Date.now() - parseInt(cachedTime);
+                    if (age < 5 * 60 * 1000) {
+                        return JSON.parse(cached);
+                    }
+                }
+            } catch(e) {}
+            return null;
+        }
+        
+        async function markMessageAsRead(messageId) {
+            if (!currentUserId) return;
+            try {
+                const msgRef = doc(db, 'users', currentUserId, 'messages', messageId);
+                await updateDoc(msgRef, { read: true });
+            } catch (err) {
+                console.error("Mark read error:", err);
+            }
+        }
+        
+        // MODIFIED: Display modal with optional link button
+        function showMessageModal(message) {
+            const existingModal = document.querySelector('.message-modal');
+            if (existingModal) existingModal.remove();
+            
+            const hasLink = message.link && message.link.trim() !== '';
+            const linkHtml = hasLink ? `
+                <div class="modal-link-wrapper">
+                    <a href="${escapeHtml(message.link)}" target="_blank" rel="noopener noreferrer" class="modal-link-btn">
+                        <i class="fas fa-external-link-alt"></i> Open Link
+                    </a>
+                </div>
+            ` : '';
+            
+            const modal = document.createElement('div');
+            modal.className = 'message-modal';
+            modal.innerHTML = `
+                <div class="modal-overlay"></div>
+                <div class="modal-container">
+                    <div class="modal-header">
+                        <h3>${escapeHtml(message.subject || 'Notification')}</h3>
+                        <button class="modal-close-btn">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="modal-meta">
+                            <span><i class="modal-icon">📨</i> From: Opayplus@service.com</span>
+                            <span><i class="modal-icon">⏱️</i> ${formatNotificationDate(message.timestamp)}</span>
+                        </div>
+                        <div class="modal-content-text">${escapeHtml(message.body || '(No additional content)')}</div>
+                        ${linkHtml}
+                    </div>
+                    <div class="modal-footer">
+                        <button class="modal-close-footer">Close</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+            
+            const closeModal = () => modal.remove();
+            modal.querySelectorAll('.modal-close-btn, .modal-close-footer, .modal-overlay').forEach(el => {
+                el.addEventListener('click', closeModal);
+            });
+            
+            if (!message.read) {
+                markMessageAsRead(message.id);
+                message.read = true;
+                if (document.querySelector('.tab.active')?.id === 'activitiesTab') {
+                    renderActivitiesMessages(allMessages);
+                }
+                updateUnreadBadge();
+            }
+        }
+        
+        // MODIFIED: Add link indicator in notification card preview
+        function renderActivitiesMessages(messages) {
+            if (!notificationsList) return;
+            
+            if (!messages || messages.length === 0) {
+                notificationsList.innerHTML = `
+                    <div style="text-align: center; padding: 40px 20px; background: #fff; border-radius: 16px; margin-top: 20px;">
+                        <span style="font-size: 48px;">📭</span>
+                        <p style="color: #666; margin-top: 12px;">No messages yet</p>
+                        <p style="color: #999; font-size: 13px;">When admin sends a message, it will appear here</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = '';
+            messages.forEach(msg => {
+                const isUnread = !msg.read;
+                const timestampFormatted = formatNotificationDate(msg.timestamp);
+                const subject = escapeHtml(msg.subject || 'Notification');
+                const bodyPreview = escapeHtml(msg.body?.substring(0, 100) || '');
+                const hasMore = (msg.body?.length || 0) > 100;
+                const displayBody = bodyPreview + (hasMore ? '...' : '');
+                const hasLink = msg.link && msg.link.trim() !== '';
+                const linkIcon = hasLink ? '<i class="fas fa-link" style="margin-left: 6px; font-size: 12px; color: #0AA83F;"></i>' : '';
+                
+                html += `
+                    <div class="notification-card" data-msg-id="${msg.id}" data-unread="${isUnread}">
+                        <div class="notification-header">
+                            <div class="notification-icon ${isUnread ? 'unread' : ''}"></div>
+                            <h3 class="notification-title">${subject} ${linkIcon}</h3>
+                        </div>
+                        <p class="notification-body">${displayBody || 'Click to view full message'}</p>
+                        <div class="notification-footer">
+                            <span class="timestamp">${timestampFormatted}</span>
+                            <button class="view-link" data-id="${msg.id}">
+                                View
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="9 18 15 12 9 6"></polyline>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            notificationsList.innerHTML = html;
+            
+            document.querySelectorAll('.notification-card').forEach(card => {
+                const msgId = card.getAttribute('data-msg-id');
+                const message = messages.find(m => m.id === msgId);
+                if (!message) return;
+                
+                card.addEventListener('click', (e) => {
+                    if (e.target.closest('.view-link')) return;
+                    showMessageModal(message);
+                });
+                
+                const viewBtn = card.querySelector('.view-link');
+                if (viewBtn) {
+                    viewBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        showMessageModal(message);
+                    });
+                }
+            });
+        }
+        
+        function updateUnreadBadge() {
+            if (!activitiesBadge) return;
+            const unreadCount = allMessages.filter(m => !m.read).length;
+            if (unreadCount > 0) {
+                activitiesBadge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+                activitiesBadge.style.display = 'inline-block';
+            } else {
+                activitiesBadge.style.display = 'none';
+            }
+        }
+        
+        function subscribeToUserMessages(uid) {
+            if (unsubscribeMessages) unsubscribeMessages();
+            const messagesRef = collection(db, 'users', uid, 'messages');
+            const q = query(messagesRef, orderBy('timestamp', 'desc'));
+            
+            const cached = loadCachedAdminMessages();
+            if (cached) {
+                allMessages = cached;
+                updateUnreadBadge();
+                if (document.querySelector('.tab.active')?.id === 'activitiesTab') {
+                    renderActivitiesMessages(allMessages);
+                }
+            }
+            
+            unsubscribeMessages = onSnapshot(q, (snapshot) => {
+                const messages = [];
+                snapshot.forEach(docSnap => {
+                    messages.push({
+                        id: docSnap.id,
+                        ...docSnap.data()
+                    });
+                });
+                allMessages = messages;
+                cacheAdminMessages(messages);
+                updateUnreadBadge();
+                const activeTab = document.querySelector('.tab.active');
+                if (activeTab && activeTab.id === 'activitiesTab') {
+                    renderActivitiesMessages(messages);
+                }
+            }, (error) => {
+                console.error("Snapshot error:", error);
+                if (document.querySelector('.tab.active')?.id === 'activitiesTab') {
+                    if (allMessages.length === 0) {
+                        notificationsList.innerHTML = `<div style="padding: 40px; text-align: center; color: red;">Failed to load messages. Using cached data if available.</div>`;
+                    }
+                }
+            });
+        }
+        
+        // ======================== TRANSACTION HISTORY (Transactions Tab) with Tier Check ========================
+        function getTransactionIcon(tx) {
+            const isIncoming = (tx.type === 'received' || tx.category === 'deposit' || tx.category === 'owealth' || tx.category === 'bonus');
+            return isIncoming ? 'images/history/downtrs.png' : 'images/history/uptrs.png';
+        }
+        
+        function cacheTransactions(transactions) {
+            try {
+                localStorage.setItem('cached_transactions', JSON.stringify(transactions));
+                localStorage.setItem('cached_transactions_time', Date.now().toString());
+            } catch(e) {}
+        }
+        
+        function loadCachedTransactions() {
+            try {
+                const cached = localStorage.getItem('cached_transactions');
+                const cachedTime = localStorage.getItem('cached_transactions_time');
+                if (cached && cachedTime) {
+                    const age = Date.now() - parseInt(cachedTime);
+                    if (age < 5 * 60 * 1000) {
+                        return JSON.parse(cached);
+                    }
+                }
+            } catch(e) {}
+            return null;
+        }
+        
+        function navigateToTransactionDetail(tx) {
+            if (!tx) return;
+            localStorage.setItem('viewTransaction', JSON.stringify(tx));
+            const bankName = (tx.bankname || '').toLowerCase();
+            const category = tx.category || '';
+            if (category === 'fee') {
+                window.location.href = 'stamp-dutysucc.html';
+            } else if (category === 'deposit' || category === 'received' || tx.type === 'received') {
+                window.location.href = 'trans-from.html';
+            } else if (bankName === 'opay') {
+                window.location.href = 'opayreceipt-view.html';
+            } else {
+                window.location.href = 'receipt-view.html';
+            }
+        }
+        
+        function renderTransactionsTabContent(transactions) {
+            if (!notificationsList) return;
+            
+            if (!transactions || transactions.length === 0) {
+                notificationsList.innerHTML = `
+                    <div style="text-align: center; padding: 40px 20px; background: #fff; border-radius: 16px; margin-top: 20px;">
+                        <span style="font-size: 48px;">💰</span>
+                        <p style="color: #666; margin-top: 12px;">No transactions yet</p>
+                        <p style="color: #999; font-size: 13px;">Your transaction history will appear here</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            let html = '';
+            let totalIn = 0, totalOut = 0;
+            transactions.forEach(tx => {
+                const amount = tx.amount || 0;
+                const isIncoming = (tx.type === 'received' || tx.category === 'deposit' || tx.category === 'owealth' || tx.category === 'bonus');
+                if (isIncoming) totalIn += amount;
+                else totalOut += amount;
+            });
+            
+            html += `
+                <div class="tx-summary" style="background: #f8f9fa; border-radius: 12px; padding: 12px 16px; margin-bottom: 16px;">
+                    <div style="display: flex; justify-content: space-between;">
+                        <span>In: <strong style="color:#00C896;">₦${totalIn.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</strong></span>
+                        <span>Out: <strong>₦${totalOut.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</strong></span>
+                    </div>
+                </div>
+            `;
+            
+            transactions.forEach((tx, idx) => {
+                const iconImg = getTransactionIcon(tx);
+                const dateStr = tx.date1 || formatTransactionDate(tx.created_at || Date.now());
+                const amount = tx.amount || 0;
+                const isIncoming = (tx.type === 'received' || tx.category === 'deposit' || tx.category === 'owealth' || tx.category === 'bonus');
+                const amountClass = isIncoming ? 'amount-positive' : 'amount-negative';
+                const displayAmount = (isIncoming ? '+' : '-') + '₦' + amount.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+                
+                let title = '';
+                if (tx.category === 'money') {
+                    title = (isIncoming ? 'Transfer from ' : 'Transfer to ') + (tx.accountname || 'Unknown');
+                } else if (tx.category === 'airtime') {
+                    title = 'Airtime';
+                } else if (tx.category === 'data') {
+                    title = 'Mobile data';
+                } else if (tx.category === 'fee') {
+                    title = 'Stamp Duty';
+                } else if (tx.category === 'owealth') {
+                    title = 'Owealth Interest Earned';
+                } else if (tx.category === 'deposit') {
+                    title = 'Transfer from ' + (tx.accountname || 'Bank');
+                } else {
+                    title = tx.accountname || 'Transaction';
+                }
+                
+                html += `
+                    <div class="notification-card tx-card" data-tx-index="${idx}">
+                        <div class="notification-header">
+                            <div class="icon-box">
+                                <img src="${iconImg}" alt="icon" onerror="this.style.display='none'">
+                            </div>
+                            <h3 class="notification-title">${escapeHtml(title)}</h3>
+                        </div>
+                        <p class="notification-body tx-amount ${amountClass}" style="font-size: 18px; font-weight: 600;">${displayAmount}</p>
+                        <div class="notification-footer">
+                            <span class="timestamp">${dateStr}</span>
+                            <button class="view-link tx-view-btn" data-idx="${idx}">
+                                View
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <polyline points="9 18 15 12 9 6"></polyline>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            notificationsList.innerHTML = html;
+            
+            document.querySelectorAll('.tx-card').forEach(card => {
+                const idx = card.getAttribute('data-tx-index');
+                const tx = transactions[parseInt(idx)];
+                if (!tx) return;
+                
+                const handleView = (e) => {
+                    e.stopPropagation();
+                    if (currentUserTier === 0) {
+                        showUpgradeModal();
+                    } else {
+                        navigateToTransactionDetail(tx);
+                    }
+                };
+                
+                card.addEventListener('click', (e) => {
+                    if (e.target.closest('.tx-view-btn')) return;
+                    handleView(e);
+                });
+                
+                const viewBtn = card.querySelector('.tx-view-btn');
+                if (viewBtn) {
+                    viewBtn.addEventListener('click', handleView);
+                }
+            });
+        }
+        
+        async function loadTransactionsFromFirestore(uid) {
+            try {
+                const userRef = doc(db, 'users', uid);
+                const userSnap = await getDoc(userRef);
+                if (userSnap.exists()) {
+                    const data = userSnap.data();
+                    const lastActivity = data.lastActivity || Date.now();
+                    const now = Date.now();
+                    const twoWeeks = 14 * 24 * 60 * 60 * 1000;
+                    
+                    let txs = data.transactions || [];
+                    if (now - lastActivity > twoWeeks) {
+                        await updateDoc(userRef, { transactions: [], lastActivity: now });
+                        txs = [];
+                    } else {
+                        await updateDoc(userRef, { lastActivity: now });
+                    }
+                    transactionList = txs;
+                    cacheTransactions(transactionList);
+                    if (document.querySelector('.tab.active')?.id === 'transactionsTab') {
+                        renderTransactionsTabContent(transactionList);
+                    }
+                    updateTransactionsBadge();
+                } else {
+                    transactionList = [];
+                    cacheTransactions([]);
+                    if (document.querySelector('.tab.active')?.id === 'transactionsTab') {
+                        renderTransactionsTabContent([]);
+                    }
+                }
+            } catch (err) {
+                console.error("Error loading transactions:", err);
+                const cached = loadCachedTransactions();
+                if (cached) {
+                    transactionList = cached;
+                    if (document.querySelector('.tab.active')?.id === 'transactionsTab') {
+                        renderTransactionsTabContent(transactionList);
+                    }
+                } else {
+                    if (document.querySelector('.tab.active')?.id === 'transactionsTab') {
+                        renderTransactionsTabContent([]);
+                    }
+                }
+            }
+        }
+        
+        function updateTransactionsBadge() {
+            if (!transactionsBadge) return;
+            const count = transactionList.length;
+            if (count > 0) {
+                transactionsBadge.textContent = count > 99 ? '99+' : count;
+                transactionsBadge.style.display = 'inline-block';
+            } else {
+                transactionsBadge.style.display = 'none';
+            }
+        }
+        
+        // ======================== Services Tab ========================
+        function renderServicesTabContent() {
+            notificationsList.innerHTML = `
+                <div class="notification-card">
+                    <div class="banner-ad">
+                        <img src="/images/slider/slider2.png" alt="Promotion" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 400 200\'%3E%3Crect fill=\'%2310b981\' width=\'400\' height=\'200\'/%3E%3Ctext x=\'20\' y=\'40\' fill=\'white\' font-size=\'24\'%3ESpecial Offer%3C/text%3E%3C/svg%3E'">
+                        <span class="ad-label">AD</span>
+                    </div>
+                    <div class="notification-header">
+                        <div class="notification-icon"></div>
+                        <h3 class="notification-title">Airtime purchase successful</h3>
+                    </div>
+                    <p class="notification-body">Your airtime of ₦1,000 has been sent to 0803****22.</p>
+                    <div class="notification-footer">
+                        <span class="timestamp">Today 08:15</span>
+                        <button class="view-link" onclick="alert('Airtime purchase completed')">View <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg></button>
+                    </div>
+                </div>
+                <div class="notification-card">
+                    <div class="banner-ad">
+                        <img src="/images/slider/slider2.png" alt="Bill payment promo" onerror="this.src='data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 400 200\'%3E%3Crect fill=\'%23FF9800\' width=\'400\' height=\'200\'/%3E%3Ctext x=\'20\' y=\'40\' fill=\'white\' font-size=\'24\'%3EPay Bills with OPay%3C/text%3E%3C/svg%3E'">
+                        <span class="ad-label">AD</span>
+                    </div>
+                    <div class="notification-header">
+                        <div class="notification-icon"></div>
+                        <h3 class="notification-title">Electricity bill discount</h3>
+                    </div>
+                    <p class="notification-body">Pay your electricity bill via OPay and get 5% cashback instantly!</p>
+                    <div class="notification-footer">
+                        <span class="timestamp">May 28,2026 12:00</span>
+                        <button class="view-link" onclick="alert('Promo: 5% cashback on bills')">View <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"></polyline></svg></button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // ======================== Tab Switching Logic ========================
+        async function switchTab(selectedTab) {
+            document.querySelectorAll('.tab').forEach(tab => {
+                tab.classList.remove('active');
+            });
+            selectedTab.classList.add('active');
+            
+            if (selectedTab.id === 'activitiesTab') {
+                renderActivitiesMessages(allMessages);
+            } else if (selectedTab.id === 'transactionsTab') {
+                if (transactionList.length === 0) {
+                    const cached = loadCachedTransactions();
+                    if (cached) {
+                        transactionList = cached;
+                        renderTransactionsTabContent(transactionList);
+                    } else if (currentUserId) {
+                        await loadTransactionsFromFirestore(currentUserId);
+                    } else {
+                        renderTransactionsTabContent([]);
+                    }
+                } else {
+                    renderTransactionsTabContent(transactionList);
+                }
+            } else if (selectedTab.id === 'servicesTab') {
+                renderServicesTabContent();
+            }
+        }
+        
+        window.switchTab = switchTab;
+        window.goBack = () => window.history.length > 1 ? window.history.back() : window.location.href = 'index.html';
+        window.signOutUser = async () => {
+            await signOut(auth);
+            window.location.href = 'create-email.html';
+        };
+        
+        if (menuBtn) {
+            menuBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const existingMenu = document.querySelector('.signout-popup');
+                if (existingMenu) existingMenu.remove();
+                
+                const popup = document.createElement('div');
+                popup.className = 'signout-popup';
+                popup.innerHTML = `
+                    <div class="signout-card">
+                        <button class="signout-btn">Sign Out</button>
+                        <button class="cancel-btn">Cancel</button>
+                    </div>
+                `;
+                document.body.appendChild(popup);
+                
+                popup.querySelector('.signout-btn').addEventListener('click', async () => {
+                    await signOut(auth);
+                    window.location.href = 'create-email.html';
+                });
+                popup.querySelector('.cancel-btn').addEventListener('click', () => popup.remove());
+                document.addEventListener('click', function closePopup(e) {
+                    if (!popup.contains(e.target) && e.target !== menuBtn) {
+                        popup.remove();
+                        document.removeEventListener('click', closePopup);
+                    }
+                });
+            });
+        }
+        
+        // Auth state listener
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUserId = user.uid;
+                await fetchUserTier(currentUserId);
+                await ensureDefaultWelcomeMessage(currentUserId);
+                subscribeToUserMessages(currentUserId);
+                await loadTransactionsFromFirestore(currentUserId);
+                const defaultTab = document.getElementById('activitiesTab');
+                if (defaultTab) switchTab(defaultTab);
+                initUpgradeModal();
+            } else {
+                window.location.href = 'create-email.html';
+            }
+        });
+        
+        // ========== ADDITIONAL STYLES (including link button) ==========
+        const style = document.createElement('style');
+        style.textContent = `
+            .notification-icon {
+                background-image: url('/images/dashboard/logo.png');
+                background-size: cover;
+                background-position: center;
+                background-repeat: no-repeat;
+                background-color: #f0f0f0;
+                position: relative;
+            }
+            .notification-icon.unread::after {
+                background-color: #e91e63;
+                content: '';
+                position: absolute;
+                top: -2px;
+                right: -2px;
+                width: 10px;
+                height: 10px;
+                border-radius: 50%;
+                border: 2px solid #fff;
+            }
+            .icon-box {
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                overflow: hidden;
+                background: #f0f0f0;
+            }
+            .icon-box img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }
+            .tx-amount {
+                margin-top: 4px;
+                margin-bottom: 12px;
+            }
+            .amount-positive { color: #00C896; }
+            .amount-negative { color: #1A1A1A; }
+            .message-modal {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                z-index: 1000;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .modal-overlay {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0,0,0,0.6);
+                backdrop-filter: blur(2px);
+            }
+            .modal-container {
+                position: relative;
+                background: white;
+                width: 90%;
+                max-width: 420px;
+                border-radius: 28px;
+                overflow: hidden;
+                box-shadow: 0 20px 35px rgba(0,0,0,0.2);
+                animation: fadeInUp 0.2s ease;
+                z-index: 1001;
+            }
+            @keyframes fadeInUp {
+                from { opacity: 0; transform: translateY(20px); }
+                to { opacity: 1; transform: translateY(0); }
+            }
+            .modal-header {
+                padding: 18px 20px;
+                background: #0AA83F;
+                color: white;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+            .modal-header h3 {
+                font-size: 18px;
+                font-weight: 600;
+                margin: 0;
+            }
+            .modal-close-btn {
+                background: none;
+                border: none;
+                font-size: 28px;
+                color: white;
+                cursor: pointer;
+                line-height: 1;
+            }
+            .modal-body {
+                padding: 20px;
+            }
+            .modal-meta {
+                display: flex;
+                justify-content: space-between;
+                font-size: 12px;
+                color: #666;
+                margin-bottom: 16px;
+                padding-bottom: 12px;
+                border-bottom: 1px solid #f0f0f0;
+            }
+            .modal-icon {
+                margin-right: 4px;
+            }
+            .modal-content-text {
+                font-size: 16px;
+                line-height: 1.5;
+                color: #1a1a1a;
+                white-space: pre-wrap;
+                margin-bottom: 16px;
+            }
+            .modal-link-wrapper {
+                text-align: center;
+                margin-top: 8px;
+            }
+            .modal-link-btn {
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                background: #00bfa5;
+                color: white;
+                padding: 10px 20px;
+                border-radius: 40px;
+                text-decoration: none;
+                font-weight: 600;
+                font-size: 14px;
+                transition: background 0.2s;
+            }
+            .modal-link-btn:hover {
+                background: #00a28b;
+            }
+            .modal-footer {
+                padding: 12px 20px 20px;
+                text-align: right;
+            }
+            .modal-close-footer {
+                background: #f0f0f0;
+                border: none;
+                padding: 8px 20px;
+                border-radius: 40px;
+                font-size: 14px;
+                font-weight: 500;
+                cursor: pointer;
+            }
+            .signout-popup {
+                position: fixed;
+                bottom: 30px;
+                left: 0;
+                right: 0;
+                display: flex;
+                justify-content: center;
+                z-index: 2000;
+            }
+            .signout-card {
+                background: white;
+                border-radius: 28px;
+                padding: 16px 20px;
+                display: flex;
+                gap: 12px;
+                box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+                border: 1px solid #e5e7eb;
+            }
+            .signout-btn, .cancel-btn {
+                padding: 8px 24px;
+                border-radius: 40px;
+                border: none;
+                font-weight: 600;
+                cursor: pointer;
+            }
+            .signout-btn {
+                background: #ef4444;
+                color: white;
+            }
+            .cancel-btn {
+                background: #f3f4f6;
+                color: #1f2937;
+            }
+            .tab {
+                position: relative;
+            }
+            .badge {
+                position: absolute;
+                top: -6px;
+                right: -6px;
+                background-color: #e91e63;
+                color: white;
+                font-size: 10px;
+                font-weight: 600;
+                padding: 2px 6px;
+                border-radius: 12px;
+                min-width: 18px;
+                text-align: center;
+                display: none;
+            }
+            .banner-ad img {
+                width: 100%;
+                border-radius: 12px;
+                object-fit: cover;
+                max-height: 120px;
+            }
+            .tx-summary {
+                font-size: 14px;
+            }
+            /* Upgrade Modal Styles */
+            .upgrade-modal-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.6);
+                backdrop-filter: blur(4px);
+                display: none;
+                align-items: center;
+                justify-content: center;
+                z-index: 10000;
+            }
+            .upgrade-modal {
+                max-width: 340px;
+                width: 90%;
+                background: #FFFFFF;
+                border-radius: 28px;
+                padding: 32px 24px 28px;
+                text-align: center;
+                box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.25);
+                animation: popIn 0.4s cubic-bezier(0.21, 1.11, 0.38, 1);
+                transform-origin: center;
+            }
+            @keyframes popIn {
+                0% { opacity: 0; transform: scale(0.9) translateY(10px); }
+                100% { opacity: 1; transform: scale(1) translateY(0); }
+            }
+            .upgrade-modal-exit {
+                animation: popOut 0.25s forwards;
+            }
+            @keyframes popOut {
+                0% { opacity: 1; transform: scale(1) translateY(0); }
+                100% { opacity: 0; transform: scale(0.9) translateY(10px); visibility: hidden; }
+            }
+            .upgrade-icon-wrapper { margin-bottom: 20px; display: flex; justify-content: center; }
+            .lock-svg {
+                filter: drop-shadow(0 2px 6px rgba(0,184,118,0.2));
+                animation: lockPulse 1.2s ease-in-out infinite;
+                transform-origin: center;
+            }
+            @keyframes lockPulse {
+                0% { transform: scale(1); opacity: 0.9; }
+                50% { transform: scale(1.08); opacity: 1; filter: drop-shadow(0 4px 12px rgba(0,184,118,0.35)); }
+                100% { transform: scale(1); opacity: 0.9; }
+            }
+            .upgrade-message {
+                font-size: 16px;
+                line-height: 1.4;
+                color: #1F2937;
+                margin-bottom: 28px;
+                font-weight: 500;
+            }
+            .upgrade-buttons { display: flex; gap: 12px; justify-content: center; }
+            .upgrade-btn { flex: 1; padding: 12px 0; border-radius: 40px; font-size: 15px; font-weight: 600; cursor: pointer; border: none; }
+            .upgrade-btn-dismiss { background: #F3F4F6; color: #1F2937; }
+            .upgrade-btn-upgrade { background: #00B876; color: white; box-shadow: 0 2px 8px rgba(0,184,118,0.3); }
+            .upgrade-loader-overlay {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.6);
+                backdrop-filter: blur(3px);
+                z-index: 10001;
+                display: none;
+                align-items: center;
+                justify-content: center;
+            }
+            .upgrade-loader-container { display: flex; flex-direction: column; align-items: center; }
+            .upgrade-green-ring {
+                position: relative;
+                width: 60px;
+                height: 60px;
+                border-radius: 50%;
+                background-color: #1e9c43;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .upgrade-logo-wrapper {
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+                background: white;
+                animation: pulse-zoom 0.7s ease-in-out infinite;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .upgrade-logo-image { width: 30px; height: 30px; object-fit: contain; border-radius: 50%; }
+            .upgrade-orbit {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                animation: rotate-dot 1.5s linear infinite;
+            }
+            .upgrade-dot {
+                position: absolute;
+                top: 28px;
+                left: 100%;
+                transform: translateX(-1400%);
+                width: 2px;
+                height: 2px;
+                background: white;
+                border-radius: 60%;
+                box-shadow: 0 0 8px 9px rgba(255, 255, 255, 0.6);
+            }
+            @keyframes pulse-zoom {
+                0% { transform: scale(1.03); opacity: 0.8; }
+                50% { transform: scale(1.15); opacity: 1; }
+                100% { transform: scale(1.03); opacity: 0.8; }
+            }
+            @keyframes rotate-dot {
+                from { transform: rotate(0deg); }
+                to   { transform: rotate(360deg); }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+
+        body {
+            background-color: #f5f5f5;
+            color: #333;
+        }
+
+        .container {
+            max-width: 480px;
+            margin: 0 auto;
+            background-color: #fff;
+            min-height: 100vh;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            background-color: #fff;
+            border-bottom: 1px solid #f0f0f0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #333;
+            padding: 0;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .header-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+
+        .menu-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+            padding: 0;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .tabs-container {
+            display: flex;
+            gap: 12px;
+            padding: 16px 20px;
+            background-color: #fff;
+            overflow-x: auto;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            border-radius: 20px;
+            background-color: #f5f5f5;
+            border: none;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            position: relative;
+            white-space: nowrap;
+            transition: all 0.3s ease;
+        }
+
+        .tab.active {
+            background-color: #e8f5e9;
+            color: #0AA83F;
+        }
+
+        .notifications-list {
+            padding: 0 16px 20px;
+        }
+
+        .notification-card {
+            background-color: #fff;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+            border: 1px solid #f0f0f0;
+            transition: transform 0.1s ease;
+            cursor: pointer;
+        }
+
+        .notification-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .notification-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            background-color: #f0f0f0;
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .notification-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1a1a1a;
+            flex: 1;
+        }
+
+        .notification-body {
+            font-size: 16px;
+            line-height: 1.6;
+            color: #666;
+            margin-bottom: 16px;
+        }
+
+        .notification-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 12px;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .timestamp {
+            font-size: 14px;
+            color: #999;
+        }
+
+        .view-link {
+            color: #0AA83F;
+            font-size: 16px;
+            font-weight: 500;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            background: none;
+            border: none;
+        }
+
+        .view-link:hover {
+            opacity: 0.8;
+        }
+
+        .banner-ad {
+            width: 100%;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 16px;
+            position: relative;
+        }
+
+        .banner-ad img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .ad-label {
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            background-color: rgba(0, 0, 0, 0.6);
+            color: white;
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                max-width: 100%;
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .notification-card {
+            animation: fadeIn 0.3s ease;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header class="header">
+        <button class="back-btn" onclick="goBack()">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="15 18 9 12 15 6"></polyline>
+            </svg>
+        </button>
+        <h1 class="header-title">Notifications</h1>
+        <button class="menu-btn">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                <circle cx="5" cy="12" r="2"></circle>
+                <circle cx="12" cy="12" r="2"></circle>
+                <circle cx="19" cy="12" r="2"></circle>
+            </svg>
+        </button>
+    </header>
+
+    <div class="tabs-container">
+        <button class="tab" id="transactionsTab" onclick="switchTab(this)">
+            Transactions
+            <span class="badge" id="transactionsBadge" style="display: none;">0</span>
+        </button>
+        <button class="tab" id="servicesTab" onclick="switchTab(this)">
+            Services
+            <span class="badge" style="display: none;">0</span>
+        </button>
+        <button class="tab active" id="activitiesTab" onclick="switchTab(this)">
+            Inbox
+            <span class="badge" id="activitiesBadge" style="display: none;">0</span>
+        </button>
+    </div>
+
+    <div class="notifications-list">
+        <div style="text-align: center; padding: 40px;"><div style="display: inline-block; width: 24px; height: 24px; border: 3px solid #e0e0e0; border-top-color: #0AA83F; border-radius: 50%; animation: spin 0.6s linear infinite;"></div><p style="margin-top: 12px;">Loading messages...</p></div>
+    </div>
+</div>
+
+<!-- Upgrade Modal (copied from dashboardful) -->
+<div id="upgradeModalOverlay" class="upgrade-modal-overlay">
+    <div class="upgrade-modal" id="upgradeModal">
+        <div class="upgrade-icon-wrapper">
+            <svg class="lock-svg" width="56" height="56" viewBox="0 0 24 24" fill="none">
+                <path d="M12 3C9.79 3 8 4.79 8 7v2H6v10h12V9h-2V7c0-2.21-1.79-4-4-4z" fill="#00B876"/>
+                <rect x="10" y="12" width="4" height="4" rx="1" fill="white"/>
+                <path d="M16 9h-2V7c0-1.1-.9-2-2-2s-2 .9-2 2v2H8v8h8V9z" fill="#00B876"/>
+                <circle cx="12" cy="14" r="1.2" fill="white"/>
+            </svg>
+        </div>
+        <div class="upgrade-message">
+            You don't have an active Subscription plan to access this feature.<br>
+            Kindly Upgrade your account to Continue.
+        </div>
+        <div class="upgrade-buttons">
+            <button class="upgrade-btn upgrade-btn-dismiss" id="upgradeDismissBtn">Dismiss</button>
+            <button class="upgrade-btn upgrade-btn-upgrade" id="upgradeActionBtn">Upgrade Account</button>
+        </div>
+    </div>
+</div>
+<div id="upgradeLoaderOverlay" class="upgrade-loader-overlay">
+    <div class="upgrade-loader-container">
+        <div class="upgrade-green-ring">
+            <div class="upgrade-orbit"><div class="upgrade-dot"></div></div>
+            <div class="upgrade-logo-wrapper"><img src="https://iili.io/qT81u1e.png" class="upgrade-logo-image"></div>
+        </div>
+    </div>
+</div>
+
+<style>
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+</style>
+
+<script>
+    // Fallback for any missing global references
+    window.goBack = window.goBack || function() { window.history.back(); };
+</script>
+</body>
+</html>
