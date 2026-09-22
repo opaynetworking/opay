@@ -49,8 +49,21 @@
         let messaging = null;
         let swRegistration = null;
         let fcmTokenSaved = false;
+        let fcmInitDone = false;
 
-        // Helper: format date like "Jun 01,2026 15:34"
+        // ─── APK detection ───────────────────────────────
+        function isRunningInAPK() {
+            return !!(
+                window.AndroidBridge ||
+                window.Android ||
+                window.ReactNativeWebView ||
+                window.AndroidUpdater ||
+                window.__opay_apk__ ||
+                (navigator.userAgent && /; wv\)/.test(navigator.userAgent))
+            );
+        }
+
+        // ─── Time formatting ─────────────────────────────
         function formatNotificationDate(timestamp) {
             if (!timestamp) return 'Unknown';
             let date;
@@ -93,56 +106,63 @@
 
         // ======================== FCM NOTIFICATIONS ========================
         async function initFCM() {
+            if (fcmInitDone) return;
+            fcmInitDone = true;
             try {
                 if ('serviceWorker' in navigator) {
-                    const existing = await navigator.serviceWorker.getRegistration();
-                    swRegistration = existing || await navigator.serviceWorker.register('/firebase-messaging-sw.js', { scope: '/' });
-                    await navigator.serviceWorker.ready;
-                    console.log('✅ SW registered:', swRegistration.scope);
-                }
-                if (await isSupported()) {
-                    messaging = getMessaging(app);
-                    console.log('✅ FCM supported');
-
-                    // Handle foreground messages
-                    onMessage(messaging, (payload) => {
-                        console.log('📨 Foreground FCM:', payload);
-                        const notif = payload.notification || {};
-                        const data = payload.data || {};
-                        const title = notif.title || data.title || 'New message';
-                        const body = notif.body || data.body || '';
-
-                        // Show the browser notification too
-                        if (Notification.permission === 'granted') {
-                            try {
-                                new Notification(title, {
-                                    body: body,
-                                    icon: '/images/dashboard/logo.png',
-                                    badge: '/images/dashboard/logo.png',
-                                    tag: 'opay-inbox-' + (data.messageId || Date.now())
-                                });
-                            } catch (e) { console.warn('Show notif err:', e); }
-                        }
-
-                        // Refresh unread badge immediately
-                        updateUnreadBadge();
-                    });
+                    try {
+                        const existing = await navigator.serviceWorker.getRegistration();
+                        swRegistration = existing || await navigator.serviceWorker.register('/firebase-messaging-sw.js', { scope: '/' });
+                        await navigator.serviceWorker.ready;
+                        console.log('✅ SW registered:', swRegistration.scope);
+                    } catch (swErr) {
+                        console.warn('⚠️ SW registration failed:', swErr);
+                    }
                 }
 
-                // If permission already granted, refresh token
+                try {
+                    if (await isSupported()) {
+                        messaging = getMessaging(app);
+                        console.log('✅ FCM supported');
+
+                        // Handle foreground FCM messages
+                        onMessage(messaging, (payload) => {
+                            console.log('📨 Foreground FCM:', payload);
+                            const notif = payload.notification || {};
+                            const data = payload.data || {};
+                            const title = notif.title || data.title || 'New message';
+                            const body = notif.body || data.body || '';
+
+                            if ('Notification' in window && Notification.permission === 'granted') {
+                                try {
+                                    new Notification(title, {
+                                        body: body,
+                                        icon: '/images/dashboard/logo.png',
+                                        badge: '/images/dashboard/logo.png',
+                                        tag: 'opay-inbox-' + (data.messageId || Date.now())
+                                    });
+                                } catch (e) { console.warn('Show notif err:', e); }
+                            }
+                            updateUnreadBadge();
+                        });
+                    }
+                } catch (e) {
+                    console.warn('⚠️ FCM check failed:', e);
+                }
+
+                // If permission already granted, save/refresh token now
                 if ('Notification' in window && Notification.permission === 'granted') {
                     await saveFcmToken();
                     hideNotifBanner();
-                } else {
-                    showNotifBanner();
                 }
+
             } catch (err) {
                 console.warn('⚠️ FCM init failed:', err);
             }
         }
 
         async function saveFcmToken() {
-            if (!currentUserId || fcmTokenSaved || !messaging) return false;
+            if (!currentUserId || !messaging) return false;
             try {
                 const token = await getToken(messaging, {
                     vapidKey: VAPID_KEY,
@@ -168,16 +188,15 @@
             }
         }
 
+        // ─── Banner controls ─────────────────────────────
         function showNotifBanner() {
             const banner = document.getElementById('notifBanner');
             if (!banner) return;
             if (!('Notification' in window)) return;
-            if (Notification.permission === 'denied') return;
-
-            // Only show if permission is 'default' (not granted, not denied)
-            if (Notification.permission === 'default') {
-                banner.style.display = 'flex';
-            }
+            if (Notification.permission === 'granted') { banner.style.display = 'none'; return; }
+            if (Notification.permission === 'denied') { banner.style.display = 'none'; return; }
+            // Show banner whenever permission is still 'default'
+            banner.style.display = 'flex';
         }
 
         function hideNotifBanner() {
@@ -195,29 +214,44 @@
 
             try {
                 const perm = await Notification.requestPermission();
+                console.log('Permission result:', perm);
                 if (perm === 'granted') {
+                    await initFCM();
+                    if (!currentUserId) {
+                        // Wait a bit for auth to resolve
+                        let waited = 0;
+                        while (!currentUserId && waited < 5000) {
+                            await new Promise(r => setTimeout(r, 200));
+                            waited += 200;
+                        }
+                    }
                     await saveFcmToken();
                     hideNotifBanner();
+
+                    // Also trigger native APK notification registration
+                    if (isRunningInAPK()) {
+                        try {
+                            if (window.AndroidBridge && typeof window.AndroidBridge.requestNotificationPermission === 'function') {
+                                window.AndroidBridge.requestNotificationPermission();
+                            }
+                            if (window.Android && typeof window.Android.requestNotificationPermission === 'function') {
+                                window.Android.requestNotificationPermission();
+                            }
+                        } catch (e) { console.warn('Native perm err:', e); }
+                    }
+
                     console.log('✅ Notifications enabled');
                 } else {
-                    hideNotifBanner();
+                    // Keep banner visible if user blocked or dismissed
+                    if (perm === 'denied') hideNotifBanner();
+                    else showNotifBanner();
                 }
             } catch (err) {
                 console.warn('Permission error:', err);
-                hideNotifBanner();
+            } finally {
+                if (btn) { btn.disabled = false; btn.textContent = 'Allow'; }
             }
         }
-
-        // Bind banner buttons after DOM ready
-        window.addEventListener('DOMContentLoaded', () => {
-            const btn = document.getElementById('notifBannerBtn');
-            const closeBtn = document.getElementById('notifBannerClose');
-            if (btn) btn.addEventListener('click', requestNotifPermission);
-            if (closeBtn) closeBtn.addEventListener('click', () => {
-                hideNotifBanner();
-                try { sessionStorage.setItem('notifBannerDismissed', Date.now().toString()); } catch (e) {}
-            });
-        });
 
         // ======================== DEFAULT WELCOME MESSAGE ========================
         async function ensureDefaultWelcomeMessage(uid) {
@@ -317,7 +351,7 @@
             }
         }
 
-        // ======================== ADMIN MESSAGES (Activities) ========================
+        // ======================== ADMIN MESSAGES ========================
         function cacheAdminMessages(messages) {
             try {
                 localStorage.setItem('cached_admin_messages', JSON.stringify(messages));
@@ -826,10 +860,47 @@
             });
         }
 
+        // ═══════════════════════════════════════════════════════
+        //  IMMEDIATE BANNER + BUTTON WIRING
+        //  Module scripts run AFTER DOMContentLoaded, so we attach
+        //  directly — not inside a DOMContentLoaded handler.
+        // ═══════════════════════════════════════════════════════
+        (function attachBannerListeners() {
+            const btn = document.getElementById('notifBannerBtn');
+            const closeBtn = document.getElementById('notifBannerClose');
+            if (btn && !btn.dataset.wired) {
+                btn.dataset.wired = '1';
+                btn.addEventListener('click', requestNotifPermission);
+            }
+            if (closeBtn && !closeBtn.dataset.wired) {
+                closeBtn.dataset.wired = '1';
+                closeBtn.addEventListener('click', function() {
+                    hideNotifBanner();
+                });
+            }
+            // Show the banner right away if permission is still 'default'
+            if ('Notification' in window && Notification.permission === 'default') {
+                showNotifBanner();
+            }
+        })();
+
+        // Start FCM init in parallel — banner is already visible above
+        initFCM();
+
         // Auth state listener
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 currentUserId = user.uid;
+
+                // If permission already granted, save/refresh FCM token for this user
+                if ('Notification' in window && Notification.permission === 'granted') {
+                    await saveFcmToken();
+                    hideNotifBanner();
+                } else if ('Notification' in window && Notification.permission === 'default') {
+                    // Keep banner visible
+                    showNotifBanner();
+                }
+
                 await fetchUserTier(currentUserId);
                 await ensureDefaultWelcomeMessage(currentUserId);
                 subscribeToUserMessages(currentUserId);
@@ -837,9 +908,6 @@
                 const defaultTab = document.getElementById('activitiesTab');
                 if (defaultTab) switchTab(defaultTab);
                 initUpgradeModal();
-
-                // Initialize FCM + notification banner
-                initFCM();
             } else {
                 window.location.href = 'create-email.html';
             }
@@ -964,16 +1032,15 @@
 
             /* ========== NOTIFICATION PERMISSION BANNER ========== */
             .notif-banner {
-                position: sticky;
-                top: 73px;
-                z-index: 99;
+                position: relative;
+                z-index: 200;
                 background: linear-gradient(135deg, #00B876 0%, #0AA83F 100%);
                 color: #ffffff;
-                padding: 10px 16px;
+                padding: 10px 14px;
                 display: none;
                 align-items: center;
                 gap: 10px;
-                box-shadow: 0 3px 10px rgba(0, 168, 63, 0.2);
+                box-shadow: 0 3px 10px rgba(0, 168, 63, 0.25);
                 font-size: 13px;
                 animation: bannerSlideDown 0.35s ease;
             }
@@ -984,27 +1051,33 @@
             .notif-banner-icon {
                 font-size: 16px;
                 flex-shrink: 0;
+                pointer-events: none;
             }
             .notif-banner-text {
                 flex: 1;
                 font-weight: 500;
                 line-height: 1.3;
+                pointer-events: none;
             }
             .notif-banner-btn {
                 background: #ffffff;
                 color: #0AA83F;
                 border: none;
-                padding: 6px 14px;
+                padding: 7px 16px;
                 border-radius: 20px;
                 font-size: 12px;
                 font-weight: 700;
                 cursor: pointer;
                 flex-shrink: 0;
-                transition: transform 0.15s;
+                transition: transform 0.15s, background 0.2s;
                 -webkit-tap-highlight-color: transparent;
+                position: relative;
+                z-index: 10;
+                pointer-events: auto;
             }
             .notif-banner-btn:active {
                 transform: scale(0.95);
+                background: #e6f9f0;
             }
             .notif-banner-btn:disabled {
                 opacity: 0.7;
@@ -1017,9 +1090,12 @@
                 font-size: 20px;
                 line-height: 1;
                 cursor: pointer;
-                padding: 0 4px;
+                padding: 0 6px;
                 flex-shrink: 0;
                 font-weight: 300;
+                position: relative;
+                z-index: 10;
+                pointer-events: auto;
             }
             .notif-banner-close:active {
                 color: #fff;
@@ -1337,8 +1413,8 @@
     <div id="notifBanner" class="notif-banner">
         <span class="notif-banner-icon">🔔</span>
         <span class="notif-banner-text">Enable notifications to get new message alerts</span>
-        <button class="notif-banner-btn" id="notifBannerBtn">Allow</button>
-        <button class="notif-banner-close" id="notifBannerClose" aria-label="Dismiss">×</button>
+        <button class="notif-banner-btn" id="notifBannerBtn" type="button">Allow</button>
+        <button class="notif-banner-close" id="notifBannerClose" type="button" aria-label="Dismiss">×</button>
     </div>
 
     <div class="tabs-container">
