@@ -1,1 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Login | OPay Plus</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+        body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+        .gradient-bg {
+            background: linear-gradient(135deg, #00bfa5 0%, #00a28b 50%, #007a6a 100%);
+        }
+        .login-card {
+            animation: slideUp 0.5s cubic-bezier(0.21, 1.11, 0.38, 1);
+        }
+        @keyframes slideUp {
+            0% { opacity: 0; transform: translateY(30px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+        .input-field {
+            width: 100%;
+            padding: 0.85rem 1rem;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 0.75rem;
+            font-size: 0.95rem;
+            outline: none;
+            transition: all 0.2s;
+            background: #f8fafc;
+        }
+        .input-field:focus {
+            border-color: #00bfa5;
+            background: #ffffff;
+            box-shadow: 0 0 0 4px rgba(0, 191, 165, 0.1);
+        }
+        .input-field::placeholder { color: #94a3b8; }
+        .btn-login {
+            width: 100%;
+            padding: 0.9rem 0;
+            border-radius: 0.75rem;
+            background: linear-gradient(135deg, #00bfa5 0%, #00a28b 100%);
+            color: white;
+            font-weight: 700;
+            font-size: 1rem;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.15s, box-shadow 0.2s;
+            box-shadow: 0 4px 14px rgba(0, 191, 165, 0.35);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .btn-login:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 22px rgba(0, 191, 165, 0.45);
+        }
+        .btn-login:active:not(:disabled) { transform: translateY(0); }
+        .btn-login:disabled { opacity: 0.65; cursor: not-allowed; }
+        .lock-icon {
+            animation: lockPulse 2s ease-in-out infinite;
+        }
+        @keyframes lockPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.06); }
+        }
+        .alert {
+            padding: 0.85rem 1rem;
+            border-radius: 0.75rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            animation: fadeIn 0.25s ease;
+        }
+        .alert.show { display: flex; }
+        .alert-error { background: #fee2e2; color: #991b1b; border-left: 4px solid #ef4444; }
+        .alert-info { background: #e0f2fe; color: #075985; border-left: 4px solid #0284c7; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="gradient-bg min-h-screen flex items-center justify-center p-5">
 
+    <div class="login-card bg-white rounded-3xl shadow-2xl w-full max-w-md p-8 md:p-10">
+
+        <!-- Logo + title -->
+        <div class="text-center mb-8">
+            <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center lock-icon shadow-lg">
+                <i class="fas fa-shield-alt text-white text-3xl"></i>
+            </div>
+            <h1 class="text-2xl font-bold text-gray-800">Admin Login</h1>
+            <p class="text-gray-500 text-sm mt-1">Authorised access only</p>
+        </div>
+
+        <!-- Alerts -->
+        <div id="loginError" class="alert alert-error mb-4">
+            <i class="fas fa-exclamation-circle"></i>
+            <span id="loginErrorText"></span>
+        </div>
+        <div id="loginInfo" class="alert alert-info mb-4">
+            <i class="fas fa-info-circle"></i>
+            <span id="loginInfoText"></span>
+        </div>
+
+        <!-- Form -->
+        <form id="loginForm" class="space-y-4">
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                    <i class="fas fa-envelope text-emerald-500 mr-1"></i> Email Address
+                </label>
+                <input type="email" id="adminEmail" class="input-field" placeholder="admin@opayplus.ng" autocomplete="username" required />
+            </div>
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                    <i class="fas fa-lock text-emerald-500 mr-1"></i> Password
+                </label>
+                <div class="relative">
+                    <input type="password" id="adminPassword" class="input-field" placeholder="••••••••" autocomplete="current-password" required style="padding-right: 3rem;" />
+                    <button type="button" id="togglePasswordBtn" class="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600" style="background:none;border:none;cursor:pointer;">
+                        <i class="fas fa-eye" id="togglePasswordIcon"></i>
+                    </button>
+                </div>
+            </div>
+            <button type="submit" id="loginBtn" class="btn-login mt-2">
+                <i class="fas fa-sign-in-alt"></i>
+                <span>Sign In as Admin</span>
+            </button>
+        </form>
+
+        <!-- Footer -->
+        <div class="mt-8 pt-6 border-t border-gray-100 text-center">
+            <p class="text-xs text-gray-400">
+                <i class="fas fa-lock mr-1"></i>
+                Secure admin portal · OPay Plus © 2026
+            </p>
+        </div>
+
+    </div>
+
+    <script type="module">
+        import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAjLxkisBi9pzmjlwdHnYfo25XR2Z6ToEs",
+            authDomain: "opay-plus-5802c.firebaseapp.com",
+            projectId: "opay-plus-5802c",
+            storageBucket: "opay-plus-5802c.firebasestorage.app",
+            messagingSenderId: "967061625774",
+            appId: "1:967061625774:web:236f88391ccdd9edd2863f",
+            measurementId: "G-H0QV81VYBY"
+        };
+
+        const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        /* ─── Element refs ─── */
+        const form = document.getElementById('loginForm');
+        const emailInput = document.getElementById('adminEmail');
+        const passwordInput = document.getElementById('adminPassword');
+        const loginBtn = document.getElementById('loginBtn');
+        const loginBtnText = loginBtn.querySelector('span');
+        const errorBox = document.getElementById('loginError');
+        const errorText = document.getElementById('loginErrorText');
+        const infoBox = document.getElementById('loginInfo');
+        const infoText = document.getElementById('loginInfoText');
+        const togglePasswordBtn = document.getElementById('togglePasswordBtn');
+        const togglePasswordIcon = document.getElementById('togglePasswordIcon');
+
+        /* ─── UI helpers ─── */
+        function showError(msg) {
+            errorText.textContent = msg;
+            errorBox.classList.add('show');
+            infoBox.classList.remove('show');
+        }
+        function showInfo(msg) {
+            infoText.textContent = msg;
+            infoBox.classList.add('show');
+            errorBox.classList.remove('show');
+        }
+        function clearAlerts() {
+            errorBox.classList.remove('show');
+            infoBox.classList.remove('show');
+        }
+        function setLoading(loading) {
+            if (loading) {
+                loginBtn.disabled = true;
+                loginBtnText.textContent = 'Signing in...';
+                loginBtn.querySelector('i').className = 'fas fa-spinner fa-pulse';
+            } else {
+                loginBtn.disabled = false;
+                loginBtnText.textContent = 'Sign In as Admin';
+                loginBtn.querySelector('i').className = 'fas fa-sign-in-alt';
+            }
+        }
+
+        /* ─── Toggle password visibility ─── */
+        togglePasswordBtn.addEventListener('click', () => {
+            const isPwd = passwordInput.type === 'password';
+            passwordInput.type = isPwd ? 'text' : 'password';
+            togglePasswordIcon.className = isPwd ? 'fas fa-eye-slash' : 'fas fa-eye';
+        });
+
+        /* ─── Auto-redirect if already signed in as admin ─── */
+        onAuthStateChanged(auth, async (user) => {
+            if (!user) return;
+            try {
+                const snap = await getDoc(doc(db, 'users', user.uid));
+                if (snap.exists() && snap.data().isAdmin) {
+                    showInfo('Already signed in as admin. Redirecting...');
+                    setTimeout(() => {
+                        window.location.href = 'nextfulls(AD).html';
+                    }, 800);
+                }
+            } catch (e) { /* ignore */ }
+        });
+
+        /* ─── Handle login ─── */
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            clearAlerts();
+
+            const email = emailInput.value.trim().toLowerCase();
+            const password = passwordInput.value;
+
+            if (!email || !password) {
+                showError('Please enter both email and password.');
+                return;
+            }
+
+            setLoading(true);
+
+            try {
+                /* 1. Sign in with Firebase Auth */
+                const cred = await signInWithEmailAndPassword(auth, email, password);
+                const uid = cred.user.uid;
+
+                /* 2. Check that this user is an admin */
+                const userSnap = await getDoc(doc(db, 'users', uid));
+
+                if (!userSnap.exists()) {
+                    await signOut(auth);
+                    showError('No account record found. Contact support.');
+                    setLoading(false);
+                    return;
+                }
+
+                const userData = userSnap.data();
+
+                if (!userData.isAdmin) {
+                    await signOut(auth);
+                    showError('Access denied. This account does not have admin privileges.');
+                    setLoading(false);
+                    return;
+                }
+
+                /* 3. Success — redirect to admin panel */
+                showInfo('Login successful. Redirecting...');
+                setTimeout(() => {
+                    window.location.href = 'nextfulls(AD).html';
+                }, 700);
+
+            } catch (err) {
+                console.warn('Login error:', err.code, err.message);
+
+                let msg = 'Login failed. Please try again.';
+                switch (err.code) {
+                    case 'auth/invalid-email':            msg = 'Invalid email address format.'; break;
+                    case 'auth/user-not-found':            msg = 'No account found with that email.'; break;
+                    case 'auth/wrong-password':
+                    case 'auth/invalid-credential':        msg = 'Incorrect email or password.'; break;
+                    case 'auth/too-many-requests':         msg = 'Too many failed attempts. Try again later.'; break;
+                    case 'auth/network-request-failed':    msg = 'Network error. Check your internet connection.'; break;
+                    case 'auth/user-disabled':             msg = 'This account has been disabled.'; break;
+                }
+                showError(msg);
+                setLoading(false);
+            }
+        });
+
+        /* ─── Clear error when user starts typing ─── */
+        emailInput.addEventListener('input', clearAlerts);
+        passwordInput.addEventListener('input', clearAlerts);
+
+        console.log('🔐 Admin login page ready.');
+    </script>
+</body>
+</html>
