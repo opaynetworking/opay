@@ -1,27 +1,28 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Admin Panel | OPay Plus</title>
+    <title>Admin Panel | Master Control & Auto-Expiry Plans + Push Notifications</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
     <style>
         body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background: #f1f5f9; }
-        .card-hover:hover { transform: translateY(-2px); transition: all 0.2s ease; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); }
+        .card-hover:hover { transform: translateY(-2px); transition: all 0.2s ease; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); }
         .badge { display: inline-flex; align-items: center; padding: 2px 10px; border-radius: 9999px; font-size: 12px; font-weight: 500; }
-        .badge-tier0 { background: #f3f4f6; color: #1f2937; }
-        .badge-tier1 { background: #dbeafe; color: #1e40af; }
-        .badge-tier2 { background: #dcfce7; color: #166534; }
-        .badge-tier3 { background: #fef9c3; color: #854d0e; }
-        .badge-suspended { background: #fee2e2; color: #b91c1c; }
-        .badge-active { background: #e0f2fe; color: #0369a1; }
-        .badge-expired { background: #fef3c7; color: #b45309; }
-        .badge-auth-pending { background: #fef3c7; color: #92400e; }
-        .badge-auth-processing { background: #e0e7ff; color: #3730a3; }
-        .badge-auth-failed { background: #fee2e2; color: #991b1b; }
-        .action-btn { padding: 4px 12px; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; border: none; transition: all 0.15s; }
+        .badge-tier0 { background-color: #f3f4f6; color: #1f2937; }
+        .badge-tier1 { background-color: #dbeafe; color: #1e40af; }
+        .badge-tier2 { background-color: #dcfce7; color: #166534; }
+        .badge-tier3 { background-color: #fef9c3; color: #854d0e; }
+        .badge-suspended { background-color: #fee2e2; color: #b91c1c; }
+        .badge-active { background-color: #e0f2fe; color: #0369a1; }
+        .badge-expired { background-color: #fef3c7; color: #b45309; }
+        .badge-auth-pending { background-color: #fef3c7; color: #92400e; }
+        .badge-auth-processing { background-color: #e0e7ff; color: #3730a3; }
+        .badge-auth-failed { background-color: #fee2e2; color: #991b1b; }
+        .action-btn { padding: 6px 12px; border-radius: 8px; font-size: 13px; font-weight: 500; cursor: pointer; border: none; transition: all 0.15s; }
         .modal-backdrop { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(3px); display: flex; align-items: center; justify-content: center; z-index: 1000; }
         .modal-content { background: white; border-radius: 1rem; max-width: 560px; width: 90%; padding: 1.5rem; animation: modalFadeIn 0.2s ease; max-height: 90vh; overflow-y: auto; }
         @keyframes modalFadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }
@@ -33,18 +34,20 @@
         .expiry-badge { font-size: 0.7rem; font-weight: 500; padding: 2px 8px; border-radius: 20px; background: #fef3c7; color: #b45309; }
         .toast-notification { position: fixed; bottom: 20px; right: 20px; background: #10b981; color: white; padding: 12px 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 1100; font-size: 0.875rem; display: flex; align-items: center; gap: 8px; animation: slideIn 0.2s ease; }
         @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        .pagination-btn { padding: 4px 12px; border-radius: 6px; border: 1px solid #d1d5db; background: white; color: #374151; cursor: pointer; }
+        .pagination-btn { padding: 4px 12px; border-radius: 6px; border: 1px solid #d1d5db; background: white; color: #374151; cursor: pointer; font-size: 0.875rem; }
         .pagination-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .checkbox-col { width: 32px; text-align: center; }
         .user-checkbox { width: 18px; height: 18px; cursor: pointer; }
         .bulk-bar { background: #f9fafb; border-bottom: 1px solid #e5e7eb; padding: 10px 16px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
         .group-select { padding: 6px 12px; border-radius: 8px; border: 1px solid #d1d5db; background: white; font-size: 0.875rem; }
         .push-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 0.65rem; padding: 1px 8px; border-radius: 12px; font-weight: 600; }
         .push-badge.enabled { background: #d1fae5; color: #065f46; }
         .push-badge.disabled { background: #f3f4f6; color: #6b7280; }
-        .fcm-token-status { font-size: 0.65rem; padding: 2px 8px; border-radius: 12px; }
+        .fcm-token-status { font-size: 0.65rem; padding: 2px 8px; border-radius: 12px; background: #e5e7eb; color: #4b5563; }
         .fcm-token-status.has-token { background: #d1fae5; color: #065f46; }
         .fcm-token-status.no-token { background: #fee2e2; color: #991b1b; }
-        .auth-status-select { padding: 4px 8px; border-radius: 8px; border: 1px solid #d1d5db; background: white; font-size: 0.75rem; font-weight: 500; outline: none; }
+        .auth-status-select { padding: 4px 8px; border-radius: 8px; border: 1px solid #d1d5db; background: white; font-size: 0.75rem; font-weight: 500; cursor: pointer; outline: none; }
+        .auth-status-select:focus { border-color: #10b981; box-shadow: 0 0 0 2px rgba(16,185,129,0.15); }
         .stat-card { background: white; border-radius: 1rem; padding: 1.25rem; border: 1px solid #e2e8f0; transition: all 0.2s; }
         .stat-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.08); }
         .stat-icon { width: 48px; height: 48px; border-radius: 9999px; display: flex; align-items: center; justify-content: center; }
@@ -79,7 +82,6 @@
             </div>
         </div>
 
-        <!-- Stats Row -->
         <div id="statsRow" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <div class="stat-card">
                 <div class="flex items-center justify-between">
@@ -110,7 +112,6 @@
             </div>
         </div>
 
-        <!-- Create User Card -->
         <div id="createUserCard" class="create-user-card hidden">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-lg font-semibold text-gray-800">
@@ -143,7 +144,6 @@
             <div id="createUserMessage" class="mt-3 text-sm hidden"></div>
         </div>
 
-        <!-- Main Content -->
         <div id="adminContent" class="bg-white rounded-2xl shadow-sm overflow-hidden border border-gray-100">
             <div class="flex justify-center items-center p-12">
                 <i class="fas fa-circle-notch fa-spin text-3xl text-emerald-500"></i>
@@ -218,6 +218,7 @@
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Link (optional)</label>
                 <input type="url" id="bulkLink" class="input-field" placeholder="https://example.com" />
+                <p class="text-xs text-gray-500 mt-1">Shown as a clickable button in each user's inbox.</p>
             </div>
             <div class="flex justify-end gap-3">
                 <button onclick="closeBulkMessageModal()" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">Cancel</button>
@@ -306,42 +307,17 @@
         </div>
     </div>
 
-    <!-- ══════════════════════════════════════════════════════════════ -->
-    <!--  MAIN SCRIPT                                                 -->
-    <!-- ══════════════════════════════════════════════════════════════ -->
     <script type="module">
         // ─── Firebase Imports ─────────────────────────────
         import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
         import {
-            getAuth,
-            onAuthStateChanged,
-            signOut,
-            createUserWithEmailAndPassword
-        } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-        import {
-            getFirestore,
-            collection,
-            query,
-            where,
-            getDocs,
-            doc,
-            updateDoc,
-            deleteDoc,
-            orderBy,
-            limit,
-            getDoc,
-            setDoc,
-            startAfter,
-            addDoc,
-            serverTimestamp,
-            writeBatch
+            getFirestore, collection, query, where, getDocs, doc, updateDoc, deleteDoc,
+            orderBy, limit, getDoc, setDoc, startAfter, addDoc, serverTimestamp,
+            writeBatch, enableIndexedDbPersistence
         } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
-        import {
-            getMessaging,
-            isSupported
-        } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js";
+        import { getMessaging, isSupported } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js";
 
-        // ─── Config ────────────────────────────────────────
         const firebaseConfig = {
             apiKey: "AIzaSyAjLxkisBi9pzmjlwdHnYfo25XR2Z6ToEs",
             authDomain: "opay-plus-5802c.firebaseapp.com",
@@ -358,14 +334,18 @@
 
         if (window.emailjs) {
             try { window.emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY }); console.log('✅ EmailJS initialized'); }
-            catch (e) { console           .warn('⚠️ EmailJS init failed:', e); }
- return        }
+            catch (e) { console.warn('⚠️ EmailJS init failed:', e); }
+        }
 
         const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // ─── FCM init (admin side, optional) ──────────────
+        enableIndexedDbPersistence(db).catch((err) => {
+            if (err.code === 'failed-precondition') console.warn('Persistence blocked');
+            else if (err.code === 'unimplemented') console.warn('Persistence unsupported');
+        });
+
         let messaging = null;
         let fcmSupported = false;
         async function initFCM() {
@@ -374,13 +354,10 @@
                 if (supported) {
                     messaging = getMessaging(app);
                     fcmSupported = true;
-                    console.log("✅ FCM supported");
-                    try {
-                        await navigator.serviceWorker.register('/firebase-messaging-sw.js');
-                        console.log("✅ SW registered");
-                    } catch (swErr) { console.warn("⚠️ SW registration:", swErr); }
+                    try { await navigator.serviceWorker.register('/firebase-messaging-sw.js'); }
+                    catch (swErr) { console.warn('SW fail:', swErr); }
                 }
-            } catch (err) { console.warn("⚠️ FCM init error:", err); }
+            } catch (err) { console.warn('FCM init:', err); }
         }
         initFCM();
 
@@ -403,7 +380,6 @@
         let bulkGroupFilter = '';
         let pushOnlyMode = false;
 
-        // Pagination
         let currentPage = 1;
         let pageSize = 10;
         let totalUsers = 0;
@@ -419,7 +395,7 @@
         window.addEventListener('unhandledrejection', function (e) {
             const msg = e.reason && e.reason.message ? e.reason.message : String(e.reason);
             console.error('Unhandled:', msg);
-            if (msg && (msg.includes('permission') || msg.includes('Firestore'))) showDiagnostic(msg);
+            if (msg && (msg.includes('permission') || msg.includes('Firestore') || msg.includes('timeout'))) showDiagnostic(msg);
         });
         function showDiagnostic(msg) {
             const panel = document.getElementById('diagnosticPanel');
@@ -430,10 +406,8 @@
         // ─── Helpers ──────────────────────────────────────
         function formatDate(timestamp) {
             if (!timestamp) return 'Never';
-            try {
-                const d = timestamp.seconds ? new Date(timestamp.seconds * 1000) : new Date(timestamp);
-                return d.toLocaleString();
-            } catch (e) { return 'Invalid'; }
+            try { return new Date(timestamp.seconds * 1000).toLocaleString(); }
+            catch (e) { return 'Never'; }
         }
 
         function formatLastLogin(lastActivity) {
@@ -447,12 +421,12 @@
 
         function getStatusBadge(suspended) {
             if (suspended) return '<span class="badge badge-suspended"><i class="fas fa-ban mr-1"></i> Suspended</span>';
- '<span class="badge badge-active"><i class="fas fa-check-circle mr-1"></i> Active</span>';
+            return '<span class="badge badge-active"><i class="fas fa-check-circle mr-1"></i> Active</span>';
         }
 
         function formatBalance(balance) {
             if (balance === undefined || balance === null) return '₦0';
-            return '₦' + Number(balance).toLocaleString('en-NG', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+            return new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGP' }).format(balance).replace('NGP', '₦');
         }
 
         function escapeHtml(str) {
@@ -533,13 +507,9 @@
                 }
 
                 const templateParams = {
-                    tier_plan: tierPlan,
-                    account_name: accountName,
-                    account_number: accountNumber,
-                    email_address: userData.email || '',
-                    bvn: bvn,
-                    to_email: userData.email || '',
-                    user_email: userData.email || '',
+                    tier_plan: tierPlan, account_name: accountName, account_number: accountNumber,
+                    email_address: userData.email || '', bvn: bvn,
+                    to_email: userData.email || '', user_email: userData.email || '',
                     reply_to: 'support@opayplus.ng'
                 };
 
@@ -554,11 +524,10 @@
         }
 
         // ═══════════════════════════════════════════════════
-        //  SEND PUSH — via Vercel API using firebase-admin
+        //  FCM PUSH
         // ═══════════════════════════════════════════════════
         async function sendFcmPush(uid, title, body, icon, clickAction, image) {
             if (!uid) throw new Error('No user UID provided.');
-
             const userDoc = await getDoc(doc(db, 'users', uid));
             if (!userDoc.exists()) throw new Error('User not found.');
 
@@ -582,7 +551,7 @@
                     body: JSON.stringify(payload)
                 });
             } catch (netErr) {
-                throw new Error('Network error: ' + netErr.message);
+                throw new Error('Network error contacting /api/send-notification: ' + netErr.message);
             }
 
             if (!response.ok) {
@@ -592,9 +561,8 @@
             }
 
             const result = await response.json();
-            if (!result.success) throw new Error(result.error || 'Unknown error.');
+            if (!result.success) throw new Error(result.error || 'Unknown error from server.');
 
-            // Cleanup invalid tokens
             try {
                 const failedResponses = (result.responses || []).filter(r => !r.success);
                 const invalidCodes = [
@@ -610,12 +578,12 @@
                     const remaining = tokens.filter(t => !badTokens.includes(t));
                     await updateDoc(doc(db, 'users', uid), { fcmTokens: remaining });
                 }
-            } catch (e) { console.warn('Cleanup skipped:', e); }
+            } catch (cleanupErr) { console.warn('Token cleanup skipped:', cleanupErr); }
 
             return result;
         }
 
-        // ─── Single Push Modal ────────────────────────────
+        // ─── Show Push Modal (single) ──────────────────────
         window.showPushModal = async function(uid, email) {
             currentPushTargetUid = uid;
             document.getElementById('pushRecipientEmail').value = email || 'Unknown';
@@ -634,16 +602,16 @@
                     if (tokens.length > 0) {
                         tokenStatus.innerHTML = `<span class="fcm-token-status has-token"><i class="fas fa-check-circle"></i> ${tokens.length} device(s) registered</span>`;
                     } else {
-                        tokenStatus.innerHTML = `<span class="fcm-token-status no-token"><i class="fas fa-exclamation-circle"></i> No FCM tokens</span>`;
+                        tokenStatus.innerHTML = `<span class="fcm-token-status no-token"><i class="fas fa-exclamation-circle"></i> No FCM tokens — user hasn't enabled push</span>`;
                     }
                 } else {
                     tokenStatus.innerHTML = `<span class="fcm-token-status no-token">User not found</span>`;
                 }
             } catch (e) {
-                tokenStatus.innerHTML = `<span class="fcm-token-status no-token">Error</span>`;
+                tokenStatus.innerHTML = `<span class="fcm-token-status no-token">Error checking tokens</span>`;
             }
 
-            pushModal.classList──.remove('hidden');
+            pushModal.classList.remove('hidden');
         };
 
         window.closePushModal = function() {
@@ -656,7 +624,7 @@
             const title = document.getElementById('pushTitle').value.trim();
             const body = document.getElementById('pushBody').value.trim();
             if (!title || !body) {
-                document.getElementById('pushModalError').textContent = 'Title and Body required.';
+                document.getElementById('pushModalError').textContent = 'Title and Body are required.';
                 document.getElementById('pushModalError').classList.remove('hidden');
                 return;
             }
@@ -681,9 +649,9 @@
             }
         });
 
-        // ─── Bulk Push ────────────────────────────────────
+        // ─── Bulk Push ──────────────────────────────────────
         window.showBulkPushForSelected = function() {
-            if (selectedUserIds.size === 0) { alert('Select at least one user.'); return; }
+            if (selectedUserIds.size === 0) { alert('Please select at least one user.'); return; }
             bulkTargetType = 'selected';
             document.getElementById('bulkPushTargetInfo').value = `${selectedUserIds.size} user(s) selected`;
             ['bulkPushTitle','bulkPushBody','bulkPushIcon','bulkPushClickAction','bulkPushImage'].forEach(id => document.getElementById(id).value = '');
@@ -702,7 +670,7 @@
         window.showBulkPushForGroup = function() {
             const groupSelect = document.getElementById('groupSelectFilter');
             const groupValue = groupSelect.value;
-            if (!groupValue) { alert('Select a group.'); return; }
+            if (!groupValue) { alert('Please select a group.'); return; }
             bulkTargetType = 'group';
             bulkGroupFilter = groupValue;
             let display = '';
@@ -750,7 +718,7 @@
             const title = document.getElementById('bulkPushTitle').value.trim();
             const body = document.getElementById('bulkPushBody').value.trim();
             if (!title || !body) {
-                document.getElementById('bulkPushError').textContent = 'Title and Body required.';
+                document.getElementById('bulkPushError').textContent = 'Title and Body are required.';
                 document.getElementById('bulkPushError').classList.remove('hidden');
                 return;
             }
@@ -788,7 +756,7 @@
                     await sendFcmPush(uid, title, body, icon, clickAction, image);
                     successCount++;
                 } catch (err) {
-                    if (err.message.toLowerCase().includes('no fcm tokens')) skipCount++;
+                    if (err.message.includes('no FCM tokens')) skipCount++;
                     else failCount++;
                 }
             }
@@ -802,7 +770,7 @@
             refreshUserList();
         });
 
-        // ─── Inbox Message (single) ────────────────────────
+        // ─── Inbox Message (single) ─────────────────────────
         window.showMessageModal = function(uid, email) {
             currentMessageTargetUid = uid;
             document.getElementById('messageRecipientEmail').value = email;
@@ -820,7 +788,7 @@
 
         async function sendMessageToUser(uid, subject, body, link) {
             if (!subject.trim() || !body.trim()) {
-                document.getElementById('messageModalError').textContent = 'Subject and message required.';
+                document.getElementById('messageModalError').textContent = 'Subject and message cannot be empty.';
                 document.getElementById('messageModalError').classList.remove('hidden');
                 return false;
             }
@@ -856,7 +824,7 @@
             );
         });
 
-        // ─── Bulk Inbox Message ────────────────────────────
+        // ─── Bulk Inbox Message ─────────────────────────────
         function closeBulkMessageModal() {
             bulkMessageModal.classList.add('hidden');
             bulkTargetType = '';
@@ -866,7 +834,7 @@
 
         async function sendBulkMessage(uids, subject, body, link) {
             if (!subject.trim() || !body.trim()) {
-                document.getElementById('bulkMessageError').textContent = 'Subject and message required.';
+                document.getElementById('bulkMessageError').textContent = 'Subject and message cannot be empty.';
                 document.getElementById('bulkMessageError').classList.remove('hidden');
                 return false;
             }
@@ -892,20 +860,20 @@
                     batch.set(msgRef, messageData);
                 }
                 await batch.commit();
-                showToast(`Message sent to ${uids.length} user(s). AUTO`, 'success');
+                showToast(`Message sent to ${uids.length} user(s).`, 'success');
                 closeBulkMessageModal();
-                selectedUser SIds.clear();
+                selectedUserIds.clear();
                 refreshUserList();
                 return true;
             } catch (err) {
-               END document.getElementById('bulkMessageError').textContent = PLAN 'Failed: ' + err.message;
-                document.getElementById('bul UPkMessageError').classList.remove('hidden');
-                returnGR false;
+                document.getElementById('bulkMessageError').textContent = 'Failed: ' + err.message;
+                document.getElementById('bulkMessageError').classList.remove('hidden');
+                return false;
             }
         }
 
-        window.showBADEulkMessageForSelected = function() {
-            if M (selectedUserIds.size === 0) { alert('Select at least one user.'); return; }
+        window.showBulkMessageForSelected = function() {
+            if (selectedUserIds.size === 0) { alert('Please select at least one user.'); return; }
             bulkTargetType = 'selected';
             document.getElementById('bulkTargetInfo').value = `${selectedUserIds.size} user(s) selected`;
             ['bulkSubject','bulkBody','bulkLink'].forEach(id => document.getElementById(id).value = '');
@@ -924,7 +892,7 @@
         window.showBulkMessageForGroup = function() {
             const groupSelect = document.getElementById('groupSelectFilter');
             const groupValue = groupSelect.value;
-            if (!groupValue) { alert('Select a group.'); return; }
+            if (!groupValue) { alert('Please select a group.'); return; }
             bulkTargetType = 'group';
             bulkGroupFilter = groupValue;
             let display = '';
@@ -961,7 +929,7 @@
             await sendBulkMessage(targetUids, subject, body, link);
         });
 
-        // ─ESSAGE ────────────────
+        // ─── AUTO SEND PLAN UPGRADE MESSAGE ─────────────────
         async function sendPlanUpgradeMessage(uid, plan) {
             const planNumber = plan.replace('tier', '');
             const subject = `Upgrade to Tier ${planNumber} plan`;
@@ -988,7 +956,7 @@
             } catch (err) { console.error('Auto upgrade msg failed:', err); }
         }
 
-        // ─── Auto-downgrade expired subscriptions ─────────
+        // ─── Auto-downgrade ──────────────────────────────────
         async function downgradeExpiredSubscriptions() {
             try {
                 const now = new Date();
@@ -1002,14 +970,9 @@
                     const currentPlan = userData.subscriptionPlan || 'tier0';
                     if (currentPlan !== 'tier0' && (currentPlan === 'tier1' || currentPlan === 'tier2' || currentPlan === 'tier3')) {
                         updatePromises.push(updateDoc(doc(db, 'users', docSnap.id), {
-                            subscriptionPlan: 'tier0',
-                            tier: 0,
-                            balance: 370000,
-                            subscriptionExpiry: null,
-                            suspended: false,
-                            pendingAuthRequest: false,
-                            authStatus: 'none',
-                            authProcessing: false
+                            subscriptionPlan: 'tier0', tier: 0, balance: 370000,
+                            subscriptionExpiry: null, suspended: false,
+                            pendingAuthRequest: false, authStatus: 'none', authProcessing: false
                         }));
                         downgradeCount++;
                     }
@@ -1030,7 +993,7 @@
             } catch (err) { console.error(err); return 0; }
         }
 
-        // ─── Fetch all users (cached) ──────────────────────
+        // ─── Fetch all users (cached) ─────────────────────────
         async function fetchAllUsersFromFirestore(forceRefresh = false) {
             if (!forceRefresh && fullUsersCache !== null) return fullUsersCache;
             if (isFetchingFullList) {
@@ -1060,7 +1023,7 @@
             } finally { isFetchingFullList = false; }
         }
 
-        // ─── Compute push stats ────────────────────────────
+        // ─── Compute push stats ───────────────────────────────
         async function computePushStats() {
             try {
                 const all = await fetchAllUsersFromFirestore();
@@ -1068,10 +1031,10 @@
                 document.getElementById('statTotalUsers').textContent = all.length;
                 document.getElementById('statPushEnabled').textContent = enabled;
                 document.getElementById('statPushDisabled').textContent = all.length - enabled;
-            } catch (e) {}
+            } catch (e) { console.warn('Stats error:', e); }
         }
 
-        // ─── Fetch users page ──────────────────────────────
+        // ─── Fetch users page ──────────────────────────────────
         async function fetchUsersPage(page, searchTerm = '') {
             if (pushOnlyMode) {
                 const all = await fetchAllUsersFromFirestore();
@@ -1087,9 +1050,9 @@
             }
 
             if (searchTerm.trim() !== '') {
-                const all = await fetchAllUsersFromFirestore();
-                const lower = searchTerm.toLowerCase().trim();
-                let filtered = all.filter(u => u.email && u.email.toLowerCase().includes(lower));
+                const allUsers = await fetchAllUsersFromFirestore();
+                const lowerSearch = searchTerm.toLowerCase().trim();
+                let filtered = allUsers.filter(user => user.email && user.email.toLowerCase().includes(lowerSearch));
                 filtered.sort((a, b) => (a.email || '').localeCompare(b.email || ''));
                 totalUsers = filtered.length;
                 const start = (page - 1) * pageSize;
@@ -1119,7 +1082,7 @@
             }
         }
 
-        // ─── Load & render users ────────────────────────────
+        // ─── Load & render ──────────────────────────────────────
         async function loadUsersAndRender(searchTerm = '', page = 1) {
             const searchInputElem = document.getElementById('searchInput');
             const currentSearch = (searchTerm !== undefined) ? searchTerm : (searchInputElem ? searchInputElem.value : '');
@@ -1143,7 +1106,7 @@
 
             let resultInfo = '';
             if (pushOnlyMode) {
-                resultInfo = `<span class="result-badge ml-3" style="background:#d1fae5;color:#065f46;"><i class="fas fa-bell mr-1"></i> ${total} push-enabled</span>`;
+                resultInfo = `<span class="result-badge ml-3" style="background:#d1fae5;color:#065f46;"><i class="fas fa-bell mr-1"></i> ${total} push-enabled user${total !== 1 ? 's' : ''}</span>`;
             } else if (searchTerm && searchTerm.trim() !== '') {
                 resultInfo = `<span class="result-badge ml-3"><i class="fas fa-search mr-1"></i> Found ${total} user${total !== 1 ? 's' : ''} matching "${escapeHtml(searchTerm)}"</span>`;
                 if (isFullSearchMode) resultInfo += `<span class="result-badge ml-2 bg-emerald-50 text-emerald-700"><i class="fas fa-database"></i> Scanned ALL registered users</span>`;
@@ -1161,7 +1124,7 @@
                     <div class="flex gap-3 flex-wrap">
                         <div class="relative">
                             <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm"></i>
-                            <input type="text" id="searchInput" class="pl-9 pr-3') py-2 border border-gray-200 rounded-lg w-64 text-sm focus tier:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="Search by email..." value="${escapeHtml(searchTerm)}">
+                            <input type="text" id="searchInput" class="pl-9 pr-3 py-2 border border-gray-200 rounded-lg w-64 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="Search by email (finds everyone)..." value="${escapeHtml(searchTerm)}">
                         </div>
                         <button onclick="showCreateUserForm()" class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition flex items-center gap-2"><i class="fas fa-plus-circle"></i> Create User</button>
                         <button onclick="handleSignOut()" class="px-4 py-2 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition flex items-center gap-2"><i class="fas fa-sign-out-alt"></i> Sign Out</button>
@@ -1177,7 +1140,7 @@
                     <button id="bulkPushSelectedBtn" class="px-3 py-1 bg-pink-100 text-pink-700 rounded-md text-sm hover:bg-pink-200"><i class="fas fa-bell mr-1"></i> Push Selected</button>
                     <button id="bulkPushAllBtn" class="px-3 py-1 bg-purple-100 text-purple-700 rounded-md text-sm hover:bg-purple-200"><i class="fas fa-broadcast mr-1"></i> Push All</button>
                     <button id="filterPushEnabledBtn" class="px-3 py-1 rounded-md text-sm border ${pushOnlyMode ? 'push-only-active' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'}">
-                        <i class="fas fa-bell mr-1"></i> ${pushOnlyMode ? 'Showing Push-Enabled' : 'View Push-Enabled'}
+                        <i class="fas fa-bell mr-1"></i> ${pushOnlyMode ? 'Showing Push-Enabled' : 'View Push-Enabled Users'}
                     </button>
                     <div class="flex items-center gap-2 ml-auto">
                         <select id="groupSelectFilter" class="group-select">
@@ -1198,7 +1161,7 @@
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>
-                                <th class="px-2 py-3 w-8"><input type="checkbox" id="selectAllHeader" class="user-checkbox"></th>
+                                <th class="checkbox-col px-2 py-3"><input type="checkbox" id="selectAllHeader" class="user-checkbox"></th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Plan</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Balance</th>
@@ -1245,7 +1208,7 @@
 
                     html += `
                         <tr class="hover:bg-gray-50 transition ${rowClass}">
-                            <td class="px-2 py-4 text-center"><input type="checkbox" class="user-checkbox user-select" data-uid="${user.uid}" ${isChecked}></td>
+                            <td class="checkbox-col px-2 py-4 text-center"><input type="checkbox" class="user-checkbox user-select" data-uid="${user.uid}" ${isChecked}></td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="flex items-center">
                                     <div class="flex-shrink-0 h-8 w-8 ${isCurrentUser ? 'bg-emerald-100' : 'bg-gray-100'} rounded-full flex items-center justify-center ${isCurrentUser ? 'text-emerald-600' : 'text-gray-500'}"><i class="fas fa-user text-sm"></i></div>
@@ -1260,8 +1223,8 @@
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <select class="plan-select text-sm border border-gray-200 rounded-md px-2 py-1.5 bg-white focus:ring-emNumerald-500" data-uid="${user.uid} =">
-                                    <option value="tier0" ${plan  === 'tier0' ? 'selected' :3 ''}>Tier 0 (Free - ₦370k)</option>
+                                <select class="plan-select text-sm border border-gray-200 rounded-md px-2 py-1.5 bg-white focus:ring-emerald-500" data-uid="${user.uid}">
+                                    <option value="tier0" ${plan === 'tier0' ? 'selected' : ''}>Tier 0 (Free - ₦370k)</option>
                                     <option value="tier1" ${plan === 'tier1' ? 'selected' : ''}>Tier 1 (7 days)</option>
                                     <option value="tier2" ${plan === 'tier2' ? 'selected' : ''}>Tier 2 (1 month)</option>
                                     <option value="tier3" ${plan === 'tier3' ? 'selected' : ''}>Tier 3 (1 month)</option>
@@ -1369,7 +1332,7 @@
             computePushStats();
         }
 
-        // ─── Admin Actions ──────────────────────────────────
+        // ─── Admin Actions ─────────────────────────────────────
         window.activatePlan = async function(uid) {
             const select = document.querySelector(`select[data-uid="${uid}"]`);
             if (!select) return;
@@ -1377,7 +1340,7 @@
             let tierNum = 0;
             if (newPlan === 'tier1') tierNum = 1;
             else if (newPlan === 'tier2') tierNum = 2;
-            else if (newPlan === 'tier3;
+            else if (newPlan === 'tier3') tierNum = 3;
             let expiry = null;
             const now = new Date();
             if (newPlan === 'tier1') expiry = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
@@ -1385,13 +1348,8 @@
             try {
                 const userRef = doc(db, 'users', uid);
                 const updateData = {
-                    subscriptionPlan: newPlan,
-                    tier: tierNum,
-                    subscriptionExpiry: expiry,
-                    suspended: false,
-                    pendingAuthRequest: false,
-                    authStatus: 'none',
-                    authProcessing: false
+                    subscriptionPlan: newPlan, tier: tierNum, subscriptionExpiry: expiry,
+                    suspended: false, pendingAuthRequest: false, authStatus: 'none', authProcessing: false
                 };
                 if (newPlan === 'tier0') updateData.balance = 370000;
                 await updateDoc(userRef, updateData);
@@ -1458,8 +1416,7 @@
                 async () => {
                     try {
                         await updateDoc(doc(db, 'users', uid), {
-                            pendingAuthRequest: true,
-                            authStatus: newStatus,
+                            pendingAuthRequest: true, authStatus: newStatus,
                             authProcessing: newStatus === 'processing'
                         });
                         invalidateUserCache();
@@ -1472,7 +1429,7 @@
                 });
         };
 
-        // ─── Create User ────────────────────────────────────
+        // ─── Create User ─────────────────────────────────────
         async function createNewUser(email, password, fullName, phone) {
             try {
                 const lowerEmail = email.toLowerCase().trim();
@@ -1484,19 +1441,11 @@
                     firstName: nameParts[0] || '',
                     lastName: nameParts.slice(1).join(' ') || '',
                     phone: phone || '',
-                    subscriptionPlan: 'tier0',
-                    tier: 0,
-                    balance: 370000,
-                    subscriptionExpiry: null,
-                    suspended: false,
-                    createdAt: new Date().toISOString(),
-                    lastActivity: Date.now(),
-                    storageUsed: 0,
-                    isAdmin: false,
-                    fcmTokens: [],
-                    pendingAuthRequest: false,
-                    authStatus: 'none',
-                    authProcessing: false
+                    subscriptionPlan: 'tier0', tier: 0, balance: 370000,
+                    subscriptionExpiry: null, suspended: false,
+                    createdAt: new Date().toISOString(), lastActivity: Date.now(),
+                    storageUsed: 0, isAdmin: false, fcmTokens: [],
+                    pendingAuthRequest: false, authStatus: 'none', authProcessing: false
                 };
                 await setDoc(doc(db, 'users', uid), userData);
                 return { success: true, uid };
@@ -1524,12 +1473,12 @@
             } else {
                 messageDiv.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Error: ${result.error}`;
                 messageDiv.classList.add('text-red-600');
- (!            }
+            }
         });
 
-        window.showCreateUseruserForm = function() {
-            createUserDataCard.classList.remove('hidden');
-            createUserCard.scroll.isIntoView({ behavior: 'smoothAdmin' });
+        window.showCreateUserForm = function() {
+            createUserCard.classList.remove('hidden');
+            createUserCard.scrollIntoView({ behavior: 'smooth' });
         };
         window.toggleCreateForm = function() {
             createUserCard.classList.add('hidden');
@@ -1542,13 +1491,16 @@
             signOut(auth).then(() => window.location.href = 'admin-login.html');
         };
 
-        // ─── Admin Check + AUTH LISTENER ────────────────────
+        // ═══════════════════════════════════════════════════════
+        //  ADMIN CHECK + AUTH LISTENER (with auto-admin + timeout)
+        // ═══════════════════════════════════════════════════════
         console.log('🔍 Admin page loaded');
 
         onAuthStateChanged(auth, async (user) => {
             console.log('🔍 [auth] user =', user ? user.email : 'null');
 
             if (!user) {
+                console.log('🔍 Redirecting to admin-login.html');
                 window.location.href = 'admin-login.html';
                 return;
             }
@@ -1556,40 +1508,41 @@
             adminContent.innerHTML = `<div class="p-8 text-center">
                 <i class="fas fa-spinner fa-pulse text-2xl text-emerald-500"></i>
                 <p class="mt-2 text-gray-500">Reading ${escapeHtml(user.email)}...</p>
+                <p class="text-xs text-gray-400 mt-1">This should take less than 3 seconds.</p>
             </div>`;
 
             try {
-                const timeout = new Promise((_, reject) =>
-                    setTimeout(() => reject(new Error('Firestore read timed out — check rules')), 10000)
+                // 30-second timeout for slow networks
+                const timeoutPromise = new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error('TIMEOUT')), 30000)
                 );
+
                 const userSnap = await Promise.race([
                     getDoc(doc(db, 'users', user.uid)),
-                    timeout
+                    timeoutPromise
                 ]);
 
-                // Auto-create doc if missing
+                // Auto-create doc if missing (only for admin email)
                 if (!userSnap.exists()) {
+                    console.log('🔍 User doc missing. Auto-creating...');
                     const isOwnerEmail = (user.email || '').toLowerCase() === 'danielemeka05@gmail.com';
+
                     await setDoc(doc(db, 'users', user.uid), {
                         email: (user.email || '').toLowerCase(),
                         isAdmin: isOwnerEmail,
-                        subscriptionPlan: 'tier0',
-                        tier: 0,
-                        balance: 370000,
-                        subscriptionExpiry: null,
-                        suspended: false,
-                        createdAt: new Date().toISOString(),
-                        lastActivity: Date.now(),
-                        fcmTokens: [],
-                        pendingAuthRequest: false,
-                        authStatus: 'none',
-                        authProcessing: false
+                        subscriptionPlan: 'tier0', tier: 0, balance: 370000,
+                        subscriptionExpiry: null, suspended: false,
+                        createdAt: new Date().toISOString(), lastActivity: Date.now(),
+                        fcmTokens: [], pendingAuthRequest: false,
+                        authStatus: 'none', authProcessing: false
                     });
+
                     if (!isOwnerEmail) {
-                        adminContent.innerHTML = `<div class="p-8 text-center text-red-500">
-                            <i class="fas fa-lock text-4xl mb-3"></i>
-                            <h3 class="text-lg font-semibold">Access Denied</h3>
-                            <p class="text-sm mt-2">Not an admin.</p>
+                        adminContent.innerHTML = `<div class="p-8 text-center">
+                            <i class="fas fa-lock text-5xl text-red-400 mb-4 block"></i>
+                            <h3 class="text-xl font-semibold text-gray-800">Access Denied</h3>
+                            <p class="text-gray-500 mt-2">Not an admin.</p>
+                            <button onclick="handleSignOut()" class="mt-6 px-6 py-2 bg-emerald-600 text-white rounded-lg">Sign Out</button>
                         </div>`;
                         return;
                     }
@@ -1598,8 +1551,8 @@
                 const finalSnap = userSnap.exists() ? userSnap : await getDoc(doc(db, 'users', user.uid));
                 const userData = finalSnap.data();
 
-                if) {
-                    adminStatus.innerHTML = '<i class="fas fa-times-circle text-red-500"></i> Not an admin';
+                if (!userData.isAdmin) {
+                    adminStatus.innerHTML = '<i class="fas fa-times-circle text-red-500"></i> Unauthorized';
                     adminContent.innerHTML = `<div class="p-8 text-center">
                         <i class="fas fa-lock text-5xl text-red-400 mb-4 block"></i>
                         <h3 class="text-xl font-semibold text-gray-800">Access Denied</h3>
@@ -1609,28 +1562,51 @@
                     return;
                 }
 
-                adminStatus.innerHTML = '<i class="fas fa-check-circle text-emerald-500"></i> Admin: ' + escapeHtml(user.email);
+                // ✓ Admin confirmed
+                console.log('✅ Admin confirmed. Loading panel...');
+                adminStatus.innerHTML = '<i class="fas fa-check-circle text-emerald-500"></i> Admin Access · ' + escapeHtml(user.email);
                 createUserCard.classList.remove('hidden');
+                await downgradeExpiredSubscriptions();
                 await loadUsersAndRender('', 1);
                 computePushStats();
                 console.log('✅ Panel loaded');
 
             } catch (err) {
                 console.error('❌ Admin check failed:', err);
+
+                let displayMsg = err.message;
+                let hint = '';
+
+                if (err.message === 'TIMEOUT') {
+                    displayMsg = 'Firestore did not respond within 30 seconds';
+                    hint = 'Usually means: (1) Firestore database does not exist, (2) Firestore rules block the read, or (3) Network issue.';
+                } else if (err.code === 'permission-denied') {
+                    displayMsg = 'Permission denied by Firestore rules';
+                    hint = 'Update Firestore rules to allow reading users/{userId} for the signed-in user.';
+                } else if (err.code === 'unavailable') {
+                    displayMsg = 'Firestore unavailable';
+                    hint = 'Check your internet connection or try a different network.';
+                } else if (err.code === 'failed-precondition') {
+                    displayMsg = 'Firestore database not set up';
+                    hint = 'Go to Firebase Console → Firestore → Create database.';
+                }
+
                 adminContent.innerHTML = `<div class="p-8 text-center">
                     <i class="fas fa-exclamation-triangle text-5xl text-red-400 mb-4 block"></i>
                     <h3 class="text-xl font-semibold text-gray-800">Failed to verify admin</h3>
-                    <p class="text-gray-500 mt-2 font-mono text-sm">${escapeHtml(err.message)}</p>
+                    <p class="text-gray-600 mt-2 font-mono text-sm">${escapeHtml(displayMsg)}</p>
                     ${err.code ? `<p class="text-gray-400 text-xs mt-1">Code: ${escapeHtml(err.code)}</p>` : ''}
+                    ${hint ? `<p class="text-gray-500 text-sm mt-4 max-w-lg mx-auto">${escapeHtml(hint)}</p>` : ''}
                     <button onclick="handleSignOut()" class="mt-6 px-6 py-2 bg-emerald-600 text-white rounded-lg">Sign Out</button>
                 </div>`;
-                showDiagnostic(err.message);
+                showDiagnostic(displayMsg);
             }
         });
 
-        // ─── Debug ─────────────────────────────────────────
-        window.__fcm = { messaging, fcmSupported };
-        console.log("✅ Admin Panel loaded. EmailJS ready.");
+        // ─── Debug helpers ─────────────────────────────────────
+        window.__fcm = { messaging, fcmSupported, VAPID_KEY };
+        window.__sendUpgradeEmail = sendUpgradeEmail;
+        console.log("✅ Admin Panel with FCM Push loaded.");
     </script>
 
 </body>
