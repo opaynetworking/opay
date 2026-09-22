@@ -1,1 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin Setup — One-Time</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+        body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background: #f1f5f9; }
+        .card { background: white; border-radius: 1.5rem; padding: 2.5rem; max-width: 480px; width: 90%; box-shadow: 0 20px 40px -12px rgba(0,0,0,0.15); }
+        .input-field { width: 100%; padding: 0.85rem 1rem; border: 1.5px solid #e2e8f0; border-radius: 0.75rem; font-size: 0.95rem; outline: none; transition: all 0.2s; background: #f8fafc; }
+        .input-field:focus { border-color: #00bfa5; background: #fff; box-shadow: 0 0 0 4px rgba(0,191,165,0.1); }
+        .btn { width: 100%; padding: 0.9rem 0; border-radius: 0.75rem; background: linear-gradient(135deg, #00bfa5, #00a28b); color: white; font-weight: 700; border: none; cursor: pointer; transition: transform 0.15s, box-shadow 0.2s; box-shadow: 0 4px 14px rgba(0,191,165,0.35); }
+        .btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 22px rgba(0,191,165,0.45); }
+        .btn:disabled { opacity: 0.65; cursor: not-allowed; }
+        .alert { padding: 0.85rem 1rem; border-radius: 0.75rem; font-size: 0.875rem; margin-bottom: 1rem; display: none; align-items: center; gap: 10px; }
+        .alert.show { display: flex; }
+        .alert-error { background: #fee2e2; color: #991b1b; border-left: 4px solid #ef4444; }
+        .alert-success { background: #d1fae5; color: #065f46; border-left: 4px solid #10b981; }
+        .alert-info { background: #e0f2fe; color: #075985; border-left: 4px solid #0284c7; }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-5">
 
+    <div class="card">
+        <div class="text-center mb-6">
+            <div class="w-16 h-16 mx-auto mb-3 rounded-full bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center shadow-lg">
+                <i class="fas fa-user-shield text-white text-2xl"></i>
+            </div>
+            <h1 class="text-2xl font-bold text-gray-800">Admin Setup</h1>
+            <p class="text-gray-500 text-sm mt-1">One-time admin account activation</p>
+        </div>
+
+        <div id="msg" class="alert alert-info show">
+            <i class="fas fa-info-circle"></i>
+            <span>Sign in with your admin email to grant yourself admin access.</span>
+        </div>
+
+        <div class="space-y-3 mb-4">
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1.5">
+                    <i class="fas fa-envelope text-emerald-500 mr-1"></i> Admin Email
+                </label>
+                <input type="email" id="email" class="input-field" placeholder="your-email@example.com" value="danielemeka05@gmail.com" />
+            </div>
+            <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1.5">
+                    <i class="fas fa-lock text-emerald-500 mr-1"></i> Password
+                </label>
+                <input type="password" id="password" class="input-field" placeholder="••••••••" />
+            </div>
+        </div>
+
+        <button id="setupBtn" class="btn">
+            <i class="fas fa-shield-alt mr-2"></i> Make Me Admin
+        </button>
+
+        <div class="mt-6 pt-5 border-t border-gray-100 text-center">
+            <p class="text-xs text-gray-400">
+                <i class="fas fa-exclamation-triangle mr-1"></i>
+                Delete this file after you've set up your admin account.
+            </p>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAjLxkisBi9pzmjlwdHnYfo25XR2Z6ToEs",
+            authDomain: "opay-plus-5802c.firebaseapp.com",
+            projectId: "opay-plus-5802c",
+            storageBucket: "opay-plus-5802c.firebasestorage.app",
+            messagingSenderId: "967061625774",
+            appId: "1:967061625774:web:236f88391ccdd9edd2863f",
+            measurementId: "G-H0QV81VYBY"
+        };
+
+        const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        const msg = document.getElementById('msg');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const btn = document.getElementById('setupBtn');
+
+        function showMsg(text, type) {
+            msg.className = 'alert alert-' + type + ' show';
+            msg.innerHTML = '<i class="fas fa-' +
+                (type === 'error' ? 'exclamation-circle' : type === 'success' ? 'check-circle' : 'info-circle') +
+                '"></i> <span>' + text + '</span>';
+        }
+
+        btn.addEventListener('click', async () => {
+            const email = emailInput.value.trim().toLowerCase();
+            const password = passwordInput.value;
+
+            if (!email || !password) {
+                showMsg('Please fill in both email and password.', 'error');
+                return;
+            }
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-pulse mr-2"></i> Processing...';
+
+            try {
+                // Step 1: Sign in
+                const cred = await signInWithEmailAndPassword(auth, email, password);
+                const uid = cred.user.uid;
+                console.log('✅ Signed in as', email, '(uid:', uid + ')');
+
+                // Step 2: Ensure the user document exists and set isAdmin: true
+                const userRef = doc(db, 'users', uid);
+                const userSnap = await getDoc(userRef);
+
+                if (!userSnap.exists()) {
+                    // Create a minimal user doc if it doesn't exist
+                    await setDoc(userRef, {
+                        email: email,
+                        isAdmin: true,
+                        subscriptionPlan: 'tier0',
+                        tier: 0,
+                        balance: 370000,
+                        suspended: false,
+                        createdAt: new Date().toISOString(),
+                        lastActivity: Date.now(),
+                        fcmTokens: [],
+                        pendingAuthRequest: false,
+                        authStatus: 'none',
+                        authProcessing: false
+                    });
+                    showMsg('✅ Admin account created successfully! Redirecting to admin panel...', 'success');
+                } else {
+                    // Update existing doc
+                    await updateDoc(userRef, { isAdmin: true });
+                    showMsg('✅ Admin access granted! Redirecting to admin panel...', 'success');
+                }
+
+                // Step 3: Redirect to admin panel after 2 seconds
+                setTimeout(() => {
+                    window.location.href = 'nextfulls(AD).html';
+                }, 2000);
+
+            } catch (err) {
+                console.error('Setup error:', err.code, err.message);
+
+                let msgText = 'Setup failed: ' + err.message;
+                if (err.code === 'auth/wrong-password' || err.code === 'auth/invalid-credential') {
+                    msgText = 'Incorrect password. Check your email and password and try again.';
+                } else if (err.code === 'auth/user-not-found') {
+                    msgText = 'No account found with that email. Create the account first in Firebase Console → Authentication.';
+                } else if (err.code === 'auth/invalid-email') {
+                    msgText = 'Invalid email address.';
+                } else if (err.code === 'auth/too-many-requests') {
+                    msgText = 'Too many attempts. Wait a few minutes and try again.';
+                } else if (err.code === 'permission-denied') {
+                    msgText = 'Firestore permission denied. Check your Firestore security rules allow writing to the user document.';
+                }
+                showMsg(msgText, 'error');
+
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-shield-alt mr-2"></i> Make Me Admin';
+            }
+        });
+
+        // Press Enter to submit
+        passwordInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') btn.click();
+        });
+    </script>
+</body>
+</html>
