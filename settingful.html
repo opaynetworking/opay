@@ -401,38 +401,6 @@
       if (e.ctrlKey && e.keyCode == 'U'.charCodeAt(0)) return false;
     };
   </script>
-  <script>
-setTimeout(function () {
-    var ua = navigator.userAgent;
-    var hasUpdater = (typeof window.AndroidUpdater !== 'undefined');
-    var hasBridge  = (typeof window.AndroidBridge !== 'undefined');
-    var isWv = /;\s*wv[)\s]/i.test(ua) || ua.indexOf(' wv') !== -1 || /Version\/4\.0.*Chrome/i.test(ua);
-    var isAndroid = /android/i.test(ua);
-
-    var msg =
-        '══════ DIAGNOSTIC ══════\n\n' +
-        'User-Agent:\n' + ua + '\n\n' +
-        'Android? ' + (isAndroid ? 'YES' : 'NO') + '\n' +
-        'WebView (wv)? ' + (isWv ? 'YES' : 'NO') + '\n' +
-        'AndroidUpdater? ' + (hasUpdater ? 'YES' : 'NO') + '\n' +
-        'AndroidBridge? ' + (hasBridge ? 'YES' : 'NO');
-
-    alert(msg);
-
-    // Also try fetching version.json
-    fetch('/version.json?t=' + Date.now(), { cache: 'no-store' })
-        .then(function (r) {
-            if (!r.ok) throw new Error('HTTP ' + r.status);
-            return r.text();
-        })
-        .then(function (t) {
-            alert('version.json response:\n\n' + t.slice(0, 400));
-        })
-        .catch(function (e) {
-            alert('version.json FAILED:\n' + e.message);
-        });
-}, 2500);
-</script>
  <script src="/pwa-check.js"></script>
  <script src="/network-popup.js"></script>
 </body>
