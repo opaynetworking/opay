@@ -2294,8 +2294,14 @@
             window.addEventListener('popstate', function() { window.location.href = 'dashboardful.html'; });
         })();
     </script>
-    <script src="/app-update-check.js"></script>
     <script src="/pwa-check.js"></script>
     <script src="/network-popup.js"></script>
+    <script>
+window.APP_UPDATE_OPTIONS = {
+    snoozeMs: 6 * 60 * 60 * 1000,   // 6 hours
+    theme: 'dark'
+};
+</script>
+<script src="/app-update-check.js"></script>
 </body>
 </html>
