@@ -1,19 +1,12 @@
-/* ============================================================================
- * app-update-check.js
+/* app-update-check.js — AGGRESSIVE DETECTION VERSION
  * ----------------------------------------------------------------------------
- * Detects old APKs (any Android WebView without the AndroidUpdater bridge)
- * and shows a forced update prompt.
+ * Detects old APKs even if the WebView User-Agent doesn't contain the
+ * standard "wv" marker.
  *
- * Add to any page with ONE line:
- *     <script src="/app-update-check.js"></script>
- *
- * Detection logic:
- *   • Not in an Android WebView → skip (Chrome/Firefox/desktop users
- *     never see this prompt)
- *   • In an Android WebView WITHOUT the AndroidUpdater bridge
- *     → this is an old APK → force update
- *   • In an Android WebView WITH the bridge
- *     → read installed versionCode, compare to version.json
+ *   • Any Android device + no AndroidUpdater bridge → treat as old APK
+ *     (shows forced update)
+ *   • Any Android device + has AndroidUpdater bridge → compare versions
+ *   • Non-Android devices → skip entirely
  * ==========================================================================*/
 
 (function () {
@@ -21,34 +14,47 @@
 
     var OPTS = Object.assign({
         versionJsonUrl: '/version.json',
-        theme: 'light'
+        theme: 'light',
+        // Set to true to ONLY prompt when UA clearly shows a WebView.
+        // Set to false (default) to prompt any Android without the bridge.
+        requireWebViewMarker: false
     }, window.APP_UPDATE_OPTIONS || {});
 
-    /* ═══════════════════════════════════════════════════════════════
-     *  ENVIRONMENT DETECTION
-     * ═══════════════════════════════════════════════════════════════ */
     function isAndroid() {
         return /android/i.test(navigator.userAgent);
     }
 
-    // True if we're inside an APK's WebView (not Chrome / Firefox / etc.)
-    function isInWebViewAPK() {
+    function hasWvMarker() {
         var ua = navigator.userAgent;
-        if (!/android/i.test(ua)) return false;
-
-        // Standard WebView marker: "; wv)" or "; wv "
         if (/;\s*wv[)\s]/i.test(ua)) return true;
-
-        // Custom marker — your WebView setup adds " wv" to the UA
         if (ua.indexOf(' wv') !== -1) return true;
-
-        // Old WebView pattern: "Version/4.0 ... Chrome ... Mobile Safari"
         if (/Version\/4\.0.*Chrome/i.test(ua) && /Mobile/i.test(ua)) return true;
-
         return false;
     }
 
-    // Does the new APK's bridge exist?
+    // Is this likely an app-embedded WebView (vs a browser)?
+    function isInWebViewAPK() {
+        if (!isAndroid()) return false;
+        if (hasWvMarker()) return true;
+        // If OPTS.requireWebViewMarker is false, accept any Android
+        // device that is NOT a known browser.
+        if (OPTS.requireWebViewMarker === false) {
+            var ua = navigator.userAgent.toLowerCase();
+            var isRealBrowser =
+                ua.indexOf('chrome/') !== -1 && ua.indexOf('version/4.0') === -1 ||
+                ua.indexOf('firefox/') !== -1 ||
+                ua.indexOf('samsungbrowser') !== -1 ||
+                ua.indexOf('edg') !== -1 ||
+                ua.indexOf('opera') !== -1 ||
+                ua.indexOf('brave') !== -1;
+            // Old WebViews often report "Version/4.0" without "wv"
+            if (ua.indexOf('version/4.0') !== -1) return true;
+            // If it's a real browser, skip; otherwise treat as APK
+            return !isRealBrowser;
+        }
+        return false;
+    }
+
     function hasNewBridge() {
         return !!(window.AndroidUpdater && typeof window.AndroidUpdater.getAppVersion === 'function');
     }
@@ -74,9 +80,6 @@
         return '';
     }
 
-    /* ═══════════════════════════════════════════════════════════════
-     *  STYLES
-     * ═══════════════════════════════════════════════════════════════ */
     function injectStyles() {
         if (document.getElementById('appUpdateStyles')) return;
         var dark = OPTS.theme === 'dark';
@@ -111,9 +114,6 @@
         document.head.appendChild(style);
     }
 
-    /* ═══════════════════════════════════════════════════════════════
-     *  MODAL
-     * ═══════════════════════════════════════════════════════════════ */
     function showUpdateModal(info, installedVer, installedName) {
         injectStyles();
 
@@ -131,10 +131,9 @@
         var defaultMessage = 'A new version of OPay Plus is available. Please update to continue using the app.';
         var messageText = customMessage || defaultMessage;
 
-        // If we couldn't read the installed version, show "Unknown"
         var installedLabel = installedVer > 0
             ? 'v' + installedVer + (installedName ? ' (' + installedName + ')' : '')
-            : 'Unknown (old version)';
+            : 'Old version';
 
         var latestLabel = 'v' + latestVer + (latestName ? ' (' + latestName + ')' : '');
 
@@ -165,66 +164,54 @@
             overlay.classList.add('show');
         });
 
-        // Block ESC key
         function blockEscape(e) {
             if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); }
         }
         document.addEventListener('keydown', blockEscape, true);
 
-        // Block taps on the backdrop
         overlay.addEventListener('click', function (e) { e.stopPropagation(); });
 
-        // Update button
         var nowBtn = overlay.querySelector('#appUpdateNowBtn');
         if (nowBtn) {
             nowBtn.addEventListener('click', function () {
                 var apkUrl = (info.apkUrl || '').trim();
-                if (!apkUrl) {
-                    console.warn('[app-update] No apkUrl provided.');
-                    return;
-                }
+                if (!apkUrl) { console.warn('[app-update] No apkUrl.'); return; }
 
-                // If new bridge exists, use it (native installer)
+                // New APK — use native installer
                 if (window.AndroidUpdater && typeof window.AndroidUpdater.installUpdate === 'function') {
                     try {
                         window.AndroidUpdater.installUpdate(apkUrl);
                         return;
-                    } catch (e) {
-                        console.warn('[app-update] installUpdate failed, falling back:', e);
-                    }
+                    } catch (e) {}
                 }
 
-                // Fallback for old APKs (no bridge):
-                // Navigate to the .apk URL. The old APK's WebView should
-                // catch the download and prompt to install.
-                try {
-                    window.location.href = apkUrl;
-                } catch (e) {
-                    // If navigation fails, try opening externally
-                    try { window.open(apkUrl, '_blank'); } catch (e2) {}
-                }
+                // Old APK — navigate to the URL; the WebView's default
+                // download handler will catch the .apk and prompt to install
+                try { window.location.href = apkUrl; }
+                catch (e) { try { window.open(apkUrl, '_blank'); } catch (e2) {} }
             });
         }
     }
 
-    /* ═══════════════════════════════════════════════════════════════
-     *  MAIN CHECK
-     * ═══════════════════════════════════════════════════════════════ */
     function checkForUpdate() {
-        // 1. Are we in ANY Android WebView? (Old or new APK)
-        if (!isInWebViewAPK()) {
-            console.log('[app-update] Not in APK WebView — skipping.');
+        // Not on Android at all — skip
+        if (!isAndroid()) {
+            console.log('[app-update] Not Android — skipping.');
             return;
         }
 
-        // 2. Does the new bridge exist?
+        // Only run inside an APK WebView
+        if (!isInWebViewAPK()) {
+            console.log('[app-update] Android browser — skipping.');
+            return;
+        }
+
         var inNewAPK = hasNewBridge();
         var installed = getInstalledVersion();
         var installedName = getInstalledVersionName();
 
         console.log('[app-update] In WebView. New bridge:', inNewAPK, '| Installed v' + installed);
 
-        // 3. Fetch version.json
         fetch(OPTS.versionJsonUrl + '?t=' + Date.now(), { cache: 'no-store' })
             .then(function (res) {
                 if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -232,23 +219,23 @@
             })
             .then(function (info) {
                 if (!info || !info.apkUrl) {
-                    console.warn('[app-update] version.json invalid or missing apkUrl.');
+                    console.warn('[app-update] version.json invalid.');
                     return;
                 }
 
                 var latest = parseInt(info.versionCode, 10) || 0;
                 console.log('[app-update] Latest versionCode:', latest);
 
-                // Case A: Old APK — no bridge at all. Force update.
+                // Old APK — no bridge → force update
                 if (!inNewAPK) {
-                    console.log('[app-update] Old APK (no bridge) → forcing update.');
+                    console.log('[app-update] Old APK detected → forcing update.');
                     showUpdateModal(info, 0, '');
                     return;
                 }
 
-                // Case B: New APK — compare versions
+                // New APK — compare versions
                 if (latest > installed) {
-                    console.log('[app-update] Outdated new APK → showing update.');
+                    console.log('[app-update] Outdated → showing update.');
                     showUpdateModal(info, installed, installedName);
                 } else {
                     console.log('[app-update] Up to date.');
@@ -259,20 +246,12 @@
             });
     }
 
-    /* ═══════════════════════════════════════════════════════════════
-     *  AUTO-START — retry until the WebView is ready
-     * ═══════════════════════════════════════════════════════════════ */
+    // Boot with retries so we catch the bridge if it's still initializing
     function boot(attempt) {
         attempt = attempt || 1;
-        if (attempt > 12) return; // give up after ~5s
+        if (attempt > 10) return;
 
         if (document.readyState === 'loading') {
-            setTimeout(function () { boot(attempt + 1); }, 400);
-            return;
-        }
-
-        // Wait for the WebView UA to settle (some tools change UA later)
-        if (isAndroid() && !isInWebViewAPK() && attempt < 5) {
             setTimeout(function () { boot(attempt + 1); }, 400);
             return;
         }
@@ -282,9 +261,6 @@
 
     boot();
 
-    /* ═══════════════════════════════════════════════════════════════
-     *  PUBLIC API
-     * ═══════════════════════════════════════════════════════════════ */
     window.AppUpdateChecker = {
         check: checkForUpdate,
         isInWebViewAPK: isInWebViewAPK,
@@ -292,276 +268,4 @@
         getInstalledVersion: getInstalledVersion,
         userAgent: navigator.userAgent
     };
-
-    console.log('[app-update] Loaded.');
-})();            }
-        } catch (e) {}
-        return 0;
-    }
-
-    function getInstalledVersionName() {
-        try {
-            if (window.AndroidUpdater && typeof window.AndroidUpdater.getAppVersionName === 'function') {
-                var n = window.AndroidUpdater.getAppVersionName();
-                if (n) return String(n);
-            }
-        } catch (e) {}
-        return '';
-    }
-
-    /* ═══════════════════════════════════════════════════════════════
-     *  STYLES
-     * ═══════════════════════════════════════════════════════════════ */
-    function injectStyles() {
-        if (document.getElementById('appUpdateStyles')) return;
-        var dark = OPTS.theme === 'dark';
-        var cardBg    = dark ? '#1e1e1e' : '#ffffff';
-        var cardText  = dark ? '#e0e0e0' : '#1a1a1a';
-        var titleText = dark ? '#ffffff' : '#1a1a1a';
-        var bodyText  = dark ? '#b8b8b8' : '#5a5a5a';
-        var chipBg    = dark ? '#2d2d2d' : '#f5f5f5';
-        var chipText  = dark ? '#888888' : '#999999';
-        var noteText  = dark ? '#777777' : '#a0a0a0';
-
-        var style = document.createElement('style');
-        style.id = 'appUpdateStyles';
-        style.textContent =
-            '.app-update-overlay{' +
-                'position:fixed;inset:0;' +
-                'background:rgba(0,0,0,0.75);' +
-                'backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);' +
-                'display:flex;align-items:center;justify-content:center;' +
-                'z-index:2147483000;padding:20px;' +
-                'font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;' +
-                'opacity:0;transition:opacity 0.25s ease;' +
-                '-webkit-tap-highlight-color:transparent;' +
-            '}' +
-            '.app-update-overlay.show{opacity:1;}' +
-            '.app-update-card{' +
-                'background:' + cardBg + ';' +
-                'color:' + cardText + ';' +
-                'width:90%;max-width:360px;' +
-                'border-radius:28px;' +
-                'padding:30px 24px 22px;' +
-                'text-align:center;' +
-                'box-shadow:0 25px 60px -12px rgba(0,0,0,0.5);' +
-                'transform:scale(0.92) translateY(12px);' +
-                'transition:transform 0.35s cubic-bezier(0.21,1.11,0.38,1);' +
-            '}' +
-            '.app-update-overlay.show .app-update-card{transform:scale(1) translateY(0);}' +
-            '.app-update-icon{' +
-                'width:70px;height:70px;' +
-                'margin:0 auto 18px;' +
-                'border-radius:50%;' +
-                'background:linear-gradient(135deg,#00bfa5,#00a28b);' +
-                'display:flex;align-items:center;justify-content:center;' +
-                'box-shadow:0 8px 24px rgba(0,191,165,0.35);' +
-                'animation:appUpdatePulse 1.6s ease-in-out infinite;' +
-            '}' +
-            '@keyframes appUpdatePulse{' +
-                '0%,100%{transform:scale(1);}' +
-                '50%{transform:scale(1.06);}' +
-            '}' +
-            '.app-update-icon svg{width:34px;height:34px;fill:#ffffff;}' +
-            '.app-update-title{' +
-                'font-size:20px;font-weight:700;' +
-                'margin-bottom:8px;letter-spacing:-0.2px;' +
-                'color:' + titleText + ';' +
-            '}' +
-            '.app-update-message{' +
-                'font-size:14px;line-height:1.5;' +
-                'color:' + bodyText + ';' +
-                'margin-bottom:22px;font-weight:500;' +
-            '}' +
-            '.app-update-versions{' +
-                'display:flex;justify-content:center;gap:10px;' +
-                'font-size:12px;margin-bottom:22px;flex-wrap:wrap;' +
-                'color:' + chipText + ';' +
-            '}' +
-            '.app-update-versions span{' +
-                'background:' + chipBg + ';' +
-                'padding:5px 12px;border-radius:20px;font-weight:600;' +
-            '}' +
-            '.app-update-versions span b{color:#00bfa5;font-weight:700;}' +
-            '.app-update-buttons{display:flex;flex-direction:column;gap:10px;}' +
-            '.app-update-btn{' +
-                'width:100%;padding:15px 0;' +
-                'border-radius:60px;border:none;' +
-                'font-size:15px;font-weight:600;' +
-                'cursor:pointer;font-family:inherit;' +
-                'transition:transform 0.15s,background 0.2s,box-shadow 0.2s;' +
-                '-webkit-tap-highlight-color:transparent;' +
-            '}' +
-            '.app-update-btn-upgrade{' +
-                'background:#00bfa5;color:#ffffff;' +
-                'box-shadow:0 4px 14px rgba(0,191,165,0.4);' +
-            '}' +
-            '.app-update-btn-upgrade:active{' +
-                'background:#00a28b;transform:scale(0.97);' +
-            '}' +
-            '.app-update-note{' +
-                'font-size:11px;margin-top:14px;' +
-                'color:' + noteText + ';' +
-            '}';
-        document.head.appendChild(style);
-    }
-
-    /* ═══════════════════════════════════════════════════════════════
-     *  MODAL
-     * ═══════════════════════════════════════════════════════════════ */
-    function showUpdateModal(info) {
-        injectStyles();
-
-        var existing = document.getElementById('appUpdateOverlay');
-        if (existing) existing.remove();
-
-        var overlay = document.createElement('div');
-        overlay.id = 'appUpdateOverlay';
-        overlay.className = 'app-update-overlay';
-
-        var installedVer  = getInstalledVersion() || OLD_VERSION_CODE;
-        var installedName = getInstalledVersionName() || OLD_VERSION_NAME;
-
-        var latestVer  = parseInt(info.versionCode, 10) || 0;
-        var latestName = info.versionName || '';
-
-        var customMessage = (info.message || '').trim();
-        var defaultMessage = 'A new version of OPay Plus is available with improvements and bug fixes. Please update to continue using the app.';
-        var messageText = customMessage || defaultMessage;
-
-        overlay.innerHTML =
-            '<div class="app-update-card" role="dialog" aria-modal="true">' +
-                '<div class="app-update-icon">' +
-                    '<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">' +
-                        '<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>' +
-                    '</svg>' +
-                '</div>' +
-                '<div class="app-update-title">Update Required</div>' +
-                '<div class="app-update-message"></div>' +
-                '<div class="app-update-versions">' +
-                    '<span>Installed: <b>v' + installedVer + (installedName ? ' (' + installedName + ')' : '') + '</b></span>' +
-                    '<span>Latest: <b>v' + latestVer + (latestName ? ' (' + latestName + ')' : '') + '</b></span>' +
-                '</div>' +
-                '<div class="app-update-buttons">' +
-                    '<button class="app-update-btn app-update-btn-upgrade" type="button" id="appUpdateNowBtn">' +
-                        'Update Now' +
-                    '</button>' +
-                '</div>' +
-                '<div class="app-update-note">This update is required to continue using the app.</div>' +
-            '</div>';
-
-        overlay.querySelector('.app-update-message').textContent = messageText;
-
-        document.body.appendChild(overlay);
-
-        requestAnimationFrame(function () {
-            overlay.classList.add('show');
-        });
-
-        // Prevent accidental dismissal — disable back button / ESC
-        function blockDismiss(e) {
-            if (e.key === 'Escape') {
-                e.preventDefault();
-                e.stopPropagation();
-            }
-        }
-        document.addEventListener('keydown', blockDismiss, true);
-
-        // Prevent taps from closing the overlay (only the Update button works)
-        overlay.addEventListener('click', function (e) {
-            e.stopPropagation();
-        });
-
-        // Update button
-        var nowBtn = overlay.querySelector('#appUpdateNowBtn');
-        if (nowBtn) {
-            nowBtn.addEventListener('click', function () {
-                var apkUrl = (info.apkUrl || '').trim();
-                if (!apkUrl) {
-                    console.warn('[app-update] No apkUrl provided.');
-                    return;
-                }
-                try {
-                    if (window.AndroidUpdater && typeof window.AndroidUpdater.installUpdate === 'function') {
-                        window.AndroidUpdater.installUpdate(apkUrl);
-                    } else {
-                        window.location.href = apkUrl;
-                    }
-                } catch (e) {
-                    console.warn('[app-update] installUpdate failed:', e);
-                }
-            });
-        }
-
-        console.log('[app-update] Mandatory update modal displayed.');
-    }
-
-    /* ═══════════════════════════════════════════════════════════════
-     *  MAIN CHECK
-     * ═══════════════════════════════════════════════════════════════ */
-    function checkForUpdate() {
-        if (!isRunningInAPK()) {
-            console.log('[app-update] Not in APK — skipping.');
-            return;
-        }
-
-        var installed = getInstalledVersion();
-        var installedName = getInstalledVersionName() || OLD_VERSION_NAME;
-        console.log('[app-update] Installed versionCode:', installed, '(' + installedName + ')');
-
-        fetch(OPTS.versionJsonUrl + '?t=' + Date.now(), { cache: 'no-store' })
-            .then(function (res) {
-                if (!res.ok) throw new Error('HTTP ' + res.status);
-                return res.json();
-            })
-            .then(function (info) {
-                if (!info) return;
-
-                var latest = parseInt(info.versionCode, 10) || 0;
-                var apkUrl = (info.apkUrl || '').trim();
-
-                console.log('[app-update] Latest versionCode:', latest);
-
-                if (latest <= installed) {
-                    console.log('[app-update] App is up to date.');
-                    return;
-                }
-
-                if (!apkUrl) {
-                    console.warn('[app-update] apkUrl missing in version.json.');
-                    return;
-                }
-
-                console.log('[app-update] Outdated APK detected — showing mandatory update.');
-                showUpdateModal(info);
-            })
-            .catch(function (err) {
-                console.warn('[app-update] Failed to fetch version.json:', err.message);
-            });
-    }
-
-    /* ═══════════════════════════════════════════════════════════════
-     *  AUTO-START
-     * ═══════════════════════════════════════════════════════════════ */
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', function () {
-            setTimeout(checkForUpdate, 800);
-        });
-    } else {
-        setTimeout(checkForUpdate, 800);
-    }
-
-    /* ═══════════════════════════════════════════════════════════════
-     *  PUBLIC API
-     * ═══════════════════════════════════════════════════════════════ */
-    window.AppUpdateChecker = {
-        check: checkForUpdate,
-        isRunningInAPK: isRunningInAPK,
-        getInstalledVersion: getInstalledVersion,
-        getInstalledVersionName: getInstalledVersionName,
-        oldVersionCode: OLD_VERSION_CODE,
-        oldVersionName: OLD_VERSION_NAME
-    };
-
-    console.log('[app-update] Loaded (baseline v' + OLD_VERSION_CODE + ' — ' + OLD_VERSION_NAME + ')');
 })();
