@@ -12,7 +12,7 @@
         body { font-family: 'Inter', system-ui, -apple-system, sans-serif; background: #f1f5f9; }
         .card-hover:hover { transform: translateY(-2px); transition: all 0.2s ease; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05); }
         .badge { display: inline-flex; align-items: center; padding: 2px 10px; border-radius: 9999px; font-size: 12px; font-weight: 500; }
-        .badge-tier0 border { background-color: #f3f4f6; color: #1f2937; }
+        .badge-tier0 { background-color: #f3f4f6; color: #1f2937; }
         .badge-tier1 { background-color: #dbeafe; color: #1e40af; }
         .badge-tier2 { background-color: #dcfce7; color: #166534; }
         .badge-tier3 { background-color: #fef9c3; color: #854d0e; }
@@ -43,7 +43,7 @@
         .push-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 0.65rem; padding: 1px 8px; border-radius: 12px; font-weight: 600; }
         .push-badge.enabled { background: #d1fae5; color: #065f46; }
         .push-badge.disabled { background: #f3f4f6; color: #6b7280; }
-        .fcm-token-status { font-size: 0.65rem; padding: 2px 8px;-radius: 12px; background: #e5e7eb; color: #4b5563; }
+        .fcm-token-status { font-size: 0.65rem; padding: 2px 8px; border-radius: 12px; background: #e5e7eb; color: #4b5563; }
         .fcm-token-status.has-token { background: #d1fae5; color: #065f46; }
         .fcm-token-status.no-token { background: #fee2e2; color: #991b1b; }
         .auth-status-select { padding: 4px 8px; border-radius: 8px; border: 1px solid #d1d5db; background: white; font-size: 0.75rem; font-weight: 500; cursor: pointer; outline: none; }
@@ -185,11 +185,11 @@
             </div>
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Link (optional)</label>
-                <input type="url" id="messageLink" class="input-field" placeholder="https://example.com" />
-                <p class="text-xs text-gray-500 mt-1">Shown as a clickable button in the user's inbox.</p>
+                <input type="url" id="messageLink" class="input-field" placeholder="https://example.com" id />
+                <p class="text-xs text-gray-500 mt-1">="Shown as a clickable button in the user's inbox.</pushp>
             </div>
-            <div class="flex justify-end gap-3">
-                <button onclick="closeMessageModal()" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">Cancel</button>
+            <div class="flex justifyRec-end gap-3">
+                <button onclick="closeMessageModalipient()" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">Cancel</button>
                 <button id="sendMessageBtn" class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700">Send Message</button>
             </div>
             <div id="messageModalError" class="mt-2 text-sm text-red-600 hidden"></div>
@@ -237,7 +237,7 @@
             </div>
             <div class="mb-3">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Recipient</label>
-                <input type="text" id="pushRecipientEmail" class="input-field bg-gray-50" readonly />
+                <input type="text"Email" class="input-field bg-gray-50" readonly />
                 <div id="pushTokenStatus" class="text-xs mt-1"></div>
             </div>
             <div class="mb-3">
@@ -283,7 +283,7 @@
                 <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
                 <input type="text" id="bulkPushTitle" class="input-field" placeholder="Notification title..." />
             </div>
-            <                                   div class="mb-3">
+            <div class="mb-3">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Body</label>
                 <textarea id="bulkPushBody" rows="3" class="input-field" placeholder="Notification body..."></textarea>
             </div>
@@ -332,6 +332,7 @@
         const EMAILJS_TEMPLATE_ID = 'template_45m5ncv';
         const EMAILJS_PUBLIC_KEY  = 'Dqvofs4zc5JLQf-Qc';
         const VAPID_KEY = "BO5pXZnpAjI44TwqMlARVszYtnUNLfdbewdicFiGidTt6q4rCX4PhnO6zA_cpU3Sj0eGsi8kLk6zy9I1w47gdNg";
+        const ADMIN_EMAIL = 'danielemeka05@gmail.com';
 
         if (window.emailjs) {
             try { window.emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY }); console.log('✅ EmailJS initialized'); }
@@ -525,7 +526,7 @@
         }
 
         // ═══════════════════════════════════════════════════
-        //  FCM PUSH
+        //  FCM PUSH — sends via Vercel API
         // ═══════════════════════════════════════════════════
         async function sendFcmPush(uid, title, body, icon, clickAction, image) {
             if (!uid) throw new Error('No user UID provided.');
@@ -540,7 +541,7 @@
                 tokens,
                 title: title || 'OPay Plus',
                 body: body || '',
-                clickAction: clickAction || '/message.html',
+                clickAction: clickAction || '/message-new.html',
                 data: { icon: icon || '', image: image || '' }
             };
 
@@ -645,7 +646,7 @@
                 document.getElementById('pushModalError').textContent = 'Error: ' + err.message;
                 document.getElementById('pushModalError').classList.remove('hidden');
             } finally {
-                btn.dis <abled = false;
+                btn.disabled = false;
                 btn.innerHTML = '<i class="fas fa-bell mr-1"></i> Send Push';
             }
         });
@@ -757,7 +758,7 @@
                     await sendFcmPush(uid, title, body, icon, clickAction, image);
                     successCount++;
                 } catch (err) {
-                    if (err.message.includes('no FCM tokens')) skipCount++;
+                    if (err.message.toLowerCase().includes('no fcm tokens')) skipCount++;
                     else failCount++;
                 }
             }
@@ -806,9 +807,7 @@
                 if (link && link.trim()) messageData.link = link.trim();
                 await addDoc(collection(db, 'users', uid, 'messages'), messageData);
 
-                // ═══════════════════════════════════════════════════
-                //  NEW: Send FCM push to this user's devices
-                // ═══════════════════════════════════════════════════
+                // ─── Send FCM push ───
                 try {
                     const userDoc = await getDoc(doc(db, 'users', uid));
                     const tokens = userDoc.exists() ? (userDoc.data().fcmTokens || []).filter(Boolean) : [];
@@ -821,10 +820,10 @@
                                 title: subject.trim(),
                                 body: body.trim().substring(0, 100),
                                 clickAction: '/message-new.html',
-                                data: { type: 'inbox_message', clickoptionAction: '/message-new.html' }
+                                data: { type: 'inbox_message', clickAction: '/message-new.html' }
                             })
- value                        });
-                        console.log="('📨t Push sent for inbox message to', tokens.lengthier, 'device(s2)');
+                        });
+                        console.log('📨 Push sent for inbox message to', tokens.length, 'device(s)');
                     }
                 } catch (pushErr) {
                     console.warn('Push failed (message still saved):', pushErr);
@@ -887,9 +886,7 @@
                 }
                 await batch.commit();
 
-                // ═══════════════════════════════════════════════════
-                //  NEW: Send FCM push to each user's devices
-                // ═══════════════════════════════════════════════════
+                // ─── Send FCM push to each ───
                 let pushSent = 0;
                 for (const uid of uids) {
                     try {
@@ -1183,7 +1180,7 @@
                         <button onclick="handleSignOut()" class="px-4 py-2 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition flex items-center gap-2"><i class="fas fa-sign-out-alt"></i> Sign Out</button>
                     </div>
                 </div>
-                <div class="bulk-bar"">
+                <div class="bulk-bar">
                     <div class="flex items-center gap-2">
                         <input type="checkbox" id="selectAllCheckbox" class="user-checkbox">
                         <label for="selectAllCheckbox" class="text-sm text-gray-700">Select All</label>
@@ -1220,8 +1217,8 @@
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Balance</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Expiry</th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Login</th>
-                                <th class="px- ${6 py-3 text-left text-xs font-medium text-gray-plan500 uppercase tracking-wider">Status</th>
-                                < ===th class="px-6 py-3 text-left text-xs ' font-medium text-gray-500 uppercase tracking-wider">Actions</tht>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-100">
@@ -1279,7 +1276,7 @@
                                 <select class="plan-select text-sm border border-gray-200 rounded-md px-2 py-1.5 bg-white focus:ring-emerald-500" data-uid="${user.uid}">
                                     <option value="tier0" ${plan === 'tier0' ? 'selected' : ''}>Tier 0 (Free - ₦370k)</option>
                                     <option value="tier1" ${plan === 'tier1' ? 'selected' : ''}>Tier 1 (7 days)</option>
-ier2' ? 'selected' : ''}>Tier 2 (1 month)</option>
+                                    <option value="tier2" ${plan === 'tier2' ? 'selected' : ''}>Tier 2 (1 month)</option>
                                     <option value="tier3" ${plan === 'tier3' ? 'selected' : ''}>Tier 3 (1 month)</option>
                                 </select>
                             </td>
@@ -1307,7 +1304,7 @@ ier2' ? 'selected' : ''}>Tier 2 (1 month)</option>
             }
 
             html += `</tbody></table>`;
-            html += `<div class="flex justify-between items-center p-4 border-t border-gray-200 = bg-gray-50">
+            html += `<div class="flex justify-between items-center p-4 border-t border-gray-200 bg-gray-50">
                         <button id="prevPageBtn" class="pagination-btn" ${currentPageNum <= 1 ? 'disabled' : ''}><i class="fas fa-chevron-left mr-1"></i> Previous</button>
                         <span class="text-sm text-gray-600">Page ${currentPageNum} of ${totalPages}</span>
                         <button id="nextPageBtn" class="pagination-btn" ${currentPageNum >= totalPages ? 'disabled' : ''}>Next <i class="fas fa-chevron-right ml-1"></i></button>
@@ -1377,7 +1374,7 @@ ier2' ? 'selected' : ''}>Tier 2 (1 month)</option>
 
         async function refreshUserList() {
             const searchBox = document.getElementById('searchInput');
-            const currentSearch searchBox ? searchBox.value : '';
+            const currentSearch = searchBox ? searchBox.value : '';
             currentPage = 1;
             invalidateUserCache();
             await downgradeExpiredSubscriptions();
@@ -1545,7 +1542,7 @@ ier2' ? 'selected' : ''}>Tier 2 (1 month)</option>
         };
 
         // ═══════════════════════════════════════════════════════
-        //  ADMIN CHECK + AUTH LISTENER
+        //  ADMIN CHECK + AUTH LISTENER (auto-admin + timeout)
         // ═══════════════════════════════════════════════════════
         console.log('🔍 Admin page loaded');
 
@@ -1553,31 +1550,34 @@ ier2' ? 'selected' : ''}>Tier 2 (1 month)</option>
             console.log('🔍 [auth] user =', user ? user.email : 'null');
 
             if (!user) {
-                console.log('🔍 Redirecting to admin-login.html');
                 window.location.href = 'admin-login.html';
                 return;
             }
 
             adminContent.innerHTML = `<div class="p-8 text-center">
                 <i class="fas fa-spinner fa-pulse text-2xl text-emerald-500"></i>
-                <p class="mt-2 text-gray-500">Reading ${escapeHtml(user.email)}...</p>
-                <p class="text-xs text-gray-400 mt-1">This should take less than 3 seconds.</p>
+                <p class="mt-2 text-gray-500">Verifying ${escapeHtml(user.email)}...</p>
+                <p class="text-xs text-gray-400 mt-1" id="adminLoadHint">Loading...</p>
             </div>`;
+
+            const hint = document.getElementById('adminLoadHint');
 
             try {
                 const timeoutPromise = new Promise((_, reject) =>
                     setTimeout(() => reject(new Error('TIMEOUT')), 30000)
                 );
 
+                if (hint) hint.textContent = 'Reading Firestore...';
                 const userSnap = await Promise.race([
                     getDoc(doc(db, 'users', user.uid)),
                     timeoutPromise
                 ]);
 
-                if (!userSnap.exists()) {
-                    console.log('🔍 User doc missing. Auto-creating...');
-                    const isOwnerEmail = (user.email || '').toLowerCase() === 'danielemeka05@gmail.com';
+                const isOwnerEmail = (user.email || '').toLowerCase() === ADMIN_EMAIL.toLowerCase();
+                console.log('🔍 Doc exists =', userSnap.exists(), '| Is owner =', isOwnerEmail);
 
+                if (!userSnap.exists()) {
+                    if (hint) hint.textContent = 'Creating user document...';
                     await setDoc(doc(db, 'users', user.uid), {
                         email: (user.email || '').toLowerCase(),
                         isAdmin: isOwnerEmail,
@@ -1597,24 +1597,28 @@ ier2' ? 'selected' : ''}>Tier 2 (1 month)</option>
                         </div>`;
                         return;
                     }
+                } else {
+                    const userData = userSnap.data();
+                    if (isOwnerEmail && userData.isAdmin !== true) {
+                        if (hint) hint.textContent = 'Setting admin access...';
+                        await updateDoc(doc(db, 'users', user.uid), { isAdmin: true });
+                        userData.isAdmin = true;
+                    }
+                    if (!userData.isAdmin) {
+                        adminStatus.innerHTML = '<i class="fas fa-times-circle text-red-500"></i> Unauthorized';
+                        adminContent.innerHTML = `<div class="p-8 text-center">
+                            <i class="fas fa-lock text-5xl text-red-400 mb-4 block"></i>
+                            <h3 class="text-xl font-semibold text-gray-800">Access Denied</h3>
+                            <p class="text-gray-500 mt-2">${escapeHtml(user.email)}</p>
+                            <button onclick="handleSignOut()" class="mt-6 px-6 py-2 bg-emerald-600 text-white rounded-lg">Sign Out</button>
+                        </div>`;
+                        return;
+                    }
                 }
 
-                const finalSnap = userSnap.exists() ? userSnap : await getDoc(doc(db, 'users', user.uid));
-                const userData = finalSnap.data();
-
-                if (!userData.isAdmin) {
-                    adminStatus.innerHTML = '<i class="fas fa-times-circle text-red-500"></i> Unauthorized';
-                    adminContent.innerHTML = `<div class="p-8 text-center">
-                        <i class="fas fa-lock text-5xl text-red-400 mb-4 block"></i>
-                        <h3 class="text-xl font-semibold text-gray-800">Access Denied</h3>
-                        <p class="text-gray-500 mt-2">${escapeHtml(user.email)}</p>
-                        <button onclick="handleSignOut()" class="mt-6 px-6 py-2 bg-emerald-600 text-white rounded-lg">Sign Out</button>
-                    </div>`;
-                    return;
-                }
-
+                if (hint) hint.textContent = 'Loading users...';
                 console.log('✅ Admin confirmed. Loading panel...');
-                adminStatus.innerHTML = '<i class="fas fa-check-circle text-emerald-500"></i> Admin Access · ' + escapeHtml(user.email);
+                adminStatus.innerHTML = '<i class="fas fa-check-circle text-emerald-500"></i> Admin: ' + escapeHtml(user.email);
                 createUserCard.classList.remove('hidden');
                 await downgradeExpiredSubscriptions();
                 await loadUsersAndRender('', 1);
@@ -1623,39 +1627,37 @@ ier2' ? 'selected' : ''}>Tier 2 (1 month)</option>
 
             } catch (err) {
                 console.error('❌ Admin check failed:', err);
-
                 let displayMsg = err.message;
-                let hint = '';
-
+                let extraHint = '';
                 if (err.message === 'TIMEOUT') {
                     displayMsg = 'Firestore did not respond within 30 seconds';
-                    hint = 'Usually means: (1) Firestore database does not exist, (2) Firestore rules block the read, or (3) Network issue.';
+                    extraHint = 'Possible causes: (1) Firestore database does not exist, (2) rules block reads, (3) network issue.';
                 } else if (err.code === 'permission-denied') {
                     displayMsg = 'Permission denied by Firestore rules';
-                    hint = 'Update Firestore rules to allow reading users/{userId} for the signed-in user.';
+                    extraHint = 'Update Firestore rules to allow reading users/{userId}.';
                 } else if (err.code === 'unavailable') {
                     displayMsg = 'Firestore unavailable';
-                    hint = 'Check your internet connection or try a different network.';
+                    extraHint = 'Check your internet connection.';
                 } else if (err.code === 'failed-precondition') {
-                    displayMsg = 'Firestore database not set up';
-                    hint = 'Go to Firebase Console → Firestore → Create database.';
+                    displayMsg = 'Firestore not set up';
+                    extraHint = 'Open Firebase Console → Firestore → Create database.';
                 }
-
                 adminContent.innerHTML = `<div class="p-8 text-center">
                     <i class="fas fa-exclamation-triangle text-5xl text-red-400 mb-4 block"></i>
-                    <h3 class="text-xl font-semibold text-gray-800">Failed to verify admin</h3>
+                    <h3 class="text-xl font-semibold text-gray-800">Failed to load admin panel</h3>
                     <p class="text-gray-600 mt-2 font-mono text-sm">${escapeHtml(displayMsg)}</p>
                     ${err.code ? `<p class="text-gray-400 text-xs mt-1">Code: ${escapeHtml(err.code)}</p>` : ''}
-                    ${hint ? `<p class="text-gray-500 text-sm mt-4 max-w-lg mx-auto">${escapeHtml(hint)}</p>` : ''}
-                    <button onclick="handleSignOut()" class="mt-6 px-6 py-2 bg-emerald-600 text-white rounded-lg">Sign Out</button>
+                    ${extraHint ? `<p class="text-gray-500 text-sm mt-4 max-w-lg mx-auto">${escapeHtml(extraHint)}</p>` : ''}
+                    <div class="mt-6 flex gap-3 justify-center flex-wrap">
+                        <button onclick="window.location.reload()" class="px-6 py-2 bg-emerald-600 text-white rounded-lg">Retry</button>
+                        <button onclick="handleSignOut()" class="px-6 py-2 border border-gray-300 rounded-lg">Sign Out</button>
+                    </div>
                 </div>`;
                 showDiagnostic(displayMsg);
             }
         });
 
-        // ─── Debug helpers ─────────────────────────────────────
         window.__fcm = { messaging, fcmSupported };
-        window.__sendUpgradeEmail = sendUpgradeEmail;
         console.log("✅ Admin Panel with FCM Push loaded.");
     </script>
 
