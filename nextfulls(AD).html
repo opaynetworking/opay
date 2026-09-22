@@ -330,6 +330,30 @@
     <!-- ══════════════════════════════════════════════════════════════ -->
     <!--  MAIN SCRIPT (ES Module)                                    -->
     <!-- ══════════════════════════════════════════════════════════════ -->
+            <script>
+    // ── TEMPORARY DIAGNOSTIC ──
+    window.addEventListener('error', function (e) {
+        console.error('❌ Global error:', e.message, 'at', e.filename, ':', e.lineno);
+        var box = document.getElementById('adminContent');
+        if (box) {
+            box.innerHTML = '<div style="padding:20px;color:#dc2626;font-family:monospace;background:#fef2f2;border:2px solid #ef4444;border-radius:8px;margin:16px;">' +
+                '<strong>❌ JavaScript Error:</strong><br>' +
+                (e.message || 'Unknown error') + '<br><small>' +
+                (e.filename || '') + ':' + (e.lineno || '') + '</small></div>';
+        }
+    });
+    window.addEventListener('unhandledrejection', function (e) {
+        console.error('❌ Unhandled promise rejection:', e.reason);
+        var box = document.getElementById('adminContent');
+        if (box) {
+            box.innerHTML = '<div style="padding:20px;color:#dc2626;font-family:monospace;background:#fef2f2;border:2px solid #ef4444;border-radius:8px;margin:16px;">' +
+                '<strong>❌ Unhandled Rejection:</strong><br>' +
+                (e.reason && e.reason.message ? e.reason.message : String(e.reason)) +
+                '</div>';
+        }
+    });
+    console.log('🔍 Diagnostics installed');
+</script>
     <script type="module">
         // ─── Firebase Imports ─────────────────────────────
         import { initializeApp, getApps, getApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
