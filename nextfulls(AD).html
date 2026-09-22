@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
@@ -17,6 +17,7 @@
         .badge-tier3 { background: #fef9c3; color: #854d0e; }
         .badge-suspended { background: #fee2e2; color: #b91c1c; }
         .badge-active { background: #e0f2fe; color: #0369a1; }
+        .badge-expired { background: #fef3c7; color: #b45309; }
         .badge-auth-pending { background: #fef3c7; color: #92400e; }
         .badge-auth-processing { background: #e0e7ff; color: #3730a3; }
         .badge-auth-failed { background: #fee2e2; color: #991b1b; }
@@ -30,7 +31,8 @@
         .input-field:focus { border-color: #10b981; }
         .result-badge { background: #f1f5f9; padding: 2px 8px; border-radius: 20px; font-size: 0.7rem; font-weight: 500; }
         .expiry-badge { font-size: 0.7rem; font-weight: 500; padding: 2px 8px; border-radius: 20px; background: #fef3c7; color: #b45309; }
-        .toast-notification { position: fixed; bottom: 20px; right: 20px; background: #10b981; color: white; padding: 12px 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 1100; font-size: 0.875rem; display: flex; align-items: center; gap: 8px; }
+        .toast-notification { position: fixed; bottom: 20px; right: 20px; background: #10b981; color: white; padding: 12px 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 1100; font-size: 0.875rem; display: flex; align-items: center; gap: 8px; animation: slideIn 0.2s ease; }
+        @keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         .pagination-btn { padding: 4px 12px; border-radius: 6px; border: 1px solid #d1d5db; background: white; color: #374151; cursor: pointer; }
         .pagination-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .user-checkbox { width: 18px; height: 18px; cursor: pointer; }
@@ -47,25 +49,29 @@
         .stat-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.08); }
         .stat-icon { width: 48px; height: 48px; border-radius: 9999px; display: flex; align-items: center; justify-content: center; }
         .push-only-active { background: #10b981 !important; color: white !important; border-color: #10b981 !important; }
+        @media (max-width: 640px) {
+            .bulk-bar { flex-direction: column; align-items: stretch; }
+            .bulk-bar .ml-auto { margin-left: 0 !important; }
+        }
     </style>
 </head>
 <body class="antialiased">
 
-    <!-- ─── DIAGNOSTIC ERROR DISPLAY ─── -->
     <div id="diagnosticPanel" style="display:none; position:fixed; top:0; left:0; right:0; background:#fee2e2; color:#991b1b; padding:12px 20px; z-index:9999; font-family:monospace; font-size:12px; border-bottom:3px solid #ef4444;">
         <strong>⚠️ Error:</strong> <span id="diagMsg"></span>
         <button onclick="document.getElementById('diagnosticPanel').style.display='none'" style="float:right; background:transparent; border:none; cursor:pointer; color:#991b1b; font-weight:bold;">✕</button>
     </div>
 
     <div class="container mx-auto px-4 py-8 max-w-7xl">
-        <!-- Header -->
         <div class="bg-white rounded-2xl shadow-sm p-6 mb-6 border border-gray-100 card-hover">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h1 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
                         <i class="fas fa-shield-alt text-emerald-600"></i> Admin Dashboard
                     </h1>
-                    <p class="text-gray-500 text-sm mt-1">Manage subscriptions · Send messages &amp; Push Notifications</p>
+                    <p class="text-gray-500 text-sm mt-1">
+                        Manage subscriptions · Auto-expiry · Send messages &amp; Push Notifications
+                    </p>
                 </div>
                 <div id="adminStatus" class="text-sm text-gray-500 flex items-center gap-2">
                     <i class="fas fa-spinner fa-pulse"></i> Loading...
@@ -78,7 +84,7 @@
             <div class="stat-card">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-xs font-semibold text-gray-500 uppercase">Total Users</p>
+                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Total Users</p>
                         <h3 id="statTotalUsers" class="text-2xl font-bold text-gray-800 mt-1">—</h3>
                     </div>
                     <div class="stat-icon bg-indigo-50"><i class="fas fa-users text-indigo-600 text-xl"></i></div>
@@ -87,7 +93,7 @@
             <div class="stat-card">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-xs font-semibold text-gray-500 uppercase">Push Enabled</p>
+                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Push Enabled</p>
                         <h3 id="statPushEnabled" class="text-2xl font-bold text-emerald-600 mt-1">—</h3>
                     </div>
                     <div class="stat-icon bg-emerald-50"><i class="fas fa-bell text-emerald-600 text-xl"></i></div>
@@ -96,7 +102,7 @@
             <div class="stat-card">
                 <div class="flex items-center justify-between">
                     <div>
-                        <p class="text-xs font-semibold text-gray-500 uppercase">Push Disabled</p>
+                        <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Push Disabled</p>
                         <h3 id="statPushDisabled" class="text-2xl font-bold text-gray-600 mt-1">—</h3>
                     </div>
                     <div class="stat-icon bg-gray-100"><i class="fas fa-bell-slash text-gray-500 text-xl"></i></div>
@@ -131,7 +137,7 @@
                 </div>
                 <div class="flex justify-end gap-3 pt-2">
                     <button type="button" onclick="toggleCreateForm()" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">Cancel</button>
-                    <button type="submit" class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700">Create User</button>
+                    <button type="submit" class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700">Create User &amp; Set Balance ₦370,000</button>
                 </div>
             </form>
             <div id="createUserMessage" class="mt-3 text-sm hidden"></div>
@@ -180,6 +186,7 @@
             <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Link (optional)</label>
                 <input type="url" id="messageLink" class="input-field" placeholder="https://example.com" />
+                <p class="text-xs text-gray-500 mt-1">Shown as a clickable button in the user's inbox.</p>
             </div>
             <div class="flex justify-end gap-3">
                 <button onclick="closeMessageModal()" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">Cancel</button>
@@ -189,7 +196,38 @@
         </div>
     </div>
 
-    <!-- Push Notification Modal -->
+    <!-- Bulk Inbox Message Modal -->
+    <div id="bulkMessageModal" class="modal-backdrop hidden">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-800"><i class="fas fa-users text-emerald-500 mr-2"></i>Send Bulk Inbox Message</h3>
+                <button onclick="closeBulkMessageModal()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="mb-3">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Target</label>
+                <input type="text" id="bulkTargetInfo" class="input-field bg-gray-50" readonly />
+            </div>
+            <div class="mb-3">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Subject</label>
+                <input type="text" id="bulkSubject" class="input-field" placeholder="Important update..." />
+            </div>
+            <div class="mb-3">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Message</label>
+                <textarea id="bulkBody" rows="3" class="input-field" placeholder="Write your message here..."></textarea>
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Link (optional)</label>
+                <input type="url" id="bulkLink" class="input-field" placeholder="https://example.com" />
+            </div>
+            <div class="flex justify-end gap-3">
+                <button onclick="closeBulkMessageModal()" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">Cancel</button>
+                <button id="sendBulkMessageBtn" class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700">Send to Selected</button>
+            </div>
+            <div id="bulkMessageError" class="mt-2 text-sm text-red-600 hidden"></div>
+        </div>
+    </div>
+
+    <!-- PUSH NOTIFICATION MODAL (single user) -->
     <div id="pushModal" class="modal-backdrop hidden">
         <div class="modal-content">
             <div class="flex justify-between items-center mb-4">
@@ -210,14 +248,61 @@
                 <textarea id="pushBody" rows="3" class="input-field" placeholder="Notification body..."></textarea>
             </div>
             <div class="mb-3">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Icon URL (optional)</label>
+                <input type="url" id="pushIcon" class="input-field" placeholder="https://example.com/icon.png" />
+            </div>
+            <div class="mb-3">
                 <label class="block text-sm font-medium text-gray-700 mb-1">Click Action URL (optional)</label>
                 <input type="url" id="pushClickAction" class="input-field" placeholder="https://example.com" />
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Image URL (optional, large)</label>
+                <input type="url" id="pushImage" class="input-field" placeholder="https://example.com/image.jpg" />
             </div>
             <div class="flex justify-end gap-3">
                 <button onclick="closePushModal()" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">Cancel</button>
                 <button id="sendPushBtn" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"><i class="fas fa-bell mr-1"></i> Send Push</button>
             </div>
             <div id="pushModalError" class="mt-2 text-sm text-red-600 hidden"></div>
+        </div>
+    </div>
+
+    <!-- BULK PUSH NOTIFICATION MODAL -->
+    <div id="bulkPushModal" class="modal-backdrop hidden">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-800"><i class="fas fa-broadcast text-indigo-500 mr-2"></i>Send Bulk Push Notification</h3>
+                <button onclick="closeBulkPushModal()" class="text-gray-400 hover:text-gray-600"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="mb-3">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Target</label>
+                <input type="text" id="bulkPushTargetInfo" class="input-field bg-gray-50" readonly />
+            </div>
+            <div class="mb-3">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                <input type="text" id="bulkPushTitle" class="input-field" placeholder="Notification title..." />
+            </div>
+            <div class="mb-3">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Body</label>
+                <textarea id="bulkPushBody" rows="3" class="input-field" placeholder="Notification body..."></textarea>
+            </div>
+            <div class="mb-3">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Icon URL (optional)</label>
+                <input type="url" id="bulkPushIcon" class="input-field" placeholder="https://example.com/icon.png" />
+            </div>
+            <div class="mb-3">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Click Action URL (optional)</label>
+                <input type="url" id="bulkPushClickAction" class="input-field" placeholder="https://example.com" />
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Image URL (optional, large)</label>
+                <input type="url" id="bulkPushImage" class="input-field" placeholder="https://example.com/image.jpg" />
+            </div>
+            <div class="flex justify-end gap-3">
+                <button onclick="closeBulkPushModal()" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50">Cancel</button>
+                <button id="sendBulkPushBtn" class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"><i class="fas fa-bell mr-1"></i> Send to All</button>
+            </div>
+            <div id="bulkPushError" class="mt-2 text-sm text-red-600 hidden"></div>
         </div>
     </div>
 
@@ -251,7 +336,12 @@
             serverTimestamp,
             writeBatch
         } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+        import {
+            getMessaging,
+            isSupported
+        } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js";
 
+        // ─── Config ────────────────────────────────────────
         const firebaseConfig = {
             apiKey: "AIzaSyAjLxkisBi9pzmjlwdHnYfo25XR2Z6ToEs",
             authDomain: "opay-plus-5802c.firebaseapp.com",
@@ -267,21 +357,42 @@
         const EMAILJS_PUBLIC_KEY  = 'Dqvofs4zc5JLQf-Qc';
 
         if (window.emailjs) {
-            try { window.emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY }); }
-            catch (e) { console.warn('EmailJS init failed:', e); }
-        }
+            try { window.emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY }); console.log('✅ EmailJS initialized'); }
+            catch (e) { console           .warn('⚠️ EmailJS init failed:', e); }
+ return        }
 
         const app = getApps().length ? getApp() : initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // ─── DOM refs ─────────────────────────────────────
+        // ─── FCM init (admin side, optional) ──────────────
+        let messaging = null;
+        let fcmSupported = false;
+        async function initFCM() {
+            try {
+                const supported = await isSupported();
+                if (supported) {
+                    messaging = getMessaging(app);
+                    fcmSupported = true;
+                    console.log("✅ FCM supported");
+                    try {
+                        await navigator.serviceWorker.register('/firebase-messaging-sw.js');
+                        console.log("✅ SW registered");
+                    } catch (swErr) { console.warn("⚠️ SW registration:", swErr); }
+                }
+            } catch (err) { console.warn("⚠️ FCM init error:", err); }
+        }
+        initFCM();
+
+        // ─── DOM refs ──────────────────────────────────────
         const adminContent = document.getElementById('adminContent');
         const adminStatus = document.getElementById('adminStatus');
         const confirmModal = document.getElementById('confirmModal');
         const createUserCard = document.getElementById('createUserCard');
         const messageModal = document.getElementById('messageModal');
+        const bulkMessageModal = document.getElementById('bulkMessageModal');
         const pushModal = document.getElementById('pushModal');
+        const bulkPushModal = document.getElementById('bulkPushModal');
 
         let pendingAction = null;
         let currentMessageTargetUid = null;
@@ -289,6 +400,10 @@
         let selectedUserIds = new Set();
         let currentUserList = [];
         let bulkTargetType = '';
+        let bulkGroupFilter = '';
+        let pushOnlyMode = false;
+
+        // Pagination
         let currentPage = 1;
         let pageSize = 10;
         let totalUsers = 0;
@@ -296,33 +411,43 @@
         let currentSearchTerm = '';
         let fullUsersCache = null;
         let isFetchingFullList = false;
-        let pushOnlyMode = false;
 
-        // ─── Diagnostics ─────────────────────────────────
+        // ─── Diagnostics ───────────────────────────────────
         window.addEventListener('error', function (e) {
-            showDiagnostic('JavaScript Error: ' + (e.message || 'Unknown') + ' at ' + (e.filename || '') + ':' + (e.lineno || ''));
+            showDiagnostic('JS Error: ' + (e.message || 'Unknown') + ' at ' + (e.filename || '') + ':' + (e.lineno || ''));
         });
         window.addEventListener('unhandledrejection', function (e) {
             const msg = e.reason && e.reason.message ? e.reason.message : String(e.reason);
-            console.error('Unhandled rejection:', msg);
-            if (msg && (msg.includes('permission') || msg.includes('Firestore'))) {
-                showDiagnostic(msg);
-            }
+            console.error('Unhandled:', msg);
+            if (msg && (msg.includes('permission') || msg.includes('Firestore'))) showDiagnostic(msg);
         });
         function showDiagnostic(msg) {
             const panel = document.getElementById('diagnosticPanel');
             document.getElementById('diagMsg').textContent = msg;
             panel.style.display = 'block';
-            console.error('[DIAGNOSTIC]', msg);
         }
 
-        // ─── Helpers ─────────────────────────────────────
+        // ─── Helpers ──────────────────────────────────────
         function formatDate(timestamp) {
             if (!timestamp) return 'Never';
             try {
                 const d = timestamp.seconds ? new Date(timestamp.seconds * 1000) : new Date(timestamp);
                 return d.toLocaleString();
             } catch (e) { return 'Invalid'; }
+        }
+
+        function formatLastLogin(lastActivity) {
+            if (!lastActivity) return 'Never';
+            let date;
+            if (lastActivity.seconds) date = new Date(lastActivity.seconds * 1000);
+            else if (typeof lastActivity === 'number') date = new Date(lastActivity);
+            else date = new Date(lastActivity);
+            return date.toLocaleString();
+        }
+
+        function getStatusBadge(suspended) {
+            if (suspended) return '<span class="badge badge-suspended"><i class="fas fa-ban mr-1"></i> Suspended</span>';
+ '<span class="badge badge-active"><i class="fas fa-check-circle mr-1"></i> Active</span>';
         }
 
         function formatBalance(balance) {
@@ -352,7 +477,6 @@
             pendingAction = onConfirm;
             confirmModal.classList.remove('hidden');
         }
-
         document.getElementById('modalCancel').addEventListener('click', () => {
             confirmModal.classList.add('hidden');
             pendingAction = null;
@@ -373,13 +497,540 @@
         }
 
         function getAuthBadgeHtml(authStatus) {
-            if (authStatus === 'failed') return '<span class="badge badge-auth-failed">Failed</span>';
-            if (authStatus === 'processing') return '<span class="badge badge-auth-processing">Processing</span>';
-            if (authStatus === 'pending') return '<span class="badge badge-auth-pending">Pending</span>';
+            if (authStatus === 'failed') return '<span class="badge badge-auth-failed ml-1"><i class="fas fa-times-circle mr-1"></i> Failed</span>';
+            if (authStatus === 'processing') return '<span class="badge badge-auth-processing ml-1"><i class="fas fa-cog fa-spin mr-1"></i> Processing</span>';
+            if (authStatus === 'pending') return '<span class="badge badge-auth-pending ml-1"><i class="fas fa-clock mr-1"></i> Pending</span>';
             return '';
         }
 
-        // ─── Fetch all users ─────────────────────────────
+        // ═══════════════════════════════════════════════════
+        //  EMAILJS: SEND PLAN-UPGRADE EMAIL
+        // ═══════════════════════════════════════════════════
+        async function sendUpgradeEmail(uid, plan) {
+            if (!window.emailjs) return { success: false, error: 'EmailJS not loaded' };
+            try {
+                const userSnap = await getDoc(doc(db, 'users', uid));
+                if (!userSnap.exists()) return { success: false, error: 'User not found' };
+                const userData = userSnap.data();
+
+                let tierPlan = 'Tier 1 plan';
+                if (plan === 'tier1') tierPlan = 'Tier 1 plan';
+                else if (plan === 'tier2') tierPlan = 'Tier 2 plan';
+                else if (plan === 'tier3') tierPlan = 'Tier 3 plan';
+
+                const fullName = [userData.firstName, userData.lastName].filter(Boolean).join(' ').trim();
+                const accountName = fullName || userData.email || 'Valued Customer';
+
+                const accountNumber = userData.accountNumber || userData.opayAccountNumber || userData.accountNo ||
+                    userData.walletNumber || userData.phone || 'N/A';
+
+                let rawBvn = userData.bvn || userData.BVN || userData.bankVerificationNumber || '';
+                let bvn = '**********';
+                if (rawBvn) {
+                    const b = String(rawBvn);
+                    if (b.length > 5) bvn = b.slice(0, 3) + '*'.repeat(Math.max(0, b.length - 5)) + b.slice(-2);
+                    else bvn = b;
+                }
+
+                const templateParams = {
+                    tier_plan: tierPlan,
+                    account_name: accountName,
+                    account_number: accountNumber,
+                    email_address: userData.email || '',
+                    bvn: bvn,
+                    to_email: userData.email || '',
+                    user_email: userData.email || '',
+                    reply_to: 'support@opayplus.ng'
+                };
+
+                const result = await window.emailjs.send(
+                    EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, templateParams, { publicKey: EMAILJS_PUBLIC_KEY }
+                );
+                return { success: true, result };
+            } catch (err) {
+                console.error('❌ Email error:', err);
+                return { success: false, error: err.message || String(err) };
+            }
+        }
+
+        // ═══════════════════════════════════════════════════
+        //  SEND PUSH — via Vercel API using firebase-admin
+        // ═══════════════════════════════════════════════════
+        async function sendFcmPush(uid, title, body, icon, clickAction, image) {
+            if (!uid) throw new Error('No user UID provided.');
+
+            const userDoc = await getDoc(doc(db, 'users', uid));
+            if (!userDoc.exists()) throw new Error('User not found.');
+
+            const userData = userDoc.data();
+            const tokens = Array.isArray(userData.fcmTokens) ? userData.fcmTokens.filter(Boolean) : [];
+            if (tokens.length === 0) throw new Error('User has no FCM tokens registered.');
+
+            const payload = {
+                tokens,
+                title: title || 'OPay Plus',
+                body: body || '',
+                clickAction: clickAction || '/message.html',
+                data: { icon: icon || '', image: image || '' }
+            };
+
+            let response;
+            try {
+                response = await fetch('/api/send-notification', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+            } catch (netErr) {
+                throw new Error('Network error: ' + netErr.message);
+            }
+
+            if (!response.ok) {
+                let errBody = '';
+                try { errBody = await response.text(); } catch (_) {}
+                throw new Error(`Server error ${response.status}: ${errBody || response.statusText}`);
+            }
+
+            const result = await response.json();
+            if (!result.success) throw new Error(result.error || 'Unknown error.');
+
+            // Cleanup invalid tokens
+            try {
+                const failedResponses = (result.responses || []).filter(r => !r.success);
+                const invalidCodes = [
+                    'messaging/invalid-registration-token',
+                    'messaging/registration-token-not-registered',
+                    'messaging/invalid-argument'
+                ];
+                const badTokens = [];
+                failedResponses.forEach((r, idx) => {
+                    if (invalidCodes.includes(r.error)) badTokens.push(tokens[idx]);
+                });
+                if (badTokens.length > 0) {
+                    const remaining = tokens.filter(t => !badTokens.includes(t));
+                    await updateDoc(doc(db, 'users', uid), { fcmTokens: remaining });
+                }
+            } catch (e) { console.warn('Cleanup skipped:', e); }
+
+            return result;
+        }
+
+        // ─── Single Push Modal ────────────────────────────
+        window.showPushModal = async function(uid, email) {
+            currentPushTargetUid = uid;
+            document.getElementById('pushRecipientEmail').value = email || 'Unknown';
+            document.getElementById('pushTitle').value = '';
+            document.getElementById('pushBody').value = '';
+            document.getElementById('pushIcon').value = '';
+            document.getElementById('pushClickAction').value = '';
+            document.getElementById('pushImage').value = '';
+            document.getElementById('pushModalError').classList.add('hidden');
+
+            const tokenStatus = document.getElementById('pushTokenStatus');
+            try {
+                const userDoc = await getDoc(doc(db, 'users', uid));
+                if (userDoc.exists()) {
+                    const tokens = userDoc.data().fcmTokens || [];
+                    if (tokens.length > 0) {
+                        tokenStatus.innerHTML = `<span class="fcm-token-status has-token"><i class="fas fa-check-circle"></i> ${tokens.length} device(s) registered</span>`;
+                    } else {
+                        tokenStatus.innerHTML = `<span class="fcm-token-status no-token"><i class="fas fa-exclamation-circle"></i> No FCM tokens</span>`;
+                    }
+                } else {
+                    tokenStatus.innerHTML = `<span class="fcm-token-status no-token">User not found</span>`;
+                }
+            } catch (e) {
+                tokenStatus.innerHTML = `<span class="fcm-token-status no-token">Error</span>`;
+            }
+
+            pushModal.classList──.remove('hidden');
+        };
+
+        window.closePushModal = function() {
+            pushModal.classList.add('hidden');
+            currentPushTargetUid = null;
+        };
+
+        document.getElementById('sendPushBtn').addEventListener('click', async () => {
+            if (!currentPushTargetUid) return;
+            const title = document.getElementById('pushTitle').value.trim();
+            const body = document.getElementById('pushBody').value.trim();
+            if (!title || !body) {
+                document.getElementById('pushModalError').textContent = 'Title and Body required.';
+                document.getElementById('pushModalError').classList.remove('hidden');
+                return;
+            }
+            const icon = document.getElementById('pushIcon').value.trim();
+            const clickAction = document.getElementById('pushClickAction').value.trim();
+            const image = document.getElementById('pushImage').value.trim();
+
+            const btn = document.getElementById('sendPushBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-pulse mr-1"></i> Sending...';
+
+            try {
+                await sendFcmPush(currentPushTargetUid, title, body, icon, clickAction, image);
+                showToast(`✅ Push sent to ${document.getElementById('pushRecipientEmail').value}`, 'success');
+                closePushModal();
+            } catch (err) {
+                document.getElementById('pushModalError').textContent = 'Error: ' + err.message;
+                document.getElementById('pushModalError').classList.remove('hidden');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-bell mr-1"></i> Send Push';
+            }
+        });
+
+        // ─── Bulk Push ────────────────────────────────────
+        window.showBulkPushForSelected = function() {
+            if (selectedUserIds.size === 0) { alert('Select at least one user.'); return; }
+            bulkTargetType = 'selected';
+            document.getElementById('bulkPushTargetInfo').value = `${selectedUserIds.size} user(s) selected`;
+            ['bulkPushTitle','bulkPushBody','bulkPushIcon','bulkPushClickAction','bulkPushImage'].forEach(id => document.getElementById(id).value = '');
+            document.getElementById('bulkPushError').classList.add('hidden');
+            bulkPushModal.classList.remove('hidden');
+        };
+
+        window.showBulkPushForAll = function() {
+            bulkTargetType = 'all';
+            document.getElementById('bulkPushTargetInfo').value = `ALL users (${totalUsers} users)`;
+            ['bulkPushTitle','bulkPushBody','bulkPushIcon','bulkPushClickAction','bulkPushImage'].forEach(id => document.getElementById(id).value = '');
+            document.getElementById('bulkPushError').classList.add('hidden');
+            bulkPushModal.classList.remove('hidden');
+        };
+
+        window.showBulkPushForGroup = function() {
+            const groupSelect = document.getElementById('groupSelectFilter');
+            const groupValue = groupSelect.value;
+            if (!groupValue) { alert('Select a group.'); return; }
+            bulkTargetType = 'group';
+            bulkGroupFilter = groupValue;
+            let display = '';
+            if (groupValue === 'tier0') display = 'All Tier 0 (Free) users';
+            else if (groupValue === 'tier1') display = 'All Tier 1 users';
+            else if (groupValue === 'tier2') display = 'All Tier 2 users';
+            else if (groupValue === 'tier3') display = 'All Tier 3 users';
+            else if (groupValue === 'active') display = 'All Active users';
+            else if (groupValue === 'suspended') display = 'All Suspended users';
+            else if (groupValue === 'push-enabled') display = '🔔 All users with Notifications Enabled';
+            document.getElementById('bulkPushTargetInfo').value = display;
+            ['bulkPushTitle','bulkPushBody','bulkPushIcon','bulkPushClickAction','bulkPushImage'].forEach(id => document.getElementById(id).value = '');
+            document.getElementById('bulkPushError').classList.add('hidden');
+            bulkPushModal.classList.remove('hidden');
+        };
+
+        window.closeBulkPushModal = function() { bulkPushModal.classList.add('hidden'); };
+
+        async function getUsersByGroup(groupType, groupValue) {
+            const usersRef = collection(db, 'users');
+
+            if (groupType === 'push' || groupValue === 'push-enabled') {
+                const all = await fetchAllUsersFromFirestore();
+                return all.filter(u => Array.isArray(u.fcmTokens) && u.fcmTokens.length > 0);
+            }
+
+            let q;
+            if (groupType === 'plan') {
+                if (groupValue === 'tier0') q = query(usersRef, where('subscriptionPlan', '==', 'tier0'));
+                else if (groupValue === 'tier1') q = query(usersRef, where('subscriptionPlan', '==', 'tier1'));
+                else if (groupValue === 'tier2') q = query(usersRef, where('subscriptionPlan', '==', 'tier2'));
+                else if (groupValue === 'tier3') q = query(usersRef, where('subscriptionPlan', '==', 'tier3'));
+                else q = query(usersRef, where('tier', '==', parseInt(groupValue.replace('tier', ''))));
+            } else if (groupType === 'status') {
+                const suspended = (groupValue === 'suspended');
+                q = query(usersRef, where('suspended', '==', suspended));
+            } else return [];
+            const snapshot = await getDocs(q);
+            const users = [];
+            snapshot.forEach(docSnap => users.push({ uid: docSnap.id, ...docSnap.data() }));
+            return users;
+        }
+
+        document.getElementById('sendBulkPushBtn').addEventListener('click', async () => {
+            const title = document.getElementById('bulkPushTitle').value.trim();
+            const body = document.getElementById('bulkPushBody').value.trim();
+            if (!title || !body) {
+                document.getElementById('bulkPushError').textContent = 'Title and Body required.';
+                document.getElementById('bulkPushError').classList.remove('hidden');
+                return;
+            }
+            const icon = document.getElementById('bulkPushIcon').value.trim();
+            const clickAction = document.getElementById('bulkPushClickAction').value.trim();
+            const image = document.getElementById('bulkPushImage').value.trim();
+
+            let targetUids = [];
+            if (bulkTargetType === 'selected') targetUids = Array.from(selectedUserIds);
+            else if (bulkTargetType === 'all') {
+                const allUsers = await fetchAllUsersFromFirestore();
+                targetUids = allUsers.map(u => u.uid);
+            } else if (bulkTargetType === 'group') {
+                const groupValue = bulkGroupFilter;
+                let groupType = 'plan';
+                if (groupValue === 'active' || groupValue === 'suspended') groupType = 'status';
+                if (groupValue === 'push-enabled') groupType = 'push';
+                const users = await getUsersByGroup(groupType, groupValue);
+                targetUids = users.map(u => u.uid);
+            }
+
+            if (targetUids.length === 0) {
+                document.getElementById('bulkPushError').textContent = 'No users in target group.';
+                document.getElementById('bulkPushError').classList.remove('hidden');
+                return;
+            }
+
+            const btn = document.getElementById('sendBulkPushBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-pulse mr-1"></i> Sending...';
+
+            let successCount = 0, failCount = 0, skipCount = 0;
+            for (const uid of targetUids) {
+                try {
+                    await sendFcmPush(uid, title, body, icon, clickAction, image);
+                    successCount++;
+                } catch (err) {
+                    if (err.message.toLowerCase().includes('no fcm tokens')) skipCount++;
+                    else failCount++;
+                }
+            }
+
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-bell mr-1"></i> Send to All';
+
+            showToast(`✅ Sent: ${successCount} · Skipped: ${skipCount} · Failed: ${failCount}`, 'success');
+            closeBulkPushModal();
+            selectedUserIds.clear();
+            refreshUserList();
+        });
+
+        // ─── Inbox Message (single) ────────────────────────
+        window.showMessageModal = function(uid, email) {
+            currentMessageTargetUid = uid;
+            document.getElementById('messageRecipientEmail').value = email;
+            document.getElementById('messageSubject').value = '';
+            document.getElementById('messageBody').value = '';
+            document.getElementById('messageLink').value = '';
+            document.getElementById('messageModalError').classList.add('hidden');
+            messageModal.classList.remove('hidden');
+        };
+
+        window.closeMessageModal = function() {
+            messageModal.classList.add('hidden');
+            currentMessageTargetUid = null;
+        };
+
+        async function sendMessageToUser(uid, subject, body, link) {
+            if (!subject.trim() || !body.trim()) {
+                document.getElementById('messageModalError').textContent = 'Subject and message required.';
+                document.getElementById('messageModalError').classList.remove('hidden');
+                return false;
+            }
+            try {
+                const adminUser = auth.currentUser;
+                const messageData = {
+                    subject: subject.trim(),
+                    body: body.trim(),
+                    from: adminUser.email,
+                    fromUid: adminUser.uid,
+                    timestamp: serverTimestamp(),
+                    read: false
+                };
+                if (link && link.trim()) messageData.link = link.trim();
+                await addDoc(collection(db, 'users', uid, 'messages'), messageData);
+                showToast(`Message sent to ${escapeHtml(document.getElementById('messageRecipientEmail').value)}`, 'success');
+                closeMessageModal();
+                return true;
+            } catch (err) {
+                document.getElementById('messageModalError').textContent = 'Failed: ' + err.message;
+                document.getElementById('messageModalError').classList.remove('hidden');
+                return false;
+            }
+        }
+
+        document.getElementById('sendMessageBtn').addEventListener('click', async () => {
+            if (!currentMessageTargetUid) return;
+            await sendMessageToUser(
+                currentMessageTargetUid,
+                document.getElementById('messageSubject').value,
+                document.getElementById('messageBody').value,
+                document.getElementById('messageLink').value
+            );
+        });
+
+        // ─── Bulk Inbox Message ────────────────────────────
+        function closeBulkMessageModal() {
+            bulkMessageModal.classList.add('hidden');
+            bulkTargetType = '';
+            bulkGroupFilter = '';
+        }
+        window.closeBulkMessageModal = closeBulkMessageModal;
+
+        async function sendBulkMessage(uids, subject, body, link) {
+            if (!subject.trim() || !body.trim()) {
+                document.getElementById('bulkMessageError').textContent = 'Subject and message required.';
+                document.getElementById('bulkMessageError').classList.remove('hidden');
+                return false;
+            }
+            if (uids.length === 0) {
+                document.getElementById('bulkMessageError').textContent = 'No users selected.';
+                document.getElementById('bulkMessageError').classList.remove('hidden');
+                return false;
+            }
+            try {
+                const adminUser = auth.currentUser;
+                const batch = writeBatch(db);
+                for (const uid of uids) {
+                    const msgRef = doc(collection(db, 'users', uid, 'messages'));
+                    const messageData = {
+                        subject: subject.trim(),
+                        body: body.trim(),
+                        from: adminUser.email,
+                        fromUid: adminUser.uid,
+                        timestamp: serverTimestamp(),
+                        read: false
+                    };
+                    if (link && link.trim()) messageData.link = link.trim();
+                    batch.set(msgRef, messageData);
+                }
+                await batch.commit();
+                showToast(`Message sent to ${uids.length} user(s). AUTO`, 'success');
+                closeBulkMessageModal();
+                selectedUser SIds.clear();
+                refreshUserList();
+                return true;
+            } catch (err) {
+               END document.getElementById('bulkMessageError').textContent = PLAN 'Failed: ' + err.message;
+                document.getElementById('bul UPkMessageError').classList.remove('hidden');
+                returnGR false;
+            }
+        }
+
+        window.showBADEulkMessageForSelected = function() {
+            if M (selectedUserIds.size === 0) { alert('Select at least one user.'); return; }
+            bulkTargetType = 'selected';
+            document.getElementById('bulkTargetInfo').value = `${selectedUserIds.size} user(s) selected`;
+            ['bulkSubject','bulkBody','bulkLink'].forEach(id => document.getElementById(id).value = '');
+            document.getElementById('bulkMessageError').classList.add('hidden');
+            bulkMessageModal.classList.remove('hidden');
+        };
+
+        window.showBulkMessageForAll = function() {
+            bulkTargetType = 'all';
+            document.getElementById('bulkTargetInfo').value = `ALL users (${totalUsers} users)`;
+            ['bulkSubject','bulkBody','bulkLink'].forEach(id => document.getElementById(id).value = '');
+            document.getElementById('bulkMessageError').classList.add('hidden');
+            bulkMessageModal.classList.remove('hidden');
+        };
+
+        window.showBulkMessageForGroup = function() {
+            const groupSelect = document.getElementById('groupSelectFilter');
+            const groupValue = groupSelect.value;
+            if (!groupValue) { alert('Select a group.'); return; }
+            bulkTargetType = 'group';
+            bulkGroupFilter = groupValue;
+            let display = '';
+            if (groupValue === 'tier0') display = 'All Tier 0 (Free) users';
+            else if (groupValue === 'tier1') display = 'All Tier 1 users';
+            else if (groupValue === 'tier2') display = 'All Tier 2 users';
+            else if (groupValue === 'tier3') display = 'All Tier 3 users';
+            else if (groupValue === 'active') display = 'All Active users';
+            else if (groupValue === 'suspended') display = 'All Suspended users';
+            else if (groupValue === 'push-enabled') display = '🔔 All users with Notifications Enabled';
+            document.getElementById('bulkTargetInfo').value = display;
+            ['bulkSubject','bulkBody','bulkLink'].forEach(id => document.getElementById(id).value = '');
+            document.getElementById('bulkMessageError').classList.add('hidden');
+            bulkMessageModal.classList.remove('hidden');
+        };
+
+        document.getElementById('sendBulkMessageBtn').addEventListener('click', async () => {
+            const subject = document.getElementById('bulkSubject').value;
+            const body = document.getElementById('bulkBody').value;
+            const link = document.getElementById('bulkLink').value;
+            let targetUids = [];
+            if (bulkTargetType === 'selected') targetUids = Array.from(selectedUserIds);
+            else if (bulkTargetType === 'all') {
+                const allUsers = await fetchAllUsersFromFirestore();
+                targetUids = allUsers.map(u => u.uid);
+            } else if (bulkTargetType === 'group') {
+                const groupValue = bulkGroupFilter;
+                let groupType = 'plan';
+                if (groupValue === 'active' || groupValue === 'suspended') groupType = 'status';
+                if (groupValue === 'push-enabled') groupType = 'push';
+                const users = await getUsersByGroup(groupType, groupValue);
+                targetUids = users.map(u => u.uid);
+            }
+            await sendBulkMessage(targetUids, subject, body, link);
+        });
+
+        // ─ESSAGE ────────────────
+        async function sendPlanUpgradeMessage(uid, plan) {
+            const planNumber = plan.replace('tier', '');
+            const subject = `Upgrade to Tier ${planNumber} plan`;
+            let body, link = null;
+            if (plan === 'tier1' || plan === 'tier2') {
+                body = `Congratulations! 🎉\n\nYour account has been upgraded to tier ${planNumber} plan Successful!.\n\nYou can now make successful transfer, add money to account, share receipts and more.\n\nNote: for top up and reflection to beneficiaries balance kindly upgrade your account to tier 3 (VIP ACCESS) plan.\n\nOPAY TEAMS.`;
+                link = '/upgrade-subscribe.html';
+            } else if (plan === 'tier3') {
+                body = `Congratulations! 🎉\n\nYour account has been upgraded to tier ${planNumber} plan Successful!.\n\nYou can now make successful transfer, add money to account, share receipts and more.\n\nNote: for top up and reflection to beneficiaries balance kindly Authorise your account in your profile.\n\nOPAY TEAMS.`;
+                link = null;
+            } else return;
+
+            try {
+                const adminUser = auth.currentUser;
+                const messageData = {
+                    subject, body,
+                    from: adminUser.email,
+                    fromUid: adminUser.uid,
+                    timestamp: serverTimestamp(),
+                    read: false
+                };
+                if (link) messageData.link = link;
+                await addDoc(collection(db, 'users', uid, 'messages'), messageData);
+            } catch (err) { console.error('Auto upgrade msg failed:', err); }
+        }
+
+        // ─── Auto-downgrade expired subscriptions ─────────
+        async function downgradeExpiredSubscriptions() {
+            try {
+                const now = new Date();
+                const usersRef = collection(db, 'users');
+                const expiredQuery = query(usersRef, where('subscriptionExpiry', '<', now));
+                const querySnapshot = await getDocs(expiredQuery);
+                let downgradeCount = 0;
+                const updatePromises = [];
+                querySnapshot.forEach(docSnap => {
+                    const userData = docSnap.data();
+                    const currentPlan = userData.subscriptionPlan || 'tier0';
+                    if (currentPlan !== 'tier0' && (currentPlan === 'tier1' || currentPlan === 'tier2' || currentPlan === 'tier3')) {
+                        updatePromises.push(updateDoc(doc(db, 'users', docSnap.id), {
+                            subscriptionPlan: 'tier0',
+                            tier: 0,
+                            balance: 370000,
+                            subscriptionExpiry: null,
+                            suspended: false,
+                            pendingAuthRequest: false,
+                            authStatus: 'none',
+                            authProcessing: false
+                        }));
+                        downgradeCount++;
+                    }
+                });
+                if (updatePromises.length > 0) {
+                    await Promise.all(updatePromises);
+                    invalidateUserCache();
+                    const statusDiv = document.getElementById('adminStatus');
+                    if (statusDiv) {
+                        const originalHtml = statusDiv.innerHTML;
+                        statusDiv.innerHTML = `<i class="fas fa-sync-alt text-amber-500 mr-1"></i> Auto-downgraded ${downgradeCount} user(s)`;
+                        setTimeout(() => {
+                            if (document.getElementById('adminStatus')) document.getElementById('adminStatus').innerHTML = originalHtml;
+                        }, 4000);
+                    }
+                }
+                return downgradeCount;
+            } catch (err) { console.error(err); return 0; }
+        }
+
+        // ─── Fetch all users (cached) ──────────────────────
         async function fetchAllUsersFromFirestore(forceRefresh = false) {
             if (!forceRefresh && fullUsersCache !== null) return fullUsersCache;
             if (isFetchingFullList) {
@@ -409,64 +1060,95 @@
             } finally { isFetchingFullList = false; }
         }
 
-        // ─── Compute push stats ──────────────────────────
+        // ─── Compute push stats ────────────────────────────
         async function computePushStats() {
             try {
-                const allUsers = await fetchAllUsersFromFirestore();
-                const pushEnabled = allUsers.filter(u => Array.isArray(u.fcmTokens) && u.fcmTokens.length > 0).length;
-                document.getElementById('statTotalUsers').textContent = allUsers.length;
-                document.getElementById('statPushEnabled').textContent = pushEnabled;
-                document.getElementById('statPushDisabled').textContent = allUsers.length - pushEnabled;
-            } catch (e) { console.warn('Stats failed:', e); }
+                const all = await fetchAllUsersFromFirestore();
+                const enabled = all.filter(u => Array.isArray(u.fcmTokens) && u.fcmTokens.length > 0).length;
+                document.getElementById('statTotalUsers').textContent = all.length;
+                document.getElementById('statPushEnabled').textContent = enabled;
+                document.getElementById('statPushDisabled').textContent = all.length - enabled;
+            } catch (e) {}
         }
 
-        // ─── Load & render users ─────────────────────────
-        async function loadUsersAndRender(searchTerm = '', page = 1) {
-            currentPage = page;
-            currentSearchTerm = searchTerm;
-            adminContent.innerHTML = `<div class="p-8 text-center"><i class="fas fa-spinner fa-pulse text-2xl text-emerald-500"></i><p class="mt-2 text-gray-500">Loading users...</p></div>`;
-
-            try {
-                let allUsers = await fetchAllUsersFromFirestore();
-
-                if (pushOnlyMode) {
-                    allUsers = allUsers.filter(u => Array.isArray(u.fcmTokens) && u.fcmTokens.length > 0);
-                }
-
+        // ─── Fetch users page ──────────────────────────────
+        async function fetchUsersPage(page, searchTerm = '') {
+            if (pushOnlyMode) {
+                const all = await fetchAllUsersFromFirestore();
+                let filtered = all.filter(u => Array.isArray(u.fcmTokens) && u.fcmTokens.length > 0);
                 if (searchTerm.trim() !== '') {
                     const lower = searchTerm.toLowerCase().trim();
-                    allUsers = allUsers.filter(u => u.email && u.email.toLowerCase().includes(lower));
+                    filtered = filtered.filter(u => u.email && u.email.toLowerCase().includes(lower));
                 }
-
-                allUsers.sort((a, b) => (a.email || '').localeCompare(b.email || ''));
-                totalUsers = allUsers.length;
+                filtered.sort((a, b) => (a.email || '').localeCompare(b.email || ''));
+                totalUsers = filtered.length;
                 const start = (page - 1) * pageSize;
-                const pageUsers = allUsers.slice(start, start + pageSize);
+                return filtered.slice(start, start + pageSize);
+            }
 
-                renderUsersTable(pageUsers, searchTerm, page, totalUsers);
-            } catch (err) {
-                console.error('Load users error:', err);
-                adminContent.innerHTML = `<div class="p-8 text-center text-red-500">
-                    <i class="fas fa-exclamation-triangle mr-2"></i>
-                    Failed to load users: ${err.message}
-                    <br><small>If this says "permission-denied", check your Firestore rules.</small>
-                </div>`;
+            if (searchTerm.trim() !== '') {
+                const all = await fetchAllUsersFromFirestore();
+                const lower = searchTerm.toLowerCase().trim();
+                let filtered = all.filter(u => u.email && u.email.toLowerCase().includes(lower));
+                filtered.sort((a, b) => (a.email || '').localeCompare(b.email || ''));
+                totalUsers = filtered.length;
+                const start = (page - 1) * pageSize;
+                return filtered.slice(start, start + pageSize);
+            } else {
+                const usersRef = collection(db, 'users');
+                let q;
+                if (page === 1) {
+                    q = query(usersRef, orderBy('email'), limit(pageSize));
+                    lastDocSnapshot = null;
+                } else {
+                    if (!lastDocSnapshot) {
+                        const firstPage = await getDocs(query(usersRef, orderBy('email'), limit(pageSize)));
+                        if (firstPage.empty) return [];
+                        lastDocSnapshot = firstPage.docs[firstPage.docs.length - 1];
+                    }
+                    q = query(usersRef, orderBy('email'), startAfter(lastDocSnapshot), limit(pageSize));
+                }
+                const snapshot = await getDocs(q);
+                if (snapshot.empty) return [];
+                lastDocSnapshot = snapshot.docs[snapshot.docs.length - 1];
+                const users = [];
+                snapshot.forEach(docSnap => users.push({ uid: docSnap.id, ...docSnap.data() }));
+                const countSnapshot = await getDocs(query(usersRef, orderBy('email')));
+                totalUsers = countSnapshot.size;
+                return users;
             }
         }
 
-        // ─── Render users table ──────────────────────────
-        function renderUsersTable(users, searchTerm, currentPageNum, total) {
+        // ─── Load & render users ────────────────────────────
+        async function loadUsersAndRender(searchTerm = '', page = 1) {
+            const searchInputElem = document.getElementById('searchInput');
+            const currentSearch = (searchTerm !== undefined) ? searchTerm : (searchInputElem ? searchInputElem.value : '');
+            currentSearchTerm = currentSearch;
+            currentPage = page;
+            adminContent.innerHTML = `<div class="p-8 text-center"><i class="fas fa-spinner fa-pulse text-2xl text-emerald-500"></i><p class="mt-2 text-gray-500">Loading users page ${page}...</p></div>`;
+            try {
+                await downgradeExpiredSubscriptions();
+                const users = await fetchUsersPage(page, currentSearch);
+                renderUsersTable(users, currentSearch, currentSearch.trim() !== '', page, totalUsers);
+            } catch (err) {
+                adminContent.innerHTML = `<div class="p-8 text-center text-red-500"><i class="fas fa-exclamation-triangle mr-2"></i>Failed: ${err.message}</div>`;
+            }
+        }
+
+        function renderUsersTable(users, searchTerm, isFullSearchMode, currentPageNum, total) {
             const currentAdminUid = auth.currentUser?.uid;
+            const filtered = users;
             const totalPages = Math.ceil(total / pageSize) || 1;
             currentUserList = users;
 
             let resultInfo = '';
             if (pushOnlyMode) {
-                resultInfo = `<span class="result-badge" style="background:#d1fae5;color:#065f46;"><i class="fas fa-bell mr-1"></i> ${total} push-enabled</span>`;
-            } else if (searchTerm) {
-                resultInfo = `<span class="result-badge"><i class="fas fa-search mr-1"></i> ${total} matching "${escapeHtml(searchTerm)}"</span>`;
+                resultInfo = `<span class="result-badge ml-3" style="background:#d1fae5;color:#065f46;"><i class="fas fa-bell mr-1"></i> ${total} push-enabled</span>`;
+            } else if (searchTerm && searchTerm.trim() !== '') {
+                resultInfo = `<span class="result-badge ml-3"><i class="fas fa-search mr-1"></i> Found ${total} user${total !== 1 ? 's' : ''} matching "${escapeHtml(searchTerm)}"</span>`;
+                if (isFullSearchMode) resultInfo += `<span class="result-badge ml-2 bg-emerald-50 text-emerald-700"><i class="fas fa-database"></i> Scanned ALL registered users</span>`;
             } else {
-                resultInfo = `<span class="result-badge"><i class="fas fa-eye"></i> Showing ${users.length} of ${total}</span>`;
+                resultInfo = `<span class="result-badge ml-3"><i class="fas fa-eye"></i> Showing ${users.length} of ${total} users</span>`;
             }
 
             let html = `
@@ -477,47 +1159,72 @@
                         ${resultInfo}
                     </div>
                     <div class="flex gap-3 flex-wrap">
-                        <input type="text" id="searchInput" class="px-3 py-2 border border-gray-200 rounded-lg text-sm" placeholder="Search email..." value="${escapeHtml(searchTerm)}">
-                        <button onclick="showCreateUserForm()" class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700"><i class="fas fa-plus-circle"></i> Create User</button>
-                        <button onclick="handleSignOut()" class="px-4 py-2 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50"><i class="fas fa-sign-out-alt"></i> Sign Out</button>
+                        <div class="relative">
+                            <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-sm"></i>
+                            <input type="text" id="searchInput" class="pl-9 pr-3') py-2 border border-gray-200 rounded-lg w-64 text-sm focus tier:outline-none focus:ring-2 focus:ring-emerald-500" placeholder="Search by email..." value="${escapeHtml(searchTerm)}">
+                        </div>
+                        <button onclick="showCreateUserForm()" class="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition flex items-center gap-2"><i class="fas fa-plus-circle"></i> Create User</button>
+                        <button onclick="handleSignOut()" class="px-4 py-2 border border-gray-200 rounded-lg text-gray-600 hover:bg-gray-50 transition flex items-center gap-2"><i class="fas fa-sign-out-alt"></i> Sign Out</button>
                     </div>
                 </div>
                 <div class="bulk-bar">
                     <div class="flex items-center gap-2">
                         <input type="checkbox" id="selectAllCheckbox" class="user-checkbox">
-                        <label class="text-sm text-gray-700">Select All</label>
+                        <label for="selectAllCheckbox" class="text-sm text-gray-700">Select All</label>
                     </div>
-                    <button id="filterPushEnabledBtn" class="px-3 py-1 rounded-md text-sm border ${pushOnlyMode ? 'push-only-active' : 'bg-emerald-50 text-emerald-700'}">
+                    <button id="bulkSelectedBtn" class="px-3 py-1 bg-indigo-100 text-indigo-700 rounded-md text-sm hover:bg-indigo-200"><i class="fas fa-envelope mr-1"></i> Msg Selected</button>
+                    <button id="bulkAllBtn" class="px-3 py-1 bg-green-100 text-green-700 rounded-md text-sm hover:bg-green-200"><i class="fas fa-globe mr-1"></i> Msg All</button>
+                    <button id="bulkPushSelectedBtn" class="px-3 py-1 bg-pink-100 text-pink-700 rounded-md text-sm hover:bg-pink-200"><i class="fas fa-bell mr-1"></i> Push Selected</button>
+                    <button id="bulkPushAllBtn" class="px-3 py-1 bg-purple-100 text-purple-700 rounded-md text-sm hover:bg-purple-200"><i class="fas fa-broadcast mr-1"></i> Push All</button>
+                    <button id="filterPushEnabledBtn" class="px-3 py-1 rounded-md text-sm border ${pushOnlyMode ? 'push-only-active' : 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100'}">
                         <i class="fas fa-bell mr-1"></i> ${pushOnlyMode ? 'Showing Push-Enabled' : 'View Push-Enabled'}
                     </button>
-                    <span class="text-sm text-gray-500">${selectedUserIds.size} selected</span>
+                    <div class="flex items-center gap-2 ml-auto">
+                        <select id="groupSelectFilter" class="group-select">
+                            <option value="">-- Group by Plan/Status --</option>
+                            <option value="push-enabled">🔔 Users with Notifications Enabled</option>
+                            <option value="tier0">Tier 0 (Free)</option>
+                            <option value="tier1">Tier 1</option>
+                            <option value="tier2">Tier 2</option>
+                            <option value="tier3">Tier 3</option>
+                            <option value="active">Active Users</option>
+                            <option value="suspended">Suspended Users</option>
+                        </select>
+                        <button id="bulkGroupBtn" class="px-3 py-1 bg-purple-100 text-purple-700 rounded-md text-sm hover:bg-purple-200"><i class="fas fa-layer-group mr-1"></i> Msg Group</button>
+                        <button id="bulkPushGroupBtn" class="px-3 py-1 bg-pink-100 text-pink-700 rounded-md text-sm hover:bg-pink-200"><i class="fas fa-bell mr-1"></i> Push Group</button>
+                    </div>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50">
                             <tr>
                                 <th class="px-2 py-3 w-8"><input type="checkbox" id="selectAllHeader" class="user-checkbox"></th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">User</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Plan</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Balance</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Expiry</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">User</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Plan</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Balance</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Expiry</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Last Login</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-100">
             `;
 
-            if (users.length === 0) {
-                html += `<tr><td colspan="7" class="px-6 py-12 text-center text-gray-400">No users found.</td></tr>`;
+            if (filtered.length === 0) {
+                html += `<tr><td colspan="8" class="px-6 py-12 text-center text-gray-400"><i class="fas fa-user-slash text-2xl mb-2 block"></i>No users found.</td></tr>`;
             } else {
-                users.forEach(user => {
+                filtered.forEach(user => {
                     const plan = user.subscriptionPlan || (user.tier !== undefined ? `tier${user.tier}` : 'tier0');
-                    const balance = user.balance || 0;
+                    const balance = user.balance !== undefined ? user.balance : 0;
                     const expiry = user.subscriptionExpiry ? formatDate(user.subscriptionExpiry) : 'Never';
+                    const lastLogin = user.lastActivity ? formatLastLogin(user.lastActivity) : 'Never';
                     const suspended = user.suspended === true;
+                    const statusHtml = getStatusBadge(suspended);
                     const isCurrentUser = user.uid === currentAdminUid;
                     const rowClass = isCurrentUser ? 'admin-row-highlight' : '';
+                    const isExpired = user.subscriptionExpiry && new Date(user.subscriptionExpiry.seconds * 1000) < new Date() && plan !== 'tier0';
+                    const expiryNote = isExpired ? '<span class="expiry-badge ml-2"><i class="fas fa-hourglass-end"></i> Expired</span>' : '';
                     const isChecked = selectedUserIds.has(user.uid) ? 'checked' : '';
 
                     const hasTokens = Array.isArray(user.fcmTokens) && user.fcmTokens.length > 0;
@@ -528,38 +1235,54 @@
                     const authStatus = getAuthStatus(user);
                     const authBadge = getAuthBadgeHtml(authStatus);
 
+                    const authActionSelect = (authStatus !== 'none') ? `
+                        <select class="auth-status-select" data-uid="${user.uid}" onchange="changeAuthStatus('${user.uid}', this.value)">
+                            <option value="pending" ${authStatus === 'pending' ? 'selected' : ''}>Pending</option>
+                            <option value="processing" ${authStatus === 'processing' ? 'selected' : ''}>Processing</option>
+                            <option value="failed" ${authStatus === 'failed' ? 'selected' : ''}>Failed</option>
+                        </select>
+                    ` : '';
+
                     html += `
-                        <tr class="hover:bg-gray-50 ${rowClass}">
+                        <tr class="hover:bg-gray-50 transition ${rowClass}">
                             <td class="px-2 py-4 text-center"><input type="checkbox" class="user-checkbox user-select" data-uid="${user.uid}" ${isChecked}></td>
-                            <td class="px-6 py-4">
-                                <div class="text-sm font-medium text-gray-900">${escapeHtml(user.email || 'No email')}</div>
-                                <div class="text-xs text-gray-500 flex items-center gap-2 mt-1">
-                                    <span>${escapeHtml((user.uid || '').slice(0, 10))}...</span>
-                                    ${isCurrentUser ? '<span class="text-emerald-600 font-medium">(You)</span>' : ''}
-                                    ${fcmLabel}
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="flex items-center">
+                                    <div class="flex-shrink-0 h-8 w-8 ${isCurrentUser ? 'bg-emerald-100' : 'bg-gray-100'} rounded-full flex items-center justify-center ${isCurrentUser ? 'text-emerald-600' : 'text-gray-500'}"><i class="fas fa-user text-sm"></i></div>
+                                    <div class="ml-3">
+                                        <div class="text-sm font-medium text-gray-900">${escapeHtml(user.email)}</div>
+                                        <div class="text-xs text-gray-500 flex items-center gap-1">
+                                            ${escapeHtml(user.uid?.slice(0,8))}...
+                                            ${isCurrentUser ? '<span class="text-emerald-600 font-medium">(You)</span>' : ''}
+                                            ${fcmLabel}
+                                        </div>
+                                    </div>
                                 </div>
                             </td>
-                            <td class="px-6 py-4">
-                                <select class="plan-select text-sm border border-gray-200 rounded-md px-2 py-1.5 bg-white" data-uid="${user.uid}">
-                                    <option value="tier0" ${plan === 'tier0' ? 'selected' : ''}>Tier 0</option>
-                                    <option value="tier1" ${plan === 'tier1' ? 'selected' : ''}>Tier 1</option>
-                                    <option value="tier2" ${plan === 'tier2' ? 'selected' : ''}>Tier 2</option>
-                                    <option value="tier3" ${plan === 'tier3' ? 'selected' : ''}>Tier 3</option>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <select class="plan-select text-sm border border-gray-200 rounded-md px-2 py-1.5 bg-white focus:ring-emNumerald-500" data-uid="${user.uid} =">
+                                    <option value="tier0" ${plan  === 'tier0' ? 'selected' :3 ''}>Tier 0 (Free - ₦370k)</option>
+                                    <option value="tier1" ${plan === 'tier1' ? 'selected' : ''}>Tier 1 (7 days)</option>
+                                    <option value="tier2" ${plan === 'tier2' ? 'selected' : ''}>Tier 2 (1 month)</option>
+                                    <option value="tier3" ${plan === 'tier3' ? 'selected' : ''}>Tier 3 (1 month)</option>
                                 </select>
                             </td>
-                            <td class="px-6 py-4 text-sm">${formatBalance(balance)}</td>
-                            <td class="px-6 py-4 text-sm text-gray-500">${escapeHtml(expiry)}</td>
-                            <td class="px-6 py-4">
-                                ${suspended ? '<span class="badge badge-suspended">Suspended</span>' : '<span class="badge badge-active">Active</span>'}
-                                ${authBadge}
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">
+                                ${formatBalance(balance)}
+                                <button class="ml-2 text-emerald-600 hover:text-emerald-800 text-xs" onclick="setTier0Balance('${user.uid}')" title="Set Tier0 balance to ₦370,000"><i class="fas fa-coins"></i></button>
                             </td>
-                            <td class="px-6 py-4">
-                                <div class="flex gap-2 flex-wrap">
-                                    <button class="action-btn bg-emerald-50 text-emerald-700" onclick="activatePlan('${user.uid}')">Activate</button>
-                                    <button class="action-btn bg-${suspended ? 'emerald' : 'amber'}-50 text-${suspended ? 'emerald' : 'amber'}-700" onclick="suspendUser('${user.uid}', ${!suspended})">${suspended ? 'Unsuspend' : 'Suspend'}</button>
-                                    <button class="action-btn bg-indigo-50 text-indigo-700" onclick="showMessageModal('${user.uid}', '${escapeHtml(user.email)}')">Msg</button>
-                                    <button class="action-btn bg-pink-50 text-pink-700" onclick="showPushModal('${user.uid}', '${escapeHtml(user.email)}')">Push</button>
-                                    <button class="action-btn bg-red-50 text-red-700" onclick="deleteUserAccount('${user.uid}', '${escapeHtml(user.email)}')">Delete</button>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${expiry} ${expiryNote}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${escapeHtml(lastLogin)}</td>
+                            <td class="px-6 py-4 whitespace-nowrap">${statusHtml}${authBadge}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm">
+                                <div class="flex gap-2 flex-wrap items-center">
+                                    <button class="action-btn bg-emerald-50 text-emerald-700 hover:bg-emerald-100" onclick="activatePlan('${user.uid}')"><i class="fas fa-check-circle mr-1"></i> Activate</button>
+                                    ${!suspended ? `<button class="action-btn bg-amber-50 text-amber-700 hover:bg-amber-100" onclick="suspendUser('${user.uid}', true)"><i class="fas fa-pause-circle mr-1"></i> Suspend</button>` : `<button class="action-btn bg-emerald-50 text-emerald-700 hover:bg-emerald-100" onclick="suspendUser('${user.uid}', false)"><i class="fas fa-play-circle mr-1"></i> Unsuspend</button>`}
+                                    <button class="action-btn bg-blue-50 text-blue-700 hover:bg-blue-100" onclick="clearUserStorage('${user.uid}')"><i class="fas fa-database mr-1"></i> Clear Storage</button>
+                                    <button class="action-btn bg-indigo-50 text-indigo-700 hover:bg-indigo-100" onclick="showMessageModal('${user.uid}', '${escapeHtml(user.email)}')"><i class="fas fa-envelope mr-1"></i> Msg</button>
+                                    <button class="action-btn bg-pink-50 text-pink-700 hover:bg-pink-100" onclick="showPushModal('${user.uid}', '${escapeHtml(user.email)}')"><i class="fas fa-bell mr-1"></i> Push</button>
+                                    ${authActionSelect}
+                                    <button class="action-btn bg-red-50 text-red-700 hover:bg-red-100" onclick="deleteUserAccount('${user.uid}', '${escapeHtml(user.email)}')"><i class="fas fa-trash-alt mr-1"></i> Delete</button>
                                 </div>
                             </td>
                         </tr>
@@ -569,19 +1292,18 @@
 
             html += `</tbody></table>`;
             html += `<div class="flex justify-between items-center p-4 border-t border-gray-200 bg-gray-50">
-                        <button id="prevPageBtn" class="pagination-btn" ${currentPageNum <= 1 ? 'disabled' : ''}>← Previous</button>
+                        <button id="prevPageBtn" class="pagination-btn" ${currentPageNum <= 1 ? 'disabled' : ''}><i class="fas fa-chevron-left mr-1"></i> Previous</button>
                         <span class="text-sm text-gray-600">Page ${currentPageNum} of ${totalPages}</span>
-                        <button id="nextPageBtn" class="pagination-btn" ${currentPageNum >= totalPages ? 'disabled' : ''}>Next →</button>
+                        <button id="nextPageBtn" class="pagination-btn" ${currentPageNum >= totalPages ? 'disabled' : ''}>Next <i class="fas fa-chevron-right ml-1"></i></button>
                     </div>`;
             adminContent.innerHTML = html;
 
-            // Wire up events
             const searchInput = document.getElementById('searchInput');
             if (searchInput) {
-                let timer;
+                let debounceTimer;
                 searchInput.addEventListener('input', (e) => {
-                    clearTimeout(timer);
-                    timer = setTimeout(() => loadUsersAndRender(e.target.value, 1), 350);
+                    clearTimeout(debounceTimer);
+                    debounceTimer = setTimeout(() => { currentPage = 1; loadUsersAndRender(e.target.value, 1); }, 350);
                 });
             }
 
@@ -592,25 +1314,35 @@
                 if (currentPageNum < totalPages) loadUsersAndRender(currentSearchTerm, currentPageNum + 1);
             });
 
-            const checkboxes = document.querySelectorAll('.user-select');
-            function syncSelected() {
+            const selectAllHeader = document.getElementById('selectAllHeader');
+            const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+            const userCheckboxes = document.querySelectorAll('.user-select');
+
+            function updateSelectAll() {
+                const allChecked = userCheckboxes.length > 0 && Array.from(userCheckboxes).every(cb => cb.checked);
+                if (selectAllHeader) selectAllHeader.checked = allChecked;
+                if (selectAllCheckbox) selectAllCheckbox.checked = allChecked;
+            }
+
+            function syncSelectedIds() {
                 selectedUserIds.clear();
                 document.querySelectorAll('.user-select:checked').forEach(cb => {
                     const uid = cb.getAttribute('data-uid');
                     if (uid) selectedUserIds.add(uid);
                 });
+                updateSelectAll();
             }
-            checkboxes.forEach(cb => cb.addEventListener('change', syncSelected));
 
-            const selectAll = document.getElementById('selectAllCheckbox');
-            if (selectAll) selectAll.addEventListener('change', (e) => {
-                checkboxes.forEach(cb => cb.checked = e.target.checked);
-                syncSelected();
-            });
-            const selectAllHeader = document.getElementById('selectAllHeader');
+            userCheckboxes.forEach(cb => cb.addEventListener('change', syncSelectedIds));
             if (selectAllHeader) selectAllHeader.addEventListener('change', (e) => {
-                checkboxes.forEach(cb => cb.checked = e.target.checked);
-                syncSelected();
+                const checked = e.target.checked;
+                userCheckboxes.forEach(cb => cb.checked = checked);
+                syncSelectedIds();
+            });
+            if (selectAllCheckbox) selectAllCheckbox.addEventListener('change', (e) => {
+                const checked = e.target.checked;
+                userCheckboxes.forEach(cb => cb.checked = checked);
+                syncSelectedIds();
             });
 
             document.getElementById('filterPushEnabledBtn')?.addEventListener('click', () => {
@@ -618,19 +1350,40 @@
                 currentPage = 1;
                 loadUsersAndRender('', 1);
             });
+
+            document.getElementById('bulkSelectedBtn')?.addEventListener('click', () => window.showBulkMessageForSelected());
+            document.getElementById('bulkAllBtn')?.addEventListener('click', () => window.showBulkMessageForAll());
+            document.getElementById('bulkGroupBtn')?.addEventListener('click', () => window.showBulkMessageForGroup());
+            document.getElementById('bulkPushSelectedBtn')?.addEventListener('click', () => window.showBulkPushForSelected());
+            document.getElementById('bulkPushAllBtn')?.addEventListener('click', () => window.showBulkPushForAll());
+            document.getElementById('bulkPushGroupBtn')?.addEventListener('click', () => window.showBulkPushForGroup());
         }
 
-        // ─── Admin actions ───────────────────────────────
+        async function refreshUserList() {
+            const searchBox = document.getElementById('searchInput');
+            const currentSearch = searchBox ? searchBox.value : '';
+            currentPage = 1;
+            invalidateUserCache();
+            await downgradeExpiredSubscriptions();
+            await loadUsersAndRender(currentSearch, 1);
+            computePushStats();
+        }
+
+        // ─── Admin Actions ──────────────────────────────────
         window.activatePlan = async function(uid) {
             const select = document.querySelector(`select[data-uid="${uid}"]`);
             if (!select) return;
             const newPlan = select.value;
-            let tierNum = parseInt(newPlan.replace('tier', ''), 10) || 0;
+            let tierNum = 0;
+            if (newPlan === 'tier1') tierNum = 1;
+            else if (newPlan === 'tier2') tierNum = 2;
+            else if (newPlan === 'tier3;
             let expiry = null;
             const now = new Date();
             if (newPlan === 'tier1') expiry = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
             else if (newPlan === 'tier2' || newPlan === 'tier3') expiry = new Date(now.setMonth(now.getMonth() + 1));
             try {
+                const userRef = doc(db, 'users', uid);
                 const updateData = {
                     subscriptionPlan: newPlan,
                     tier: tierNum,
@@ -641,173 +1394,95 @@
                     authProcessing: false
                 };
                 if (newPlan === 'tier0') updateData.balance = 370000;
-                await updateDoc(doc(db, 'users', uid), updateData);
-                showToast('Plan ' + newPlan.toUpperCase() + ' activated');
-                invalidateUserCache();
-                await loadUsersAndRender(currentSearchTerm, currentPage);
-                computePushStats();
-            } catch (error) {
-                showToast('Failed: ' + error.message, 'error');
-            }
+                await updateDoc(userRef, updateData);
+
+                if (newPlan !== 'tier0') {
+                    await sendPlanUpgradeMessage(uid, newPlan);
+                    try {
+                        const emailResult = await sendUpgradeEmail(uid, newPlan);
+                        if (emailResult.success) showToast('📧 Upgrade email sent', 'success');
+                        else showToast('⚠️ Email not sent: ' + emailResult.error, 'error');
+                    } catch (emailErr) { console.warn('Email err:', emailErr); }
+                }
+
+                alert(`Plan ${newPlan.toUpperCase()} activated.`);
+                await refreshUserList();
+            } catch (error) { alert('Failed: ' + error.message); }
+        };
+
+        window.setTier0Balance = async function(uid) {
+            showConfirm('Set Tier0 Balance', "Set balance to ₦370,000 and plan Tier 0?", async () => {
+                await updateDoc(doc(db, 'users', uid), {
+                    balance: 370000, subscriptionPlan: 'tier0', tier: 0, subscriptionExpiry: null,
+                    suspended: false, pendingAuthRequest: false, authStatus: 'none', authProcessing: false
+                });
+                await refreshUserList();
+            });
         };
 
         window.suspendUser = async function(uid, suspend) {
-            try {
-                await updateDoc(doc(db, 'users', uid), { suspended: suspend });
-                showToast(suspend ? 'User suspended' : 'User unsuspended');
-                invalidateUserCache();
-                await loadUsersAndRender(currentSearchTerm, currentPage);
-            } catch (e) { showToast('Failed: ' + e.message, 'error'); }
+            showConfirm(suspend ? 'Suspend User' : 'Unsuspend User',
+                suspend ? 'User will be unable to log in.' : 'Restore user access.',
+                async () => {
+                    await updateDoc(doc(db, 'users', uid), { suspended: suspend });
+                    await refreshUserList();
+                });
+        };
+
+        window.clearUserStorage = async function(uid) {
+            showConfirm('Clear Storage', 'Reset files and storageUsed for this user.', async () => {
+                await updateDoc(doc(db, 'users', uid), { storageUsed: 0, files: [] });
+                await refreshUserList();
+            });
         };
 
         window.deleteUserAccount = async function(uid, email) {
-            showConfirm('Delete Account', 'Permanently delete ' + email + '?', async () => {
-                try {
-                    await deleteDoc(doc(db, 'users', uid));
-                    showToast('User deleted');
-                    invalidateUserCache();
-                    await loadUsersAndRender(currentSearchTerm, currentPage);
-                    computePushStats();
-                } catch (e) { showToast('Failed: ' + e.message, 'error'); }
-            });
-        };
-
-        // ─── Push ────────────────────────────────────────
-        async function sendFcmPush(uid, title, body, clickAction) {
-            const userDoc = await getDoc(doc(db, 'users', uid));
-            if (!userDoc.exists()) throw new Error('User not found.');
-            const tokens = userDoc.data().fcmTokens || [];
-            if (tokens.length === 0) throw new Error('No FCM tokens registered.');
-
-            const res = await fetch('/api/send-notification', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ tokens, title, body, clickAction: clickAction || '/message.html' })
-            });
-            if (!res.ok) throw new Error('Server error ' + res.status);
-            const result = await res.json();
-            if (!result.success) throw new Error(result.error || 'Unknown error');
-            return result;
-        }
-
-        window.showPushModal = async function(uid, email) {
-            currentPushTargetUid = uid;
-            document.getElementById('pushRecipientEmail').value = email || 'Unknown';
-            document.getElementById('pushTitle').value = '';
-            document.getElementById('pushBody').value = '';
-            document.getElementById('pushClickAction').value = '';
-            document.getElementById('pushModalError').classList.add('hidden');
-
-            const statusEl = document.getElementById('pushTokenStatus');
-            try {
-                const snap = await getDoc(doc(db, 'users', uid));
-                if (snap.exists()) {
-                    const tokens = snap.data().fcmTokens || [];
-                    statusEl.innerHTML = tokens.length > 0
-                        ? `<span class="fcm-token-status has-token">✓ ${tokens.length} device(s)</span>`
-                        : `<span class="fcm-token-status no-token">⚠ No tokens</span>`;
+            showConfirm('Delete Account', `Permanently delete ${email}?`, async () => {
+                await deleteDoc(doc(db, 'users', uid));
+                if (uid === auth.currentUser?.uid) {
+                    await signOut(auth);
+                    window.location.href = 'admin-login.html';
+                    return;
                 }
-            } catch (e) { statusEl.innerHTML = ''; }
-
-            pushModal.classList.remove('hidden');
+                invalidateUserCache();
+                await refreshUserList();
+            });
         };
 
-        window.closePushModal = function() {
-            pushModal.classList.add('hidden');
-            currentPushTargetUid = null;
+        window.changeAuthStatus = async function(uid, newStatus) {
+            const allowed = ['pending', 'processing', 'failed'];
+            if (!allowed.includes(newStatus)) return;
+            const labelMap = { pending: 'Pending', processing: 'Processing', failed: 'Failed' };
+            showConfirm(`Set status to ${labelMap[newStatus]}`,
+                `Change this user's authorisation status to ${labelMap[newStatus].toUpperCase()}?`,
+                async () => {
+                    try {
+                        await updateDoc(doc(db, 'users', uid), {
+                            pendingAuthRequest: true,
+                            authStatus: newStatus,
+                            authProcessing: newStatus === 'processing'
+                        });
+                        invalidateUserCache();
+                        showToast(`Status set to ${labelMap[newStatus]}`, 'success');
+                        await refreshUserList();
+                    } catch (err) {
+                        showToast('Failed: ' + err.message, 'error');
+                        await refreshUserList();
+                    }
+                });
         };
 
-        document.getElementById('sendPushBtn').addEventListener('click', async () => {
-            if (!currentPushTargetUid) return;
-            const title = document.getElementById('pushTitle').value.trim();
-            const body = document.getElementById('pushBody').value.trim();
-            if (!title || !body) {
-                document.getElementById('pushModalError').textContent = 'Title and Body required.';
-                document.getElementById('pushModalError').classList.remove('hidden');
-                return;
-            }
-            const btn = document.getElementById('sendPushBtn');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-pulse"></i> Sending...';
+        // ─── Create User ────────────────────────────────────
+        async function createNewUser(email, password, fullName, phone) {
             try {
-                await sendFcmPush(currentPushTargetUid, title, body, document.getElementById('pushClickAction').value.trim());
-                showToast('Push sent!');
-                closePushModal();
-            } catch (err) {
-                document.getElementById('pushModalError').textContent = err.message;
-                document.getElementById('pushModalError').classList.remove('hidden');
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-bell mr-1"></i> Send Push';
-            }
-        });
-
-        // ─── Inbox message ────────────────────────────────
-        window.showMessageModal = function(uid, email) {
-            currentMessageTargetUid = uid;
-            document.getElementById('messageRecipientEmail').value = email;
-            document.getElementById('messageSubject').value = '';
-            document.getElementById('messageBody').value = '';
-            document.getElementById('messageLink').value = '';
-            document.getElementById('messageModalError').classList.add('hidden');
-            messageModal.classList.remove('hidden');
-        };
-
-        window.closeMessageModal = function() {
-            messageModal.classList.add('hidden');
-            currentMessageTargetUid = null;
-        };
-
-        document.getElementById('sendMessageBtn').addEventListener('click', async () => {
-            if (!currentMessageTargetUid) return;
-            const subject = document.getElementById('messageSubject').value.trim();
-            const body = document.getElementById('messageBody').value.trim();
-            if (!subject || !body) {
-                document.getElementById('messageModalError').textContent = 'Subject and message required.';
-                document.getElementById('messageModalError').classList.remove('hidden');
-                return;
-            }
-            try {
-                const adminUser = auth.currentUser;
-                const data = {
-                    subject, body,
-                    from: adminUser.email,
-                    fromUid: adminUser.uid,
-                    timestamp: serverTimestamp(),
-                    read: false
-                };
-                const link = document.getElementById('messageLink').value.trim();
-                if (link) data.link = link;
-                await addDoc(collection(db, 'users', currentMessageTargetUid, 'messages'), data);
-                showToast('Message sent!');
-                closeMessageModal();
-            } catch (err) {
-                document.getElementById('messageModalError').textContent = err.message;
-                document.getElementById('messageModalError').classList.remove('hidden');
-            }
-        });
-
-        // ─── Create user ──────────────────────────────────
-        document.getElementById('createUserForm')?.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const email = document.getElementById('newUserEmail').value.trim();
-            const password = document.getElementById('newUserPassword').value;
-            const fullName = document.getElementById('newUserFullName').value.trim();
-            const phone = document.getElementById('newUserPhone').value.trim();
-            const msgDiv = document.getElementById('createUserMessage');
-
-            msgDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating...';
-            msgDiv.classList.remove('hidden');
-            msgDiv.className = 'mt-3 text-sm';
-
-            try {
-                const cred = await createUserWithEmailAndPassword(auth, email.toLowerCase(), password);
-                const uid = cred.user.uid;
-                const parts = fullName ? fullName.split(' ') : [];
-                await setDoc(doc(db, 'users', uid), {
-                    email: email.toLowerCase(),
-                    firstName: parts[0] || '',
-                    lastName: parts.slice(1).join(' ') || '',
+                const lowerEmail = email.toLowerCase().trim();
+                const userCredential = await createUserWithEmailAndPassword(auth, lowerEmail, password);
+                const uid = userCredential.user.uid;
+                const nameParts = fullName ? fullName.trim().split(' ') : [];
+                const userData = {
+                    email: lowerEmail,
+                    firstName: nameParts[0] || '',
+                    lastName: nameParts.slice(1).join(' ') || '',
                     phone: phone || '',
                     subscriptionPlan: 'tier0',
                     tier: 0,
@@ -816,81 +1491,88 @@
                     suspended: false,
                     createdAt: new Date().toISOString(),
                     lastActivity: Date.now(),
+                    storageUsed: 0,
                     isAdmin: false,
                     fcmTokens: [],
                     pendingAuthRequest: false,
                     authStatus: 'none',
                     authProcessing: false
-                });
-                msgDiv.innerHTML = '<i class="fas fa-check-circle"></i> User created!';
-                msgDiv.className = 'mt-3 text-sm text-green-600';
+                };
+                await setDoc(doc(db, 'users', uid), userData);
+                return { success: true, uid };
+            } catch (error) { return { success: false, error: error.message }; }
+        }
+
+        document.getElementById('createUserForm')?.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('newUserEmail').value.trim();
+            const password = document.getElementById('newUserPassword').value;
+            const fullName = document.getElementById('newUserFullName').value.trim();
+            const phone = document.getElementById('newUserPhone').value.trim();
+            const messageDiv = document.getElementById('createUserMessage');
+            if (!email || !password) { messageDiv.textContent = 'Email and password required.'; messageDiv.classList.remove('hidden'); return; }
+            messageDiv.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creating user...';
+            messageDiv.classList.remove('hidden');
+            const result = await createNewUser(email, password, fullName, phone);
+            if (result.success) {
+                messageDiv.innerHTML = '<i class="fas fa-check-circle"></i> User created with Tier0 & ₦370,000!';
+                messageDiv.classList.add('text-green-600');
                 document.getElementById('createUserForm').reset();
                 invalidateUserCache();
-                setTimeout(() => {
-                    toggleCreateForm();
-                    loadUsersAndRender(currentSearchTerm, currentPage);
-                    computePushStats();
-                }, 1500);
-            } catch (err) {
-                msgDiv.innerHTML = '<i class="fas fa-exclamation-triangle"></i> ' + err.message;
-                msgDiv.className = 'mt-3 text-sm text-red-600';
-            }
+                await refreshUserList();
+                setTimeout(() => toggleCreateForm(), 1800);
+            } else {
+                messageDiv.innerHTML = `<i class="fas fa-exclamation-triangle"></i> Error: ${result.error}`;
+                messageDiv.classList.add('text-red-600');
+ (!            }
         });
 
-        window.showCreateUserForm = function() {
-            createUserCard.classList.remove('hidden');
-            createUserCard.scrollIntoView({ behavior: 'smooth' });
+        window.showCreateUseruserForm = function() {
+            createUserDataCard.classList.remove('hidden');
+            createUserCard.scroll.isIntoView({ behavior: 'smoothAdmin' });
         };
         window.toggleCreateForm = function() {
             createUserCard.classList.add('hidden');
             document.getElementById('createUserForm')?.reset();
-            document.getElementById('createUserMessage').classList.add('hidden');
+            const msgDiv = document.getElementById('createUserMessage');
+            msgDiv.classList.add('hidden');
+            msgDiv.innerHTML = '';
         };
         window.handleSignOut = function() {
             signOut(auth).then(() => window.location.href = 'admin-login.html');
         };
 
-        // ─── AUTH LISTENER — MAIN ENTRY POINT ────────────
-        console.log('🔍 Admin page script loaded');
+        // ─── Admin Check + AUTH LISTENER ────────────────────
+        console.log('🔍 Admin page loaded');
 
         onAuthStateChanged(auth, async (user) => {
-            console.log('🔍 [auth] onAuthStateChanged fired. user =', user ? user.email : 'null');
+            console.log('🔍 [auth] user =', user ? user.email : 'null');
 
             if (!user) {
-                console.log('🔍 [auth] No user → redirecting to admin-login.html');
                 window.location.href = 'admin-login.html';
                 return;
             }
 
-            // Show loading state
             adminContent.innerHTML = `<div class="p-8 text-center">
                 <i class="fas fa-spinner fa-pulse text-2xl text-emerald-500"></i>
-                <p class="mt-2 text-gray-500">Reading user document for ${escapeHtml(user.email)}...</p>
+                <p class="mt-2 text-gray-500">Reading ${escapeHtml(user.email)}...</p>
             </div>`;
 
             try {
-                console.log('🔍 [auth] Fetching users/' + user.uid);
-
-                // 10-second timeout for the Firestore read
                 const timeout = new Promise((_, reject) =>
-                    setTimeout(() => reject(new Error('Firestore read timed out — check your Firestore rules')), 10000)
+                    setTimeout(() => reject(new Error('Firestore read timed out — check rules')), 10000)
                 );
                 const userSnap = await Promise.race([
                     getDoc(doc(db, 'users', user.uid)),
                     timeout
                 ]);
 
-                console.log('🔍 [auth] getDoc returned. exists =', userSnap.exists());
-
-                // ─── FIX: If doc doesn't exist, create it with isAdmin if this is the owner email ───
+                // Auto-create doc if missing
                 if (!userSnap.exists()) {
-                    console.log('🔍 [auth] User doc missing — auto-creating...');
-
                     const isOwnerEmail = (user.email || '').toLowerCase() === 'danielemeka05@gmail.com';
-
                     await setDoc(doc(db, 'users', user.uid), {
                         email: (user.email || '').toLowerCase(),
-                        isAdmin: isOwnerEmail,  // ← auto-admin for your email
+                        isAdmin: isOwnerEmail,
                         subscriptionPlan: 'tier0',
                         tier: 0,
                         balance: 370000,
@@ -903,51 +1585,41 @@
                         authStatus: 'none',
                         authProcessing: false
                     });
-
-                    console.log('🔍 [auth] Created doc with isAdmin:', isOwnerEmail);
-
                     if (!isOwnerEmail) {
                         adminContent.innerHTML = `<div class="p-8 text-center text-red-500">
                             <i class="fas fa-lock text-4xl mb-3"></i>
                             <h3 class="text-lg font-semibold">Access Denied</h3>
-                            <p class="text-sm mt-2">This account is not an admin.</p>
+                            <p class="text-sm mt-2">Not an admin.</p>
                         </div>`;
                         return;
                     }
                 }
 
-                // Re-read if we just created it
                 const finalSnap = userSnap.exists() ? userSnap : await getDoc(doc(db, 'users', user.uid));
                 const userData = finalSnap.data();
 
-                console.log('🔍 [auth] userData.isAdmin =', userData.isAdmin);
-
-                if (!userData.isAdmin) {
+                if) {
                     adminStatus.innerHTML = '<i class="fas fa-times-circle text-red-500"></i> Not an admin';
                     adminContent.innerHTML = `<div class="p-8 text-center">
                         <i class="fas fa-lock text-5xl text-red-400 mb-4 block"></i>
                         <h3 class="text-xl font-semibold text-gray-800">Access Denied</h3>
-                        <p class="text-gray-500 mt-2">Account: ${escapeHtml(user.email)}</p>
-                        <p class="text-gray-500 text-sm mt-1">This account does not have admin privileges.</p>
-                        <p class="text-gray-400 text-xs mt-3">The field "isAdmin" in Firestore must be "true".</p>
+                        <p class="text-gray-500 mt-2">${escapeHtml(user.email)}</p>
                         <button onclick="handleSignOut()" class="mt-6 px-6 py-2 bg-emerald-600 text-white rounded-lg">Sign Out</button>
                     </div>`;
                     return;
                 }
 
-                // ─── SUCCESS ─────────────────────────────
-                console.log('🔍 [auth] ✓ Admin confirmed. Loading panel...');
                 adminStatus.innerHTML = '<i class="fas fa-check-circle text-emerald-500"></i> Admin: ' + escapeHtml(user.email);
                 createUserCard.classList.remove('hidden');
                 await loadUsersAndRender('', 1);
                 computePushStats();
-                console.log('🔍 [auth] ✓ Panel loaded successfully');
+                console.log('✅ Panel loaded');
 
             } catch (err) {
                 console.error('❌ Admin check failed:', err);
                 adminContent.innerHTML = `<div class="p-8 text-center">
                     <i class="fas fa-exclamation-triangle text-5xl text-red-400 mb-4 block"></i>
-                    <h3 class="text-xl font-semibold text-gray-800">Failed to verify admin access</h3>
+                    <h3 class="text-xl font-semibold text-gray-800">Failed to verify admin</h3>
                     <p class="text-gray-500 mt-2 font-mono text-sm">${escapeHtml(err.message)}</p>
                     ${err.code ? `<p class="text-gray-400 text-xs mt-1">Code: ${escapeHtml(err.code)}</p>` : ''}
                     <button onclick="handleSignOut()" class="mt-6 px-6 py-2 bg-emerald-600 text-white rounded-lg">Sign Out</button>
@@ -956,7 +1628,9 @@
             }
         });
 
-        console.log('🔍 Admin panel ready.');
+        // ─── Debug ─────────────────────────────────────────
+        window.__fcm = { messaging, fcmSupported };
+        console.log("✅ Admin Panel loaded. EmailJS ready.");
     </script>
 
 </body>
