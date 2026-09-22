@@ -1339,6 +1339,13 @@
 <script>
     // Fallback for any missing global references
     window.goBack = window.goBack || function() { window.history.back(); };
+    <script>
+window.APP_UPDATE_OPTIONS = {
+    snoozeMs: 6 * 60 * 60 * 1000,   // 6 hours
+    theme: 'dark'
+};
+</script>
+<script src="/app-update-check.js"></script>
 </script>
 </body>
 </html>
