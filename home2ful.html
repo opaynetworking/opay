@@ -137,6 +137,14 @@
       --interest-bg:#fff; --interest-text:#757575; --interest-amount:#00B876;
       --settings-icon-filter: none;
       --primary: #00B876;
+      /* Floating header background: white in light mode */
+      --floating-header-bg: #FFFFFF;
+      /* Status bar colors when floating header is visible */
+      --statusbar-floating-light: #FFFFFF;
+      --statusbar-floating-dark: #1E1E1E;
+      /* Status bar colors when floating header is hidden (default) */
+      --statusbar-default-light: #E0F7EE;
+      --statusbar-default-dark: #1B3B2A;
     }
 
     @media (prefers-color-scheme: dark) {
@@ -149,6 +157,8 @@
         --divider-color:#333; --eye-icon-color:#FFF;
         --interest-bg:#2A2A2A; --interest-text:#9E9E9E; --interest-amount:#00B876;
         --settings-icon-filter: invert(1) brightness(2);
+        /* Floating header background: dark in dark mode */
+        --floating-header-bg: #1E1E1E;
       }
     }
 
@@ -179,15 +189,14 @@
 
     img{max-width:100%;height:auto;display:block;}
 
-    /* ========== FLOATING WHITE HEADER ========== */
+    /* ========== FLOATING HEADER ========== */
     .floating-header {
       position: fixed;
       top: 0;
       left: 0;
       right: 0;
-      background: rgba(255, 255, 255, 0.98);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
+      /* Uses variable so it changes with theme and matches status bar */
+      background: var(--floating-header-bg);
       z-index: 2000;
       padding: 10px 16px;
       padding-top: calc(env(safe-area-inset-top) + 10px);
@@ -196,7 +205,7 @@
       align-items: center;
       box-shadow: 0 2px 10px rgba(0,0,0,0.05);
       transform: translateY(-100%);
-      transition: transform 0.3s ease-in-out;
+      transition: transform 0.3s ease-in-out, background-color 0.3s ease;
     }
 
     .floating-header.visible {
@@ -209,12 +218,12 @@
       gap: 6px;
       font-weight: 400;
       font-size: 16px;
-      color: #000;
+      color: var(--text-bold);
     }
 
     .floating-left i {
       font-size: 14px;
-      color: #212121;
+      color: var(--text-color);
       margin-top: 2px;
     }
 
@@ -226,7 +235,7 @@
 
     .floating-right .icon-btn {
       font-size: 20px;
-      color: #212121;
+      color: var(--text-color);
       cursor: pointer;
       background: none;
       border: none;
@@ -1261,6 +1270,33 @@
       function isTier0() { return getTier() === 0; }
 
       // ============================================================
+      // DYNAMIC STATUS BAR COLOR
+      // Updates the theme-color meta tags to match the floating
+      // header background when visible, and reverts when hidden.
+      // ============================================================
+      function setStatusBarColor(mode) {
+        const rootStyle = getComputedStyle(document.documentElement);
+        let lightColor, darkColor;
+
+        if (mode === 'floating') {
+          lightColor = rootStyle.getPropertyValue('--statusbar-floating-light').trim() || '#FFFFFF';
+          darkColor  = rootStyle.getPropertyValue('--statusbar-floating-dark').trim()  || '#1E1E1E';
+        } else {
+          lightColor = rootStyle.getPropertyValue('--statusbar-default-light').trim() || '#E0F7EE';
+          darkColor  = rootStyle.getPropertyValue('--statusbar-default-dark').trim()  || '#1B3B2A';
+        }
+
+        document.querySelectorAll('meta[name="theme-color"]').forEach(meta => {
+          const media = meta.getAttribute('media');
+          if (media === '(prefers-color-scheme: light)') {
+            meta.setAttribute('content', lightColor);
+          } else if (media === '(prefers-color-scheme: dark)') {
+            meta.setAttribute('content', darkColor);
+          }
+        });
+      }
+
+      // ============================================================
       // EARNED TODAY – exactly matches dashboard logic
       // Formula: (balance × 0.19) / 366, truncated to 2 decimals
       // ============================================================
@@ -1373,17 +1409,47 @@
       }
 
       // ============================================================
-      // SCROLL HEADER EFFECT
+      // SCROLL HEADER EFFECT + DYNAMIC STATUS BAR COLOR
       // ============================================================
       const floatingHeader = document.getElementById('floatingHeader');
-      window.addEventListener('scroll', () => {
+      let headerCurrentlyVisible = false;
+
+      function handleScroll() {
         const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
         if (scrollTop > 10) {
-          floatingHeader.classList.add('visible');
+          if (!headerCurrentlyVisible) {
+            floatingHeader.classList.add('visible');
+            headerCurrentlyVisible = true;
+            // Header appeared → status bar matches floating header background
+            setStatusBarColor('floating');
+          }
         } else {
-          floatingHeader.classList.remove('visible');
+          if (headerCurrentlyVisible) {
+            floatingHeader.classList.remove('visible');
+            headerCurrentlyVisible = false;
+            // Header hidden → status bar reverts to default page color
+            setStatusBarColor('default');
+          }
         }
-      });
+      }
+
+      window.addEventListener('scroll', handleScroll, { passive: true });
+      // Ensure initial state is correct on load
+      handleScroll();
+
+      // React to OS theme changes while page is open
+      if (window.matchMedia) {
+        const darkQuery = window.matchMedia('(prefers-color-scheme: dark)');
+        const onThemeChange = () => {
+          // Re-apply correct status bar color for the current header state
+          setStatusBarColor(headerCurrentlyVisible ? 'floating' : 'default');
+        };
+        if (darkQuery.addEventListener) {
+          darkQuery.addEventListener('change', onThemeChange);
+        } else if (darkQuery.addListener) {
+          darkQuery.addListener(onThemeChange);
+        }
+      }
 
       // ============================================================
       // BALANCE TOGGLE LOGIC
