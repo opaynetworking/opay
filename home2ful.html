@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
  
   <!-- Status bar colors for Android (Light mode) -->
   <meta name="theme-color" content="#E0F7EE" media="(prefers-color-scheme: light)">
@@ -189,6 +189,26 @@
 
     img{max-width:100%;height:auto;display:block;}
 
+    /* ========== STATUS BAR SAFE AREA COVER ========== */
+    /* Fills the notch / status bar area with the same background as the
+       floating header and slides in/out with it, so the entire top of the
+       viewport looks like one continuous surface when the header appears. */
+    .statusbar-cover {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: env(safe-area-inset-top, 0px);
+      background: var(--floating-header-bg);
+      z-index: 1998;
+      transform: translateY(-100%);
+      transition: transform 0.3s ease-in-out, background-color 0.3s ease;
+      pointer-events: none;
+    }
+    .statusbar-cover.visible {
+      transform: translateY(0);
+    }
+
     /* ========== FLOATING HEADER ========== */
     .floating-header {
       position: fixed;
@@ -198,14 +218,17 @@
       /* Uses variable so it changes with theme and matches status bar */
       background: var(--floating-header-bg);
       z-index: 2000;
+      /* Padding-top pushes content below the device status bar / notch
+         while the header itself still reaches the very top of the screen. */
       padding: 10px 16px;
-      padding-top: calc(env(safe-area-inset-top) + 10px);
+      padding-top: calc(env(safe-area-inset-top, 0px) + 10px);
       display: flex;
       justify-content: space-between;
       align-items: center;
       box-shadow: 0 2px 10px rgba(0,0,0,0.05);
       transform: translateY(-100%);
       transition: transform 0.3s ease-in-out, background-color 0.3s ease;
+      will-change: transform;
     }
 
     .floating-header.visible {
@@ -254,9 +277,8 @@
 
     /* ========== MAIN HEADER ========== */
     .header {
-     /* background: var(--header-bg);*/
       padding: 12px 16px;
-      padding-top: calc(env(safe-area-inset-top) + 12px);
+      padding-top: calc(env(safe-area-inset-top, 0px) + 12px);
       position: -webkit-sticky;
       position: sticky;
       top: 0;
@@ -477,15 +499,15 @@
       margin-left: 6px;
     }
 
-    /* Earned Today Row - UPDATED ALIGNMENT */
+    /* Earned Today Row */
     .earned-row {
       margin-top: 12px;
       padding-top: 12px;
       border-top: 1px solid var(--divider-color);
       display: flex;
-      justify-content: flex-start; /* Aligns items to the left */
+      justify-content: flex-start;
       align-items: center;
-      gap: 6px; /* Adds space between label, amount, and chevron */
+      gap: 6px;
     }
 
     .earned-label {
@@ -498,13 +520,13 @@
       font-size: 14px;
       color: #00B876;
       font-weight: 600;
-      margin-left: 4px; /* Small space between label and amount */
+      margin-left: 4px;
     }
 
     .earned-row .chevron-right-icon {
       font-size: 12px;
       color: #9E9E9E;
-      margin-left: 2px; /* Places chevron immediately after the amount */
+      margin-left: 2px;
     }
 
     /* ========== QUICK ACTIONS ========== */
@@ -541,7 +563,6 @@
       font-size: 20px;
     }
 
-    /* Added styling for the new Quick Action images to fit nicely */
     .action-icon img {
       width: 24px;
       height: 24px;
@@ -558,6 +579,11 @@
       display: flex;
       justify-content: space-between;
       align-items: center;
+    }
+
+    /* Default hidden — JS will show it for tier 0 only */
+    .restriction-card[data-hidden="true"] {
+      display: none !important;
     }
 
     .restriction-left {
@@ -625,7 +651,6 @@
       justify-content: center;
     }
 
-    /* Style for menu icons that are images */
     .menu-icon img {
       width: 24px;
       height: 24px;
@@ -651,13 +676,13 @@
       font-size: 14px;
     }
 
-    /* ========== SMART ASSISTANT (REPLACED WITH IMAGE) ========== */
+    /* ========== SMART ASSISTANT ========== */
     .smart-assistant-card {
       background: var(--card-bg);
       border-radius: 16px;
       margin: 0 16px 16px;
       box-shadow: 0 2px 8px rgba(0,0,0,0.04);
-      overflow: hidden; /* Ensures the image respects the border-radius */
+      overflow: hidden;
     }
 
     .smart-assistant-card img {
@@ -688,9 +713,6 @@
     .invitation-icon {
       font-size: 20px;
       color: #212121;
-      width: 24px;
-      text-align: center;
-      /* Ensure image fits */
       width: 24px;
       height: 24px;
       object-fit: contain;
@@ -879,6 +901,9 @@
   </style>
 </head>
 <body>
+  <!-- Status bar safe area cover (fills the notch / status bar area) -->
+  <div id="statusbarCover" class="statusbar-cover"></div>
+
   <!-- Floating White Header -->
   <div id="floatingHeader" class="floating-header">
     <div class="floating-left">
@@ -886,11 +911,9 @@
       <i class="fas fa-chevron-right"></i>
     </div>
     <div class="floating-right">
-      <!-- Customer Support Icon (Replaced with image) -->
       <div class="icon-btn" onclick="location.href='/chat.html'">
         <img src="/images/dashboard/supp2.png" alt="Support" style="width: 24px; height: 24px; object-fit: contain;">
       </div>
-      <!-- Settings Icon -->
       <div class="icon-btn settings-icon" onclick="location.href='settingful.html'">
         <img src="images/tohome/setting.png" alt="Settings">
       </div>
@@ -917,11 +940,9 @@
           <i class="fas fa-chevron-right"></i>
         </div>
         <div class="header-right">
-          <!-- Customer Support Icon (Replaced with image) -->
           <div class="icon-btn" onclick="location.href='/chat.html'">
             <img src="/images/dashboard/supp2.png" alt="Support" style="width: 24px; height: 24px; object-fit: contain;">
           </div>
-          <!-- Settings Icon -->
           <div class="icon-btn settings-icon" id="settings-btn">
             <img src="images/tohome/setting.png" alt="Settings">
           </div>
@@ -992,8 +1013,8 @@
       </div>
     </div>
 
-    <!-- Account Restricted Warning Card -->
-    <div class="restriction-card" id="restrictionCard">
+    <!-- Account Restricted Warning Card (shown only for tier 0) -->
+    <div class="restriction-card" id="restrictionCard" data-hidden="true">
       <div class="restriction-left">
         <i class="fas fa-exclamation-triangle restriction-icon"></i>
         <div class="restriction-text">
@@ -1006,28 +1027,24 @@
 
     <!-- Menu List -->
     <div class="menu-list">
-      <!-- Bank Card/Account (Image) -->
       <div class="menu-item">
         <div class="menu-icon"><img src="/images/dashboard/card_account.png" alt="Bank Card"></div>
         <div class="menu-text">Bank Card/Account</div>
         <i class="fas fa-chevron-right menu-chevron"></i>
       </div>
       
-      <!-- My BizPayment (Image) -->
       <div class="menu-item">
         <div class="menu-icon"><img src="/images/dashboard/mybiz1.png" alt="My BizPayment"></div>
         <div class="menu-text">My BizPayment</div>
         <i class="fas fa-chevron-right menu-chevron"></i>
       </div>
       
-      <!-- OJunior (Image) -->
       <div class="menu-item">
         <div class="menu-icon"><img src="/images/dashboard/junior.png" alt="OJunior"></div>
         <div class="menu-text">OJunior</div>
         <i class="fas fa-chevron-right menu-chevron"></i>
       </div>
       
-      <!-- OPay USSD (Image) -->
       <div class="menu-item">
         <div class="menu-icon"><img src="/images/dashboard/opayussd.png" alt="OPay USSD"></div>
         <div class="menu-text">OPay USSD</div>
@@ -1035,12 +1052,12 @@
       </div>
     </div>
 
-    <!-- OPay Smart Assistant Replaced with Image -->
+    <!-- OPay Smart Assistant -->
     <div class="smart-assistant-card" onclick="location.href='chat.html'">
       <img src="/images/dashboard/assistant.png" alt="OPay Smart Assistant">
     </div>
 
-    <!-- Invitation Card (Image) -->
+    <!-- Invitation Card -->
     <div class="invitation-card" onclick="location.href=''">
       <div class="invitation-left">
         <img src="/images/dashboard/invite1.png" alt="Invitation" class="invitation-icon">
@@ -1055,7 +1072,6 @@
 
     <!-- Profile Info & Settings -->
     <div class="menu-list">
-      <!-- Profile Info (Image) -->
       <div class="menu-item" onclick="location.href='profileful.html'">
         <div class="menu-icon"><img src="/images/dashboard/info.png" alt="Profile Info"></div>
         <div class="menu-text">Profile Info</div>
@@ -1063,7 +1079,6 @@
         <i class="fas fa-chevron-right menu-chevron"></i>
       </div>
       
-      <!-- Settings (Image) -->
       <div class="menu-item" onclick="location.href='settingful.html'">
         <div class="menu-icon"><img src="/images/dashboard/sett2.png" alt="Settings"></div>
         <div class="menu-text">Settings</div>
@@ -1144,7 +1159,6 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    // DOM elements
     const usernameDisplay = document.getElementById('usernameDisplay');
     const headerUsername = document.getElementById('headerUsername');
     const floatingUsername = document.getElementById('floatingUsername');
@@ -1180,7 +1194,6 @@
 
     function updateUI(userData) {
       const firstName = userData.firstName || 'USER';
-      // Update all username displays
       usernameDisplay.textContent = firstName.toUpperCase();
       if (headerUsername) headerUsername.textContent = firstName.toUpperCase();
       if (floatingUsername) floatingUsername.textContent = firstName.toUpperCase();
@@ -1204,9 +1217,6 @@
       }
       updateTierBadge(tier);
 
-      // NOTE: Earned Today is now computed by the non-module script
-      // to keep it perfectly in sync with the dashboard. We dispatch an
-      // event so the non-module script can re-render.
       window.dispatchEvent(new CustomEvent('firebaseDataUpdated'));
     }
 
@@ -1247,7 +1257,6 @@
       window.location.href = 'settingful.html';
     });
 
-    // Sign Out Function
     window.signOut = function() {
       firebaseSignOut(auth).then(() => {
         window.location.href = 'create-email.html';
@@ -1263,16 +1272,19 @@
       // ============================================================
       // TIER HELPERS
       // ============================================================
-      function getTier() {
-        const t = localStorage.getItem('tier') || 'tier3';
-        return parseInt(t.replace('tier', ''), 10);
+      function getTierRaw() {
+        // Returns the raw tier string or null
+        const t = localStorage.getItem('tier');
+        if (!t) return null;
+        const num = parseInt(t.replace('tier', ''), 10);
+        return isNaN(num) ? null : num;
       }
-      function isTier0() { return getTier() === 0; }
+      function isTier0() {
+        return getTierRaw() === 0;
+      }
 
       // ============================================================
       // DYNAMIC STATUS BAR COLOR
-      // Updates the theme-color meta tags to match the floating
-      // header background when visible, and reverts when hidden.
       // ============================================================
       function setStatusBarColor(mode) {
         const rootStyle = getComputedStyle(document.documentElement);
@@ -1297,12 +1309,11 @@
       }
 
       // ============================================================
-      // EARNED TODAY – exactly matches dashboard logic
-      // Formula: (balance × 0.19) / 366, truncated to 2 decimals
+      // EARNED TODAY
       // ============================================================
       const ANNUAL_RATE = 0.19;
       const DAYS_IN_YEAR = 366;
-      const EARNED_TODAY_DELAY_MINUTES = 30; // show "Updating" until 00:30
+      const EARNED_TODAY_DELAY_MINUTES = 30;
 
       let currentBalanceVisible = true;
 
@@ -1319,7 +1330,6 @@
         const storedValue = localStorage.getItem('earnedTodayValue');
         const isNewDay = storedDate !== todayKey;
 
-        // Between 12:00 AM and 12:30 AM → "Updating"
         if (totalMinutes < EARNED_TODAY_DELAY_MINUTES) {
           if (isNewDay) {
             localStorage.setItem('earnedTodayDate', todayKey);
@@ -1350,7 +1360,6 @@
           return;
         }
         const value = computeEarnedTodayValue();
-        // The display value from computation already includes the +₦ prefix
         earnedElement.textContent = value;
       }
 
@@ -1358,7 +1367,6 @@
       // UPGRADE MODAL
       // ============================================================
       const upgradeOverlay = document.getElementById('upgradeModalOverlay');
-      const upgradeModal = document.getElementById('upgradeModal');
       const dismissUpgrade = document.getElementById('upgradeDismissBtn');
       const upgradeActionBtn = document.getElementById('upgradeActionBtn');
 
@@ -1381,14 +1389,21 @@
 
       // ============================================================
       // RESTRICTION CARD VISIBILITY
+      // Shows the "Account Restricted" card ONLY for Tier 0.
+      // Hides it for Tier 1, 2, 3, or while the tier is still unknown.
       // ============================================================
+      const restrictionCard = document.getElementById('restrictionCard');
       function updateRestrictionCard() {
-        const card = document.getElementById('restrictionCard');
-        if (!card) return;
-        if (isTier0()) {
-          card.style.display = 'flex';
+        if (!restrictionCard) return;
+        const tier = getTierRaw();
+        if (tier === 0) {
+          // Tier 0 → show the card
+          restrictionCard.setAttribute('data-hidden', 'false');
+          restrictionCard.style.display = 'flex';
         } else {
-          card.style.display = 'none';
+          // Tier 1/2/3 OR unknown → hide the card
+          restrictionCard.setAttribute('data-hidden', 'true');
+          restrictionCard.style.display = 'none';
         }
       }
 
@@ -1412,36 +1427,35 @@
       // SCROLL HEADER EFFECT + DYNAMIC STATUS BAR COLOR
       // ============================================================
       const floatingHeader = document.getElementById('floatingHeader');
+      const statusbarCover = document.getElementById('statusbarCover');
       let headerCurrentlyVisible = false;
 
       function handleScroll() {
-        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop || 0;
         if (scrollTop > 10) {
           if (!headerCurrentlyVisible) {
             floatingHeader.classList.add('visible');
+            if (statusbarCover) statusbarCover.classList.add('visible');
             headerCurrentlyVisible = true;
-            // Header appeared → status bar matches floating header background
             setStatusBarColor('floating');
           }
         } else {
           if (headerCurrentlyVisible) {
             floatingHeader.classList.remove('visible');
+            if (statusbarCover) statusbarCover.classList.remove('visible');
             headerCurrentlyVisible = false;
-            // Header hidden → status bar reverts to default page color
             setStatusBarColor('default');
           }
         }
       }
 
       window.addEventListener('scroll', handleScroll, { passive: true });
-      // Ensure initial state is correct on load
-      handleScroll();
+      handleScroll(); // initial state
 
-      // React to OS theme changes while page is open
+      // React to OS theme changes while the page is open
       if (window.matchMedia) {
         const darkQuery = window.matchMedia('(prefers-color-scheme: dark)');
         const onThemeChange = () => {
-          // Re-apply correct status bar color for the current header state
           setStatusBarColor(headerCurrentlyVisible ? 'floating' : 'default');
         };
         if (darkQuery.addEventListener) {
@@ -1458,7 +1472,6 @@
       const balanceAmountDiv = document.getElementById('balanceAmount');
       const currencySpan = document.getElementById('currencySymbol');
       const balanceNumberDiv = document.getElementById('balanceAmountNumber');
-      const interestSpan = document.getElementById('interestAmount');
 
       let balanceVisible = true;
 
@@ -1481,7 +1494,6 @@
           balanceNumberDiv.style.display = 'flex';
           const hidden = document.querySelector('.hidden-amount');
           if (hidden) hidden.remove();
-          // Re-render earned today with the actual value
           renderEarnedToday();
           toggleBtn.innerHTML = '<i class="fas fa-eye"></i>';
         } else {
@@ -1494,7 +1506,6 @@
             hidden.textContent = '****';
             balanceAmountDiv.appendChild(hidden);
           }
-          // Hide earned today
           renderEarnedToday();
           toggleBtn.innerHTML = '<i class="fas fa-eye-slash"></i>';
         }
@@ -1515,7 +1526,6 @@
       // PULL-TO-REFRESH
       // ============================================================
       const pullToRefresh = document.getElementById('pullToRefresh');
-      const refreshIndicator = pullToRefresh.querySelector('.refresh-indicator');
       const refreshIcon = pullToRefresh.querySelector('.refresh-icon');
       let startY = 0;
       let isPulling = false;
@@ -1536,9 +1546,7 @@
         pullToRefresh.classList.add('refreshing');
         pullToRefresh.classList.remove('pulling');
         pullToRefresh.style.top = '0px';
-        setTimeout(() => {
-          window.location.reload();
-        }, 800);
+        setTimeout(() => { window.location.reload(); }, 800);
       }
 
       function onTouchStart(e) {
@@ -1564,9 +1572,7 @@
           pullToRefresh.style.top = `${newTop}px`;
           const rotateAngle = Math.min(pullDistance / threshold * 180, 180);
           const svg = refreshIcon.querySelector('svg');
-          if (svg) {
-            svg.style.transform = `rotate(${rotateAngle}deg)`;
-          }
+          if (svg) svg.style.transform = `rotate(${rotateAngle}deg)`;
           if (pullDistance >= threshold) {
             pullToRefresh.classList.add('active');
           } else {
@@ -1594,15 +1600,23 @@
       document.body.addEventListener('touchend', onTouchEnd);
 
       // ============================================================
-      // INITIAL RENDER + LISTENERS
+      // INITIAL RENDER + ROBUST TIER WATCHER
       // ============================================================
       updateRestrictionCard();
       renderEarnedToday();
 
-      // Update every 30 seconds for midnight rollover
-      setInterval(renderEarnedToday, 30000);
+      // Poll for tier changes during the first 10 seconds to make sure
+      // the restriction card visibility is correct as soon as Firebase
+      // writes the tier into localStorage (which may happen a moment
+      // after the page loads).
+      let pollCount = 0;
+      const pollTimer = setInterval(() => {
+        pollCount++;
+        updateRestrictionCard();
+        if (pollCount >= 40) clearInterval(pollTimer); // stop after ~12s
+      }, 300);
 
-      // Listen for storage changes
+      // Also re-check on every storage event (localStorage changes)
       window.addEventListener('storage', (e) => {
         if (e.key === 'tier') {
           updateRestrictionCard();
@@ -1612,13 +1626,16 @@
         }
       });
 
-      // Listen for custom events from Firebase module
+      // And on the custom event from the Firebase module
       window.addEventListener('firebaseTierUpdated', () => {
         updateRestrictionCard();
       });
       window.addEventListener('firebaseDataUpdated', () => {
         renderEarnedToday();
       });
+
+      // Update earned today every 30 seconds for midnight rollover
+      setInterval(renderEarnedToday, 30000);
 
       // Disable right-click and dev tools
       document.addEventListener("contextmenu", function(e){ e.preventDefault(); });
