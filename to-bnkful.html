@@ -2,8 +2,19 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
     <title>Transfer to Bank Account</title>
+
+    <!-- Status bar colors for Android (Light mode) -->
+    <meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)">
+    <!-- Status bar colors for Android (Dark mode) -->
+    <meta name="theme-color" content="#1e1e1e" media="(prefers-color-scheme: dark)">
+
+    <!-- iOS status bar: black-translucent makes it transparent with dark text/icons -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="OPay">
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         /* ===== original styles ===== */
@@ -57,8 +68,11 @@
             font-family: 'Segoe UI', Roboto, Arial, sans-serif;
             -webkit-tap-highlight-color: transparent;
         }
+        html, body {
+            /* Match the header background so the status bar area has no gap */
+            background-color: var(--header-bg);
+        }
         body {
-            background-color: var(--bg-color);
             color: var(--text-color);
             line-height: 1.5;
         }
@@ -68,10 +82,12 @@
             background: var(--bg-color);
             min-height: 100vh;
         }
+        /* ========== HEADER (now properly covers the status bar) ========== */
         .header {
             display: flex;
             align-items: center;
             padding: 10px 20px 5px;
+            padding-top: calc(env(safe-area-inset-top, 0px) + 10px);
             background: var(--header-bg);
             position: sticky;
             top: 0;
@@ -168,7 +184,7 @@
         .bank-selector {
             display: flex;
             align-items: center;
-            padding: 12px 0;
+            padding:g 12px 0;
             border-bottom: 1px solid var(--border-color);
             cursor: pointer;
         }
@@ -253,7 +269,7 @@
             display: none;
         }
         .detection-bar.error {
-            background: var(--error-bg);
+            background: var(--error-b);
             display: flex;
         }
         .error-circle {
@@ -622,7 +638,7 @@
 </head>
 <body>
     <div class="container">
-        <!-- Header -->
+        <!-- Header (now covers the device status bar area) -->
         <div class="header">
             <div class="back-btn" id="backBtn">‹</div>
             <div class="header-text">Transfer to Bank Account</div>
@@ -850,13 +866,11 @@
 
             function imageLoaded() {
                 imagesLoaded++;
-                // If all images are loaded, start the slider immediately
                 if (imagesLoaded === totalSlides) {
                     startSlider();
                 }
             }
 
-            // Check each image
             slideImages.forEach(img => {
                 if (img.complete) {
                     imageLoaded();
@@ -866,10 +880,8 @@
                 }
             });
 
-            // Fallback: if not all images load within 3 seconds, start anyway
             setTimeout(function() {
                 if (!sliderInterval) {
-                    // If interval hasn't been set yet, start it now
                     startSlider();
                 }
             }, 3000);
@@ -898,7 +910,6 @@
 
             const PAYSTACK_SECRET_KEY = 'sk_live_982c3772d00d6c6f0219ac6241d9747f581421e8';
 
-            // ===== LocalStorage helpers =====
             function loadRecentList() {
                 try {
                     const stored = localStorage.getItem('transfer.recentList');
@@ -917,7 +928,6 @@
                 }
             }
 
-            // ===== Render recents & favourites =====
             function renderRecentList() {
                 const container = recentsPane;
                 container.innerHTML = '';
@@ -1010,7 +1020,6 @@
                 }
             }
 
-            // ===== Tab switching =====
             tabButtons.forEach(btn => {
                 btn.addEventListener('click', function() {
                     tabButtons.forEach(b => b.classList.remove('active'));
@@ -1026,7 +1035,6 @@
                 });
             });
 
-            // ===== Account number & bank session storage =====
             function loadSavedAccountNumber() {
                 const saved = sessionStorage.getItem('tempAccountNumber');
                 if (saved) {
@@ -1084,7 +1092,6 @@
                 }
             }
 
-            // ===== Detection bar =====
             function resetDetection() {
                 detectBar.style.display = 'none';
                 detectBar.classList.remove('success', 'loading', 'error');
@@ -1123,7 +1130,6 @@
                 resolvedAccountName = '';
             }
 
-            // ===== Resolve account with Paystack =====
             async function resolveAccount() {
                 const accNum = accountInput.value.trim();
                 if (!selectedBank) {
@@ -1181,7 +1187,6 @@
 
             accountInput.addEventListener('input', handleAccountInput);
 
-            // ===== Bank selector click =====
             bankSelector.addEventListener('click', function(e) {
                 e.preventDefault();
                 saveAccountNumber();
@@ -1192,7 +1197,6 @@
                 }, 5000);
             });
 
-            // ===== Network monitor click =====
             networkMonitor.addEventListener('click', function(e) {
                 e.preventDefault();
                 window.showLoader(true);
@@ -1202,7 +1206,6 @@
                 }, 5000);
             });
 
-            // ===== Next button =====
             nextBtn.addEventListener('click', async function() {
                 if (!nextBtn.disabled && nextBtn.classList.contains('enabled')) {
                     let freeCount = 3;
@@ -1232,12 +1235,10 @@
                 }
             });
 
-            // ===== Back button =====
             backBtn.addEventListener('click', function() {
                 window.history.back();
             });
 
-            // ===== Init with Firestore =====
             (async function init() {
                 if (window.fbAuth) {
                     window.fbAuth.onAuthStateChanged(async function(user) {
